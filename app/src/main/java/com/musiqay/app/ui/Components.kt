@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Add
@@ -53,26 +54,47 @@ import com.musiqay.app.playback.NowPlayingState
 import com.musiqay.app.util.formatDuration
 
 @Composable
-fun AlbumArtwork(model: Any?, modifier: Modifier = Modifier, cornerRadius: Int = 14) {
+fun AlbumArtwork(
+    model: Any?,
+    modifier: Modifier = Modifier,
+    cornerRadius: Int = 14,
+    prominentPlaceholder: Boolean = false
+) {
     val shape = RoundedCornerShape(cornerRadius.dp)
+    val imageFailed = remember(model) { mutableStateOf(false) }
+
     Box(
-        modifier = modifier.clip(shape).background(MaterialTheme.colorScheme.surfaceVariant),
+        modifier = modifier
+            .clip(shape)
+            .background(MaterialTheme.colorScheme.surfaceVariant),
         contentAlignment = Alignment.Center
     ) {
-        if (model != null) {
+        if (model != null && !imageFailed.value) {
             AsyncImage(
                 model = model,
                 contentDescription = null,
+                onError = { imageFailed.value = true },
                 modifier = Modifier.matchParentSize(),
                 contentScale = ContentScale.Crop
             )
         } else {
-            Icon(
-                Icons.Rounded.MusicNote,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.size(34.dp)
-            )
+            val containerSize = if (prominentPlaceholder) 112.dp else 38.dp
+            val iconSize = if (prominentPlaceholder) 56.dp else 22.dp
+
+            Box(
+                modifier = Modifier
+                    .size(containerSize)
+                    .clip(CircleShape)
+                    .background(MaterialTheme.colorScheme.primaryContainer),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    Icons.Rounded.MusicNote,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(iconSize)
+                )
+            }
         }
     }
 }

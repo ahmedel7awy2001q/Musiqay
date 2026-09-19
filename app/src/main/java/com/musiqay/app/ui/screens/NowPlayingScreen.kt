@@ -345,7 +345,7 @@ fun NowPlayingScreen(
                             )
                         )
                 ) {
-                    AlbumArtwork(state.artworkUri, Modifier.fillMaxSize().navigationBarsPadding(), 28)
+                    AlbumArtwork(state.artworkUri, Modifier.fillMaxSize(), 28, prominentPlaceholder = true)
                 }
             }
         }
