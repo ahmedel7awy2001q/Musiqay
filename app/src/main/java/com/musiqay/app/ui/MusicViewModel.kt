@@ -9,6 +9,9 @@ import com.musiqay.app.data.PlaylistEntity
 import com.musiqay.app.data.Song
 import com.musiqay.app.data.ThemeMode
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -34,11 +37,33 @@ class MusicViewModel(application: Application) : AndroidViewModel(application) {
     val player = app.playerController
 
     init {
-        refreshLibrary()
+        viewModelScope.launch {
+            app.settingsRepository.settings
+                .map { current ->
+                    current.minimumAudioDurationSeconds to current.includeNonMusicAudio
+                }
+                .distinctUntilChanged()
+                .collectLatest { (minimumSeconds, includeNonMusic) ->
+                    val loadedSongs = app.mediaStoreRepository.loadSongs(
+                        minimumDurationSeconds = minimumSeconds,
+                        includeNonMusicAudio = includeNonMusic
+                    )
+
+                    _songs.value = loadedSongs
+                    app.playerController.restoreSession(loadedSongs)
+                }
+        }
     }
 
     fun refreshLibrary() {
-        viewModelScope.launch { _songs.value = app.mediaStoreRepository.loadSongs() }
+        viewModelScope.launch {
+            val current = settings.value
+
+            _songs.value = app.mediaStoreRepository.loadSongs(
+                minimumDurationSeconds = current.minimumAudioDurationSeconds,
+                includeNonMusicAudio = current.includeNonMusicAudio
+            )
+        }
     }
 
     fun play(song: Song, source: List<Song> = songs.value) {
@@ -73,6 +98,12 @@ class MusicViewModel(application: Application) : AndroidViewModel(application) {
         viewModelScope.launch { dao.removeTrackFromPlaylist(playlistId, mediaId) }
     }
 
+    fun cleanupDeletedMedia(mediaId: Long) {
+        viewModelScope.launch {
+            dao.removeDeletedMediaReferences(mediaId)
+        }
+    }
+
     fun playlistTrackIds(id: Long): Flow<List<Long>> = dao.observePlaylistTrackIds(id)
 
     fun setTheme(mode: ThemeMode) {
@@ -81,5 +112,17 @@ class MusicViewModel(application: Application) : AndroidViewModel(application) {
 
     fun setDynamicColors(enabled: Boolean) {
         viewModelScope.launch { app.settingsRepository.setDynamicColors(enabled) }
+    }
+
+    fun setMinimumAudioDuration(seconds: Int) {
+        viewModelScope.launch {
+            app.settingsRepository.setMinimumAudioDuration(seconds)
+        }
+    }
+
+    fun setIncludeNonMusicAudio(enabled: Boolean) {
+        viewModelScope.launch {
+            app.settingsRepository.setIncludeNonMusicAudio(enabled)
+        }
     }
 }

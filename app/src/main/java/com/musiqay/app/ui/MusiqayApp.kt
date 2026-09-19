@@ -1,11 +1,12 @@
 package com.musiqay.app.ui
 
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Home
 import androidx.compose.material.icons.rounded.LibraryMusic
-import androidx.compose.material.icons.rounded.QueueMusic
+import androidx.compose.material.icons.automirrored.rounded.QueueMusic
 import androidx.compose.material.icons.rounded.Search
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
@@ -50,7 +51,7 @@ fun MusiqayApp(vm: MusicViewModel) {
     val rootItems = listOf(
         NavItem("home", "الرئيسية", Icons.Rounded.Home),
         NavItem("songs", "الأغاني", Icons.Rounded.LibraryMusic),
-        NavItem("playlists", "القوائم", Icons.Rounded.QueueMusic),
+        NavItem("playlists", "القوائم", Icons.AutoMirrored.Rounded.QueueMusic),
         NavItem("search", "البحث", Icons.Rounded.Search)
     )
     val showBottom = currentRoute in rootItems.map { it.route }
@@ -58,7 +59,7 @@ fun MusiqayApp(vm: MusicViewModel) {
     Scaffold(
         bottomBar = {
             if (showBottom) {
-                Column {
+                Column(modifier = Modifier.navigationBarsPadding()) {
                     MiniPlayer(
                         state = playerState,
                         onOpen = { navController.navigate("player") },

@@ -23,7 +23,7 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.ArrowBack
+import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.ExpandMore
 import androidx.compose.material.icons.rounded.Favorite
@@ -35,8 +35,8 @@ import androidx.compose.material.icons.rounded.MoreVert
 import androidx.compose.material.icons.rounded.MusicNote
 import androidx.compose.material.icons.rounded.Pause
 import androidx.compose.material.icons.rounded.PlayArrow
-import androidx.compose.material.icons.rounded.PlaylistAdd
-import androidx.compose.material.icons.rounded.QueueMusic
+import androidx.compose.material.icons.automirrored.rounded.PlaylistAdd
+import androidx.compose.material.icons.automirrored.rounded.QueueMusic
 import androidx.compose.material.icons.rounded.Repeat
 import androidx.compose.material.icons.rounded.RepeatOne
 import androidx.compose.material.icons.rounded.Shuffle
@@ -72,6 +72,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -99,6 +101,8 @@ fun NowPlayingScreen(
     var dragPosition by remember { mutableStateOf<Float?>(null) }
     var showQueue by remember { mutableStateOf(false) }
     var showTimer by remember { mutableStateOf(false) }
+    var customTimerMinutes by remember { mutableStateOf("") }
+    var showCustomTimerDialog by remember { mutableStateOf(false) }
     var showPlaylistPicker by remember { mutableStateOf(false) }
     var createPlaylist by remember { mutableStateOf(false) }
     var newPlaylistName by remember { mutableStateOf("") }
@@ -122,7 +126,27 @@ fun NowPlayingScreen(
                             Text("إيقاف التشغيل بعد $minutes دقيقة", Modifier.padding(horizontal = 12.dp))
                         }
                     }
-                    if (sleepEnd != null) {
+                    Row(
+                    Modifier
+                        .fillMaxWidth()
+                        .clickable {
+                            showTimer = false
+                            showCustomTimerDialog = true
+                        }
+                        .padding(vertical = 12.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        imageVector = Icons.Rounded.Timer,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary
+                    )
+                    Text(
+                        "مدة مخصصة",
+                        Modifier.padding(horizontal = 12.dp)
+                    )
+                }
+                if (sleepEnd != null) {
                         TextButton(onClick = {
                             vm.player.setSleepTimer(null)
                             showTimer = false
@@ -135,6 +159,59 @@ fun NowPlayingScreen(
         )
     }
 
+    if (showCustomTimerDialog) {
+        AlertDialog(
+            onDismissRequest = {
+                showCustomTimerDialog = false
+                customTimerMinutes = ""
+            },
+            title = { Text("مدة مخصصة") },
+            text = {
+                OutlinedTextField(
+                    value = customTimerMinutes,
+                    onValueChange = { value ->
+                        customTimerMinutes = value
+                            .filter { it.isDigit() }
+                            .take(4)
+                    },
+                    label = { Text("عدد الدقائق") },
+                    placeholder = { Text("مثال: 25") },
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions(
+                        keyboardType = KeyboardType.Number
+                    )
+                )
+            },
+            confirmButton = {
+                Button(
+                    enabled = customTimerMinutes
+                        .toIntOrNull()
+                        ?.let { it in 1..1440 } == true,
+                    onClick = {
+                        val minutes = customTimerMinutes.toIntOrNull()
+
+                        if (minutes != null && minutes in 1..1440) {
+                            vm.player.setSleepTimer(minutes)
+                            showCustomTimerDialog = false
+                            customTimerMinutes = ""
+                        }
+                    }
+                ) {
+                    Text("تشغيل المؤقت")
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = {
+                        showCustomTimerDialog = false
+                        customTimerMinutes = ""
+                    }
+                ) {
+                    Text("إلغاء")
+                }
+            }
+        )
+    }
     if (showPlaylistPicker && currentSong != null) {
         PlaylistPickerDialog(
             playlists = playlists,
@@ -236,7 +313,7 @@ fun NowPlayingScreen(
     }
 
     LazyColumn(
-        modifier = Modifier.fillMaxSize().statusBarsPadding(),
+        modifier = Modifier.fillMaxSize().navigationBarsPadding().statusBarsPadding(),
         contentPadding = androidx.compose.foundation.layout.PaddingValues(bottom = 30.dp)
     ) {
         item {
@@ -244,7 +321,7 @@ fun NowPlayingScreen(
                 Modifier.fillMaxWidth().padding(horizontal = 10.dp, vertical = 4.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                IconButton(onClick = onBack) { Icon(Icons.Rounded.ArrowBack, "رجوع") }
+                IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Rounded.ArrowBack, "رجوع") }
                 Column(Modifier.weight(1f), horizontalAlignment = Alignment.CenterHorizontally) {
                     Text("قيد التشغيل الآن", fontWeight = FontWeight.Bold)
                     if (queue.isNotEmpty()) Text("${queue.size} في قائمة الانتظار", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -268,7 +345,7 @@ fun NowPlayingScreen(
                             )
                         )
                 ) {
-                    AlbumArtwork(state.artworkUri, Modifier.fillMaxSize(), 28)
+                    AlbumArtwork(state.artworkUri, Modifier.fillMaxSize().navigationBarsPadding(), 28)
                 }
             }
         }
@@ -314,7 +391,8 @@ fun NowPlayingScreen(
                         dragPosition?.let { vm.player.seekTo(it.toLong()) }
                         dragPosition = null
                     },
-                    valueRange = 0f..max
+                    valueRange = 0f..max,
+                    modifier = Modifier.fillMaxWidth()
                 )
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                     Text(formatDuration(shown.toLong()), style = MaterialTheme.typography.bodySmall)
@@ -325,31 +403,73 @@ fun NowPlayingScreen(
 
         item {
             Row(
-                Modifier.fillMaxWidth().padding(horizontal = 18.dp, vertical = 14.dp),
-                horizontalArrangement = Arrangement.SpaceEvenly,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 20.dp, vertical = 18.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                IconButton(onClick = vm.player::toggleShuffle) {
-                    Icon(Icons.Rounded.Shuffle, "عشوائي", tint = if (state.shuffleEnabled) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface)
-                }
-                IconButton(onClick = vm.player::previous, modifier = Modifier.size(58.dp)) {
-                    Icon(Icons.Rounded.SkipPrevious, "السابق", modifier = Modifier.size(38.dp))
-                }
-                FilledIconButton(onClick = vm.player::togglePlayPause, modifier = Modifier.size(76.dp)) {
+                IconButton(
+                    onClick = vm.player::toggleShuffle,
+                    modifier = Modifier.size(48.dp)
+                ) {
                     Icon(
-                        if (state.isPlaying) Icons.Rounded.Pause else Icons.Rounded.PlayArrow,
-                        if (state.isPlaying) "إيقاف مؤقت" else "تشغيل",
-                        modifier = Modifier.size(42.dp)
+                        Icons.Rounded.Shuffle,
+                        contentDescription = "عشوائي",
+                        tint = if (state.shuffleEnabled)
+                            MaterialTheme.colorScheme.primary
+                        else
+                            MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
-                IconButton(onClick = vm.player::next, modifier = Modifier.size(58.dp)) {
-                    Icon(Icons.Rounded.SkipNext, "التالي", modifier = Modifier.size(38.dp))
-                }
-                IconButton(onClick = vm.player::cycleRepeatMode) {
+
+                IconButton(
+                    onClick = vm.player::previous,
+                    modifier = Modifier.size(60.dp)
+                ) {
                     Icon(
-                        if (state.repeatMode == Player.REPEAT_MODE_ONE) Icons.Rounded.RepeatOne else Icons.Rounded.Repeat,
-                        "تكرار",
-                        tint = if (state.repeatMode != Player.REPEAT_MODE_OFF) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
+                        Icons.Rounded.SkipPrevious,
+                        contentDescription = "السابق",
+                        modifier = Modifier.size(40.dp)
+                    )
+                }
+
+                FilledIconButton(
+                    onClick = vm.player::togglePlayPause,
+                    modifier = Modifier.size(80.dp)
+                ) {
+                    Icon(
+                        if (state.isPlaying) Icons.Rounded.Pause else Icons.Rounded.PlayArrow,
+                        contentDescription = if (state.isPlaying) "إيقاف مؤقت" else "تشغيل",
+                        modifier = Modifier.size(44.dp)
+                    )
+                }
+
+                IconButton(
+                    onClick = vm.player::next,
+                    modifier = Modifier.size(60.dp)
+                ) {
+                    Icon(
+                        Icons.Rounded.SkipNext,
+                        contentDescription = "التالي",
+                        modifier = Modifier.size(40.dp)
+                    )
+                }
+
+                IconButton(
+                    onClick = vm.player::cycleRepeatMode,
+                    modifier = Modifier.size(48.dp)
+                ) {
+                    Icon(
+                        if (state.repeatMode == Player.REPEAT_MODE_ONE)
+                            Icons.Rounded.RepeatOne
+                        else
+                            Icons.Rounded.Repeat,
+                        contentDescription = "تكرار",
+                        tint = if (state.repeatMode != Player.REPEAT_MODE_OFF)
+                            MaterialTheme.colorScheme.primary
+                        else
+                            MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             }
@@ -360,7 +480,7 @@ fun NowPlayingScreen(
                 Modifier.fillMaxWidth().padding(horizontal = 18.dp),
                 horizontalArrangement = Arrangement.SpaceEvenly
             ) {
-                ActionButton(Icons.Rounded.PlaylistAdd, "قائمة تشغيل") { showPlaylistPicker = currentSong != null }
+                ActionButton(Icons.AutoMirrored.Rounded.PlaylistAdd, "قائمة تشغيل") { showPlaylistPicker = currentSong != null }
                 ActionButton(Icons.Rounded.GraphicEq, "مؤثرات صوتية") {
                     val effectIntent = Intent(AudioEffect.ACTION_DISPLAY_AUDIO_EFFECT_CONTROL_PANEL).apply {
                         putExtra(AudioEffect.EXTRA_PACKAGE_NAME, context.packageName)
@@ -370,8 +490,28 @@ fun NowPlayingScreen(
                         runCatching { context.startActivity(Intent(Settings.ACTION_SOUND_SETTINGS)) }
                     }
                 }
-                ActionButton(Icons.Rounded.Timer, if (sleepEnd != null) "المؤقت مفعل" else "مؤقت الإيقاف") { showTimer = true }
-                ActionButton(Icons.Rounded.QueueMusic, "الانتظار") { showQueue = true }
+                val currentSleepEnd = sleepEnd
+
+                val timerLabel = if (currentSleepEnd != null) {
+                    val remainingMinutes =
+                        ((currentSleepEnd - System.currentTimeMillis()) / 60_000L)
+                            .coerceAtLeast(0L)
+
+                    if (remainingMinutes > 0L)
+                        "متبقي $remainingMinutes د"
+                    else
+                        "المؤقت مفعل"
+                } else {
+                    "مؤقت الإيقاف"
+                }
+
+                ActionButton(
+                    Icons.Rounded.Timer,
+                    timerLabel
+                ) {
+                    showTimer = true
+                }
+                ActionButton(Icons.AutoMirrored.Rounded.QueueMusic, "الانتظار") { showQueue = true }
             }
         }
 

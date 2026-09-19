@@ -86,6 +86,15 @@ interface MusicDao {
 
     @Query("DELETE FROM playlist_tracks WHERE playlistId = :playlistId AND mediaId = :mediaId")
     suspend fun removeTrackFromPlaylist(playlistId: Long, mediaId: Long)
+
+    @Query("DELETE FROM playlist_tracks WHERE mediaId = :mediaId")
+    suspend fun removeTrackFromAllPlaylists(mediaId: Long)
+
+    @Transaction
+    suspend fun removeDeletedMediaReferences(mediaId: Long) {
+        removeFavorite(mediaId)
+        removeTrackFromAllPlaylists(mediaId)
+    }
 }
 
 @Database(

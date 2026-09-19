@@ -1,5 +1,13 @@
 package com.musiqay.app.ui.screens
 
+import androidx.compose.ui.platform.LocalContext
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.activity.result.IntentSenderRequest
+import androidx.activity.compose.rememberLauncherForActivityResult
+import android.provider.MediaStore
+import android.os.Build
+import android.app.RecoverableSecurityException
+import android.app.Activity
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -16,15 +24,15 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material.icons.rounded.Album
-import androidx.compose.material.icons.rounded.ArrowBack
+import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.rounded.Delete
 import androidx.compose.material.icons.rounded.Favorite
 import androidx.compose.material.icons.rounded.Folder
 import androidx.compose.material.icons.rounded.Person
 import androidx.compose.material.icons.rounded.PlayArrow
-import androidx.compose.material.icons.rounded.QueueMusic
+import androidx.compose.material.icons.automirrored.rounded.QueueMusic
 import androidx.compose.material.icons.rounded.Search
-import androidx.compose.material.icons.rounded.Sort
+import androidx.compose.material.icons.automirrored.rounded.Sort
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
@@ -99,7 +107,7 @@ fun SongsScreen(
                 },
                 actions = {
                     Box {
-                        IconButton(onClick = { sortMenu = true }) { Icon(Icons.Rounded.Sort, contentDescription = "الترتيب") }
+                        IconButton(onClick = { sortMenu = true }) { Icon(Icons.AutoMirrored.Rounded.Sort, contentDescription = "الترتيب") }
                         DropdownMenu(expanded = sortMenu, onDismissRequest = { sortMenu = false }) {
                             SongSort.entries.forEach { option ->
                                 DropdownMenuItem(
@@ -193,7 +201,7 @@ fun FavoritesScreen(
             TopAppBar(
                 modifier = Modifier.statusBarsPadding(),
                 title = { Text("المفضلة", fontWeight = FontWeight.Bold) },
-                navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.Rounded.ArrowBack, "رجوع") } },
+                navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Rounded.ArrowBack, "رجوع") } },
                 actions = {
                     if (songs.isNotEmpty()) {
                         IconButton(onClick = { vm.play(songs.first(), songs); onOpenPlayer() }) {
@@ -282,7 +290,7 @@ fun PlaylistsScreen(
                 PlaylistCard(
                     title = playlist.name,
                     subtitle = "قائمة تشغيل محلية",
-                    icon = Icons.Rounded.QueueMusic,
+                    icon = Icons.AutoMirrored.Rounded.QueueMusic,
                     onClick = { onPlaylist(playlist.id) },
                     trailing = {
                         IconButton(onClick = { onDelete(playlist.id) }) {
@@ -351,7 +359,7 @@ fun BrowseGroupsScreen(
                 title = { Text(selected ?: title, maxLines = 1, overflow = TextOverflow.Ellipsis, fontWeight = FontWeight.Bold) },
                 navigationIcon = {
                     IconButton(onClick = { if (selected != null) selected = null else onBack() }) {
-                        Icon(Icons.Rounded.ArrowBack, "رجوع")
+                        Icon(Icons.AutoMirrored.Rounded.ArrowBack, "رجوع")
                     }
                 }
             )
@@ -424,7 +432,7 @@ fun PlaylistDetailScreen(
                         Text("${songs.size} أغنية", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                 },
-                navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.Rounded.ArrowBack, "رجوع") } },
+                navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Rounded.ArrowBack, "رجوع") } },
                 actions = {
                     if (songs.isNotEmpty()) {
                         FilledTonalButton(onClick = { vm.play(songs.first(), songs); onOpenPlayer() }) {
@@ -469,6 +477,85 @@ private fun SongList(
     var pickerSong by remember { mutableStateOf<Song?>(null) }
     var createForSong by remember { mutableStateOf<Song?>(null) }
     var newPlaylistName by remember { mutableStateOf("") }
+    var songPendingDelete by remember { mutableStateOf<Song?>(null) }
+    var songAwaitingSystemDelete by remember { mutableStateOf<Song?>(null) }
+    var retryDeleteAfterGrant by remember { mutableStateOf(false) }
+
+    val context = LocalContext.current
+
+    val deleteLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.StartIntentSenderForResult()
+    ) { result ->
+        val pendingSong = songAwaitingSystemDelete
+
+        if (result.resultCode == Activity.RESULT_OK) {
+            if (retryDeleteAfterGrant && pendingSong != null) {
+                val deleted = runCatching {
+                    context.contentResolver.delete(
+                        pendingSong.uri,
+                        null,
+                        null
+                    )
+                }.getOrDefault(0)
+
+                if (deleted > 0) {
+                    vm.cleanupDeletedMedia(pendingSong.id)
+                }
+            } else if (pendingSong != null) {
+                vm.cleanupDeletedMedia(pendingSong.id)
+            }
+
+            vm.refreshLibrary()
+        }
+
+        songAwaitingSystemDelete = null
+        retryDeleteAfterGrant = false
+    }
+
+    fun deleteFromDevice(song: Song) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            val pendingIntent = MediaStore.createDeleteRequest(
+                context.contentResolver,
+                listOf(song.uri)
+            )
+
+            songAwaitingSystemDelete = song
+            retryDeleteAfterGrant = false
+
+            deleteLauncher.launch(
+                IntentSenderRequest.Builder(
+                    pendingIntent.intentSender
+                ).build()
+            )
+        } else {
+            try {
+                val deleted = context.contentResolver.delete(
+                    song.uri,
+                    null,
+                    null
+                )
+
+                if (deleted > 0) {
+                    vm.cleanupDeletedMedia(song.id)
+                    vm.refreshLibrary()
+                }
+            } catch (error: SecurityException) {
+                if (
+                    Build.VERSION.SDK_INT == Build.VERSION_CODES.Q &&
+                    error is RecoverableSecurityException
+                ) {
+                    songAwaitingSystemDelete = song
+                    retryDeleteAfterGrant = true
+
+                    deleteLauncher.launch(
+                        IntentSenderRequest.Builder(
+                            error.userAction.actionIntent.intentSender
+                        ).build()
+                    )
+                }
+            }
+        }
+    }
 
     pickerSong?.let { song ->
         PlaylistPickerDialog(
@@ -511,6 +598,41 @@ private fun SongList(
         )
     }
 
+    songPendingDelete?.let { song ->
+        AlertDialog(
+            onDismissRequest = {
+                songPendingDelete = null
+            },
+            title = {
+                Text("حذف الملف من الجهاز")
+            },
+            text = {
+                Text(
+                    "سيتم حذف \"${song.title}\" من الهاتف نفسه وليس من موسيقاي فقط. هل تريد المتابعة"
+                )
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        val songToDelete = song
+                        songPendingDelete = null
+                        deleteFromDevice(songToDelete)
+                    }
+                ) {
+                    Text("متابعة")
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = {
+                        songPendingDelete = null
+                    }
+                ) {
+                    Text("إلغاء")
+                }
+            }
+        )
+    }
     if (songs.isEmpty()) {
         Box(modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             Text(emptyMessage, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(24.dp))
@@ -531,6 +653,7 @@ private fun SongList(
                 onPlayNext = { vm.player.playNext(song) },
                 onAddToQueue = { vm.player.addToQueue(song) },
                 onAddToPlaylist = { pickerSong = song },
+                onDeleteFromDevice = { songPendingDelete = song },
                 trailingContent = extraTrailing?.let { content -> { content(song) } }
             )
         }

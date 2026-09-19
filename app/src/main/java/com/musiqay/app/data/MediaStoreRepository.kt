@@ -9,7 +9,7 @@ import kotlinx.coroutines.withContext
 
 class MediaStoreRepository(private val context: Context) {
 
-    suspend fun loadSongs(): List<Song> = withContext(Dispatchers.IO) {
+    suspend fun loadSongs(minimumDurationSeconds: Int = 10, includeNonMusicAudio: Boolean = false): List<Song> = withContext(Dispatchers.IO) {
         val collection = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI
         val projection = buildList {
             add(MediaStore.Audio.Media._ID)
@@ -24,11 +24,22 @@ class MediaStoreRepository(private val context: Context) {
 
         val songs = mutableListOf<Song>()
         try {
+            val safeMinimumSeconds = minimumDurationSeconds.coerceIn(0, 3600)
+            val minimumDurationMs = safeMinimumSeconds * 1000L
+
+            val selection = if (includeNonMusicAudio) {
+                "${MediaStore.Audio.Media.DURATION} >= ?"
+            } else {
+                "${MediaStore.Audio.Media.IS_MUSIC} != 0 AND ${MediaStore.Audio.Media.DURATION} >= ?"
+            }
+
+            val selectionArgs = arrayOf(minimumDurationMs.toString())
+
             context.contentResolver.query(
                 collection,
                 projection,
-                "${MediaStore.Audio.Media.DURATION} >= ?",
-                arrayOf("1000"),
+                selection,
+                selectionArgs,
                 "${MediaStore.Audio.Media.DATE_ADDED} DESC"
             )?.use { cursor ->
                 val idCol = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media._ID)
