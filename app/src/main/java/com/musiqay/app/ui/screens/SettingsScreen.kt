@@ -11,7 +11,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.ArrowBack
+import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.rounded.Refresh
 import androidx.compose.material.icons.rounded.Security
 import androidx.compose.material.icons.rounded.Tune
@@ -49,7 +49,7 @@ fun SettingsScreen(vm: MusicViewModel, onBack: () -> Unit) {
                 modifier = Modifier.statusBarsPadding(),
                 title = { Text("الإعدادات", fontWeight = FontWeight.Bold) },
                 navigationIcon = {
-                    IconButton(onClick = onBack) { Icon(Icons.Rounded.ArrowBack, "رجوع") }
+                    IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Rounded.ArrowBack, "رجوع") }
                 }
             )
         }
@@ -96,6 +96,73 @@ fun SettingsScreen(vm: MusicViewModel, onBack: () -> Unit) {
                     Text("إعادة فحص الموسيقى", fontWeight = FontWeight.SemiBold)
                     Text("تحديث الأغاني والألبومات والمجلدات من الهاتف", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
+            }
+
+            Spacer(Modifier.height(8.dp))
+
+            Text(
+                "الحد الأدنى لمدة الملف",
+                fontWeight = FontWeight.SemiBold
+            )
+
+            listOf(
+                0 to "بدون فلترة",
+                10 to "10 ثواني",
+                20 to "20 ثانية",
+                60 to "60 ثانية"
+            ).forEach { (seconds, label) ->
+                Row(
+                    Modifier
+                        .fillMaxWidth()
+                        .clickable {
+                            vm.setMinimumAudioDuration(seconds)
+                        }
+                        .padding(vertical = 4.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    RadioButton(
+                        selected = settings.minimumAudioDurationSeconds == seconds,
+                        onClick = {
+                            vm.setMinimumAudioDuration(seconds)
+                        }
+                    )
+                    Text(
+                        label,
+                        Modifier.weight(1f)
+                    )
+                }
+            }
+
+            Spacer(Modifier.height(6.dp))
+
+            Row(
+                Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 10.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(Icons.Rounded.Tune, null)
+
+                Column(
+                    Modifier
+                        .weight(1f)
+                        .padding(horizontal = 12.dp)
+                ) {
+                    Text(
+                        "عرض كل الملفات الصوتية",
+                        fontWeight = FontWeight.SemiBold
+                    )
+                    Text(
+                        "يشمل التسجيلات وأصوات التطبيقات والملفات التي لا يصنفها Android كموسيقى",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+
+                Switch(
+                    checked = settings.includeNonMusicAudio,
+                    onCheckedChange = vm::setIncludeNonMusicAudio
+                )
             }
 
             HorizontalDivider(Modifier.padding(vertical = 12.dp))

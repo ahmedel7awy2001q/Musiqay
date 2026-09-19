@@ -40,6 +40,12 @@ class PlayerController(private val context: Context) {
     private var controller: MediaController? = null
     private var sleepJob: Job? = null
 
+    private val playbackPrefs =
+        context.getSharedPreferences("playback_state", Context.MODE_PRIVATE)
+
+    private var lastPersistAt = 0L
+    private var pendingRestoreSongs: List<Song>? = null
+
     private val _state = MutableStateFlow(NowPlayingState())
     val state: StateFlow<NowPlayingState> = _state.asStateFlow()
 
@@ -52,6 +58,7 @@ class PlayerController(private val context: Context) {
     private val listener = object : Player.Listener {
         override fun onEvents(player: Player, events: Player.Events) {
             updateFromPlayer(player)
+            persistSession(player)
         }
     }
 
@@ -65,6 +72,10 @@ class PlayerController(private val context: Context) {
                 controller = mediaController
                 mediaController.addListener(listener)
                 updateFromPlayer(mediaController)
+
+                pendingRestoreSongs?.let { songs ->
+                    restoreSession(songs)
+                }
             }
         }, ContextCompat.getMainExecutor(context))
 
@@ -170,6 +181,100 @@ class PlayerController(private val context: Context) {
         }
     }
 
+    fun restoreSession(songs: List<Song>) {
+        val player = controller
+
+        if (player == null) {
+            pendingRestoreSongs = songs
+            return
+        }
+
+        pendingRestoreSongs = null
+
+        // If Android service already has an active queue, keep it as-is.
+        if (player.mediaItemCount > 0) {
+            updateFromPlayer(player)
+            return
+        }
+
+        val savedIds = playbackPrefs
+            .getString("queue_ids", null)
+            ?.split(",")
+            ?.mapNotNull { it.toLongOrNull() }
+            .orEmpty()
+
+        if (savedIds.isEmpty()) return
+
+        val songsById = songs.associateBy { it.id }
+        val restoredSongs = savedIds.mapNotNull { songsById[it] }
+
+        if (restoredSongs.isEmpty()) return
+
+        val currentId = playbackPrefs.getLong("current_media_id", -1L)
+        val savedPosition = playbackPrefs
+            .getLong("position_ms", 0L)
+            .coerceAtLeast(0L)
+
+        val index = restoredSongs
+            .indexOfFirst { it.id == currentId }
+            .takeIf { it >= 0 }
+            ?: 0
+
+        player.setMediaItems(
+            restoredSongs.map { it.toMediaItem() },
+            index,
+            savedPosition
+        )
+
+        player.shuffleModeEnabled =
+            playbackPrefs.getBoolean("shuffle_enabled", false)
+
+        player.repeatMode =
+            playbackPrefs.getInt(
+                "repeat_mode",
+                Player.REPEAT_MODE_OFF
+            )
+
+        player.prepare()
+        player.pause()
+
+        updateFromPlayer(player)
+    }
+
+    private fun persistSession(player: Player) {
+        if (player.mediaItemCount <= 0) return
+
+        val queueIds = buildList {
+            for (index in 0 until player.mediaItemCount) {
+                player.getMediaItemAt(index)
+                    .mediaId
+                    .toLongOrNull()
+                    ?.let(::add)
+            }
+        }
+
+        if (queueIds.isEmpty()) return
+
+        playbackPrefs.edit()
+            .putString("queue_ids", queueIds.joinToString(","))
+            .putLong(
+                "current_media_id",
+                player.currentMediaItem?.mediaId?.toLongOrNull() ?: -1L
+            )
+            .putLong(
+                "position_ms",
+                player.currentPosition.coerceAtLeast(0L)
+            )
+            .putBoolean(
+                "shuffle_enabled",
+                player.shuffleModeEnabled
+            )
+            .putInt(
+                "repeat_mode",
+                player.repeatMode
+            )
+            .apply()
+    }
     private fun updateFromPlayer(player: Player) {
         val metadata = player.currentMediaItem?.mediaMetadata
         _state.value = NowPlayingState(
@@ -194,5 +299,11 @@ class PlayerController(private val context: Context) {
             positionMs = player.currentPosition.coerceAtLeast(0),
             durationMs = player.duration.takeIf { it > 0 } ?: previous.durationMs
         )
+
+        val now = System.currentTimeMillis()
+        if (now - lastPersistAt >= 5_000L) {
+            lastPersistAt = now
+            persistSession(player)
+        }
     }
 }

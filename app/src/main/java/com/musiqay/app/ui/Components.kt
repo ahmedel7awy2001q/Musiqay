@@ -14,20 +14,22 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Add
+import androidx.compose.material.icons.rounded.Delete
 import androidx.compose.material.icons.rounded.Favorite
 import androidx.compose.material.icons.rounded.FavoriteBorder
 import androidx.compose.material.icons.rounded.MoreVert
 import androidx.compose.material.icons.rounded.MusicNote
 import androidx.compose.material.icons.rounded.Pause
 import androidx.compose.material.icons.rounded.PlayArrow
-import androidx.compose.material.icons.rounded.PlaylistAdd
-import androidx.compose.material.icons.rounded.QueueMusic
+import androidx.compose.material.icons.automirrored.rounded.PlaylistAdd
+import androidx.compose.material.icons.automirrored.rounded.QueueMusic
 import androidx.compose.material.icons.rounded.SkipNext
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -97,6 +99,7 @@ fun SongRow(
     onPlayNext: () -> Unit,
     onAddToQueue: () -> Unit,
     onAddToPlaylist: () -> Unit,
+    onDeleteFromDevice: () -> Unit,
     trailingContent: (@Composable () -> Unit)? = null,
     modifier: Modifier = Modifier
 ) {
@@ -135,13 +138,33 @@ fun SongRow(
                 )
                 DropdownMenuItem(
                     text = { Text("إضافة إلى قائمة الانتظار") },
-                    leadingIcon = { Icon(Icons.Rounded.QueueMusic, null) },
+                    leadingIcon = { Icon(Icons.AutoMirrored.Rounded.QueueMusic, null) },
                     onClick = { menu = false; onAddToQueue() }
                 )
                 DropdownMenuItem(
                     text = { Text("إضافة إلى قائمة تشغيل") },
-                    leadingIcon = { Icon(Icons.Rounded.PlaylistAdd, null) },
+                    leadingIcon = { Icon(Icons.AutoMirrored.Rounded.PlaylistAdd, null) },
                     onClick = { menu = false; onAddToPlaylist() }
+                )
+
+                DropdownMenuItem(
+                    text = {
+                        Text(
+                            "حذف من الجهاز",
+                            color = MaterialTheme.colorScheme.error
+                        )
+                    },
+                    leadingIcon = {
+                        Icon(
+                            Icons.Rounded.Delete,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.error
+                        )
+                    },
+                    onClick = {
+                        menu = false
+                        onDeleteFromDevice()
+                    }
                 )
             }
         }
@@ -158,27 +181,71 @@ fun MiniPlayer(
 ) {
     if (state.mediaId == null) return
     Surface(
-        modifier = modifier.fillMaxWidth().padding(horizontal = 10.dp, vertical = 5.dp).clickable(onClick = onOpen),
-        shape = RoundedCornerShape(18.dp),
-        tonalElevation = 7.dp
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(horizontal = 10.dp, vertical = 5.dp)
+            .clickable(onClick = onOpen),
+        shape = RoundedCornerShape(20.dp),
+        tonalElevation = 6.dp
     ) {
-        Row(Modifier.padding(8.dp), verticalAlignment = Alignment.CenterVertically) {
-            AlbumArtwork(state.artworkUri, Modifier.size(48.dp), 10)
-            Spacer(Modifier.width(10.dp))
-            Column(Modifier.weight(1f)) {
-                Text(state.title, maxLines = 1, overflow = TextOverflow.Ellipsis, fontWeight = FontWeight.SemiBold)
-                Text(
-                    state.artist,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+        Column {
+            Row(
+                Modifier.padding(horizontal = 10.dp, vertical = 8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                AlbumArtwork(
+                    state.artworkUri,
+                    Modifier.size(50.dp),
+                    12
                 )
+
+                Spacer(Modifier.width(11.dp))
+
+                Column(Modifier.weight(1f)) {
+                    Text(
+                        text = state.title,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        fontWeight = FontWeight.Bold,
+                        style = MaterialTheme.typography.bodyLarge
+                    )
+
+                    Text(
+                        text = state.artist.ifBlank { "فنان غير معروف" },
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+
+                IconButton(onClick = onToggle) {
+                    Icon(
+                        imageVector = if (state.isPlaying) Icons.Rounded.Pause else Icons.Rounded.PlayArrow,
+                        contentDescription = if (state.isPlaying) "إيقاف مؤقت" else "تشغيل"
+                    )
+                }
+
+                IconButton(onClick = onNext) {
+                    Icon(
+                        Icons.Rounded.SkipNext,
+                        contentDescription = "التالي"
+                    )
+                }
             }
-            IconButton(onClick = onToggle) {
-                Icon(if (state.isPlaying) Icons.Rounded.Pause else Icons.Rounded.PlayArrow, if (state.isPlaying) "إيقاف مؤقت" else "تشغيل")
-            }
-            IconButton(onClick = onNext) { Icon(Icons.Rounded.SkipNext, contentDescription = "التالي") }
+
+            val progress =
+                if (state.durationMs > 0L)
+                    (state.positionMs.toFloat() / state.durationMs.toFloat()).coerceIn(0f, 1f)
+                else
+                    0f
+
+            LinearProgressIndicator(
+                progress = { progress },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(2.dp)
+            )
         }
     }
 }
@@ -201,7 +268,7 @@ fun PlaylistPickerDialog(
                         Modifier.fillMaxWidth().clickable { onPick(playlist.id) }.padding(vertical = 12.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Icon(Icons.Rounded.QueueMusic, null)
+                        Icon(Icons.AutoMirrored.Rounded.QueueMusic, null)
                         Spacer(Modifier.width(10.dp))
                         Text(playlist.name, modifier = Modifier.weight(1f))
                     }
