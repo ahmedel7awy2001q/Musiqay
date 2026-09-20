@@ -4,6 +4,7 @@ import android.content.Intent
 import android.media.audiofx.AudioEffect
 import android.provider.Settings
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -14,6 +15,7 @@ import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -39,6 +41,7 @@ import androidx.compose.material.icons.automirrored.rounded.PlaylistAdd
 import androidx.compose.material.icons.automirrored.rounded.QueueMusic
 import androidx.compose.material.icons.rounded.Repeat
 import androidx.compose.material.icons.rounded.RepeatOne
+import androidx.compose.material.icons.rounded.Share
 import androidx.compose.material.icons.rounded.Shuffle
 import androidx.compose.material.icons.rounded.SkipNext
 import androidx.compose.material.icons.rounded.SkipPrevious
@@ -67,7 +70,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -318,19 +323,36 @@ fun NowPlayingScreen(
             .background(
                 Brush.verticalGradient(
                     listOf(
-                        MaterialTheme.colorScheme.background,
-                        MaterialTheme.colorScheme.surface,
-                        MaterialTheme.colorScheme.background
+                        Color(0xFF071022),
+                        Color(0xFF0B1430),
+                        Color(0xFF080D1B)
                     )
                 )
             )
             .navigationBarsPadding()
             .statusBarsPadding()
     ) {
+        Box(
+            modifier = Modifier
+                .align(Alignment.TopCenter)
+                .padding(top = 64.dp)
+                .size(310.dp)
+                .clip(CircleShape)
+                .background(
+                    Brush.radialGradient(
+                        listOf(
+                            MaterialTheme.colorScheme.primary.copy(alpha = .22f),
+                            MaterialTheme.colorScheme.secondary.copy(alpha = .10f),
+                            Color.Transparent
+                        )
+                    )
+                )
+        )
+
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(horizontal = 18.dp, vertical = 6.dp),
+                .padding(horizontal = 20.dp, vertical = 6.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Row(
@@ -347,8 +369,8 @@ fun NowPlayingScreen(
                 ) {
                     Text(
                         "قيد التشغيل الآن",
-                        fontWeight = FontWeight.Bold,
-                        style = MaterialTheme.typography.titleMedium
+                        fontWeight = FontWeight.ExtraBold,
+                        fontSize = 21.sp
                     )
                     if (queue.isNotEmpty()) {
                         Text(
@@ -360,33 +382,85 @@ fun NowPlayingScreen(
                 }
 
                 IconButton(onClick = { showQueue = true }) {
-                    Icon(Icons.Rounded.MoreVert, "القائمة")
+                    Icon(Icons.Rounded.MoreVert, "المزيد")
                 }
             }
 
-            Spacer(Modifier.height(14.dp))
+            Spacer(Modifier.height(26.dp))
 
-            Surface(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(28.dp),
-                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = .46f),
-                tonalElevation = 5.dp
+            val infoShape = RoundedCornerShape(30.dp)
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(210.dp)
+                    .shadow(18.dp, infoShape)
+                    .background(
+                        Brush.linearGradient(
+                            listOf(
+                                Color(0xFF17234A).copy(alpha = .94f),
+                                Color(0xFF101A39).copy(alpha = .92f),
+                                Color(0xFF131B32).copy(alpha = .95f)
+                            )
+                        ),
+                        infoShape
+                    )
+                    .border(
+                        1.dp,
+                        Brush.linearGradient(
+                            listOf(
+                                MaterialTheme.colorScheme.primary.copy(alpha = .70f),
+                                Color.White.copy(alpha = .20f),
+                                MaterialTheme.colorScheme.secondary.copy(alpha = .32f)
+                            )
+                        ),
+                        infoShape
+                    )
+                    .padding(horizontal = 24.dp, vertical = 22.dp)
             ) {
                 Column(
-                    Modifier.padding(horizontal = 22.dp, vertical = 22.dp),
+                    Modifier.align(Alignment.Center),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
+                    Box(
+                        modifier = Modifier
+                            .size(58.dp)
+                            .background(
+                                Brush.radialGradient(
+                                    listOf(
+                                        MaterialTheme.colorScheme.primary.copy(alpha = .34f),
+                                        MaterialTheme.colorScheme.primary.copy(alpha = .08f)
+                                    )
+                                ),
+                                CircleShape
+                            )
+                            .border(
+                                1.dp,
+                                MaterialTheme.colorScheme.primary.copy(alpha = .45f),
+                                CircleShape
+                            ),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            Icons.Rounded.MusicNote,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(30.dp)
+                        )
+                    }
+
+                    Spacer(Modifier.height(14.dp))
+
                     Text(
                         state.title,
                         maxLines = 2,
                         overflow = TextOverflow.Ellipsis,
                         fontSize = 27.sp,
-                        lineHeight = 32.sp,
+                        lineHeight = 31.sp,
                         fontWeight = FontWeight.Black,
                         textAlign = TextAlign.Center
                     )
 
-                    Spacer(Modifier.height(8.dp))
+                    Spacer(Modifier.height(7.dp))
 
                     Text(
                         state.artist.ifBlank { "فنان غير معروف" },
@@ -403,70 +477,31 @@ fun NowPlayingScreen(
                             state.album,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = .82f),
+                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = .78f),
                             style = MaterialTheme.typography.bodySmall,
                             textAlign = TextAlign.Center
                         )
                     }
+                }
 
-                    Spacer(Modifier.height(14.dp))
-
-                    if (state.mediaId != null) {
-                        IconButton(onClick = { vm.toggleFavorite(state.mediaId!!) }) {
-                            Icon(
-                                if (state.mediaId in favoriteIds) Icons.Rounded.Favorite else Icons.Rounded.FavoriteBorder,
-                                "المفضلة",
-                                tint = if (state.mediaId in favoriteIds)
-                                    MaterialTheme.colorScheme.primary
-                                else
-                                    MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
+                if (state.mediaId != null) {
+                    IconButton(
+                        onClick = { vm.toggleFavorite(state.mediaId!!) },
+                        modifier = Modifier.align(Alignment.BottomStart)
+                    ) {
+                        Icon(
+                            if (state.mediaId in favoriteIds) Icons.Rounded.Favorite else Icons.Rounded.FavoriteBorder,
+                            "المفضلة",
+                            tint = if (state.mediaId in favoriteIds)
+                                MaterialTheme.colorScheme.primary
+                            else
+                                MaterialTheme.colorScheme.onSurfaceVariant
+                        )
                     }
                 }
             }
 
-            Spacer(Modifier.height(14.dp))
-
-            Row(
-                Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceEvenly
-            ) {
-                ActionButton(Icons.AutoMirrored.Rounded.QueueMusic, "الانتظار") {
-                    showQueue = true
-                }
-
-                val currentSleepEnd = sleepEnd
-                val timerLabel = if (currentSleepEnd != null) {
-                    val remainingMinutes =
-                        ((currentSleepEnd - System.currentTimeMillis()) / 60_000L)
-                            .coerceAtLeast(0L)
-
-                    if (remainingMinutes > 0L) "متبقي \$remainingMinutes د" else "المؤقت مفعل"
-                } else {
-                    "مؤقت الإيقاف"
-                }
-
-                ActionButton(Icons.Rounded.Timer, timerLabel) {
-                    showTimer = true
-                }
-
-                ActionButton(Icons.Rounded.GraphicEq, "مؤثرات") {
-                    val effectIntent = Intent(AudioEffect.ACTION_DISPLAY_AUDIO_EFFECT_CONTROL_PANEL).apply {
-                        putExtra(AudioEffect.EXTRA_PACKAGE_NAME, context.packageName)
-                        putExtra(AudioEffect.EXTRA_AUDIO_SESSION, 0)
-                    }
-                    runCatching { context.startActivity(effectIntent) }.onFailure {
-                        runCatching { context.startActivity(Intent(Settings.ACTION_SOUND_SETTINGS)) }
-                    }
-                }
-
-                ActionButton(Icons.AutoMirrored.Rounded.PlaylistAdd, "قائمة") {
-                    showPlaylistPicker = currentSong != null
-                }
-            }
-
-            Spacer(Modifier.height(16.dp))
+            Spacer(Modifier.height(20.dp))
 
             Column(Modifier.fillMaxWidth()) {
                 val max = state.durationMs.coerceAtLeast(1L).toFloat()
@@ -492,7 +527,7 @@ fun NowPlayingScreen(
                 }
             }
 
-            Spacer(Modifier.height(18.dp))
+            Spacer(Modifier.height(16.dp))
 
             androidx.compose.runtime.CompositionLocalProvider(
                 androidx.compose.ui.platform.LocalLayoutDirection provides androidx.compose.ui.unit.LayoutDirection.Ltr
@@ -502,34 +537,28 @@ fun NowPlayingScreen(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    IconButton(
-                        onClick = vm.player::toggleShuffle,
-                        modifier = Modifier.size(48.dp)
+                    PremiumControlButton(
+                        active = state.shuffleEnabled,
+                        size = 52,
+                        onClick = vm.player::toggleShuffle
                     ) {
-                        Icon(
-                            Icons.Rounded.Shuffle,
-                            contentDescription = "عشوائي",
-                            tint = if (state.shuffleEnabled)
-                                MaterialTheme.colorScheme.primary
-                            else
-                                MaterialTheme.colorScheme.onSurfaceVariant
-                        )
+                        Icon(Icons.Rounded.Shuffle, "عشوائي")
                     }
 
-                    IconButton(
-                        onClick = vm.player::previous,
-                        modifier = Modifier.size(58.dp)
-                    ) {
+                    PremiumControlButton(size = 62, onClick = vm.player::previous) {
                         Icon(
                             Icons.Rounded.SkipPrevious,
-                            contentDescription = "السابق",
-                            modifier = Modifier.size(38.dp)
+                            "السابق",
+                            modifier = Modifier.size(36.dp)
                         )
                     }
 
                     FilledIconButton(
                         onClick = vm.player::togglePlayPause,
-                        modifier = Modifier.size(86.dp)
+                        modifier = Modifier
+                            .size(88.dp)
+                            .shadow(22.dp, CircleShape),
+                        shape = CircleShape
                     ) {
                         Icon(
                             if (state.isPlaying) Icons.Rounded.Pause else Icons.Rounded.PlayArrow,
@@ -538,33 +567,75 @@ fun NowPlayingScreen(
                         )
                     }
 
-                    IconButton(
-                        onClick = vm.player::next,
-                        modifier = Modifier.size(58.dp)
-                    ) {
+                    PremiumControlButton(size = 62, onClick = vm.player::next) {
                         Icon(
                             Icons.Rounded.SkipNext,
-                            contentDescription = "التالي",
-                            modifier = Modifier.size(38.dp)
+                            "التالي",
+                            modifier = Modifier.size(36.dp)
                         )
                     }
 
-                    IconButton(
-                        onClick = vm.player::cycleRepeatMode,
-                        modifier = Modifier.size(48.dp)
+                    PremiumControlButton(
+                        active = state.repeatMode != Player.REPEAT_MODE_OFF,
+                        size = 52,
+                        onClick = vm.player::cycleRepeatMode
                     ) {
                         Icon(
                             if (state.repeatMode == Player.REPEAT_MODE_ONE)
                                 Icons.Rounded.RepeatOne
                             else
                                 Icons.Rounded.Repeat,
-                            contentDescription = "تكرار",
-                            tint = if (state.repeatMode != Player.REPEAT_MODE_OFF)
-                                MaterialTheme.colorScheme.primary
-                            else
-                                MaterialTheme.colorScheme.onSurfaceVariant
+                            "تكرار"
                         )
                     }
+                }
+            }
+
+            Spacer(Modifier.height(22.dp))
+
+            val currentSleepEnd = sleepEnd
+            val timerLabel = if (currentSleepEnd != null) {
+                val remainingMinutes =
+                    ((currentSleepEnd - System.currentTimeMillis()) / 60_000L).coerceAtLeast(0L)
+                if (remainingMinutes > 0L) "متبقي \$remainingMinutes د" else "المؤقت مفعل"
+            } else {
+                "مؤقت النوم"
+            }
+
+            Row(
+                Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                GlassActionButton(Icons.Rounded.Share, "مشاركة") {
+                    val shareText = buildString {
+                        append(state.title)
+                        if (state.artist.isNotBlank()) append(" - ").append(state.artist)
+                    }
+                    val shareIntent = Intent(Intent.ACTION_SEND).apply {
+                        type = "text/plain"
+                        putExtra(Intent.EXTRA_TEXT, shareText)
+                    }
+                    runCatching {
+                        context.startActivity(Intent.createChooser(shareIntent, "مشاركة"))
+                    }
+                }
+
+                GlassActionButton(Icons.Rounded.Timer, timerLabel) {
+                    showTimer = true
+                }
+
+                GlassActionButton(Icons.Rounded.GraphicEq, "المؤثرات") {
+                    val effectIntent = Intent(AudioEffect.ACTION_DISPLAY_AUDIO_EFFECT_CONTROL_PANEL).apply {
+                        putExtra(AudioEffect.EXTRA_PACKAGE_NAME, context.packageName)
+                        putExtra(AudioEffect.EXTRA_AUDIO_SESSION, 0)
+                    }
+                    runCatching { context.startActivity(effectIntent) }.onFailure {
+                        runCatching { context.startActivity(Intent(Settings.ACTION_SOUND_SETTINGS)) }
+                    }
+                }
+
+                GlassActionButton(Icons.AutoMirrored.Rounded.PlaylistAdd, "القائمة") {
+                    showPlaylistPicker = currentSong != null
                 }
             }
 
@@ -574,19 +645,86 @@ fun NowPlayingScreen(
 }
 
 @Composable
-private fun ActionButton(
+private fun GlassActionButton(
     icon: androidx.compose.ui.graphics.vector.ImageVector,
     label: String,
     onClick: () -> Unit
 ) {
+    val shape = RoundedCornerShape(20.dp)
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = Modifier.clickable(onClick = onClick).padding(6.dp)
+        modifier = Modifier.width(78.dp)
     ) {
-        Surface(shape = CircleShape, color = MaterialTheme.colorScheme.surfaceVariant, modifier = Modifier.size(48.dp)) {
-            Box(contentAlignment = Alignment.Center) { Icon(icon, contentDescription = label) }
+        Box(
+            modifier = Modifier
+                .size(width = 72.dp, height = 66.dp)
+                .background(
+                    Brush.linearGradient(
+                        listOf(
+                            MaterialTheme.colorScheme.surfaceVariant.copy(alpha = .88f),
+                            MaterialTheme.colorScheme.surface.copy(alpha = .58f)
+                        )
+                    ),
+                    shape
+                )
+                .border(
+                    1.dp,
+                    Brush.linearGradient(
+                        listOf(
+                            MaterialTheme.colorScheme.primary.copy(alpha = .42f),
+                            Color.White.copy(alpha = .08f)
+                        )
+                    ),
+                    shape
+                )
+                .clickable(onClick = onClick),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                icon,
+                contentDescription = label,
+                tint = MaterialTheme.colorScheme.onSurface,
+                modifier = Modifier.size(27.dp)
+            )
         }
-        Spacer(Modifier.height(6.dp))
-        Text(label, style = MaterialTheme.typography.labelSmall, maxLines = 1)
+        Spacer(Modifier.height(7.dp))
+        Text(
+            label,
+            style = MaterialTheme.typography.labelSmall,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
+        )
+    }
+}
+
+@Composable
+private fun PremiumControlButton(
+    size: Int,
+    active: Boolean = false,
+    onClick: () -> Unit,
+    content: @Composable () -> Unit
+) {
+    Box(
+        modifier = Modifier
+            .size(size.dp)
+            .background(
+                if (active)
+                    MaterialTheme.colorScheme.primary.copy(alpha = .20f)
+                else
+                    MaterialTheme.colorScheme.surfaceVariant.copy(alpha = .36f),
+                CircleShape
+            )
+            .border(
+                1.dp,
+                if (active)
+                    MaterialTheme.colorScheme.primary.copy(alpha = .72f)
+                else
+                    MaterialTheme.colorScheme.primary.copy(alpha = .20f),
+                CircleShape
+            )
+            .clickable(onClick = onClick),
+        contentAlignment = Alignment.Center
+    ) {
+        content()
     }
 }
