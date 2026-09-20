@@ -28,6 +28,7 @@ import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.rounded.Delete
 import androidx.compose.material.icons.rounded.Favorite
 import androidx.compose.material.icons.rounded.Folder
+import androidx.compose.material.icons.rounded.VisibilityOff
 import androidx.compose.material.icons.rounded.Person
 import androidx.compose.material.icons.rounded.PlayArrow
 import androidx.compose.material.icons.automirrored.rounded.QueueMusic
@@ -339,16 +340,19 @@ fun BrowseGroupsScreen(
     onOpenPlayer: () -> Unit
 ) {
     var selected by rememberSaveable { mutableStateOf<String?>(null) }
+    val appSettings by vm.settings.collectAsState()
     val title = when (type) {
         "artist" -> "الفنانون"
         "album" -> "الألبومات"
         else -> "المجلدات"
     }
-    val grouped = remember(songs, type) {
+    val grouped = remember(songs, type, appSettings.hiddenFolders) {
         when (type) {
             "artist" -> songs.groupBy { it.artist }
             "album" -> songs.groupBy { it.album }
-            else -> songs.groupBy { it.folder }
+            else -> songs
+                .filter { it.folder !in appSettings.hiddenFolders }
+                .groupBy { it.folder }
         }.toSortedMap(String.CASE_INSENSITIVE_ORDER)
     }
 
@@ -386,6 +390,15 @@ fun BrowseGroupsScreen(
                         Column(Modifier.weight(1f).padding(horizontal = 14.dp)) {
                             Text(entry.key, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
                             Text("${entry.value.size} أغنية", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        }
+                        if (type == "folder") {
+                            IconButton(onClick = { vm.hideFolder(entry.key) }) {
+                                Icon(
+                                    Icons.Rounded.VisibilityOff,
+                                    contentDescription = "إخفاء المجلد",
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
                         }
                     }
                     HorizontalDivider()
