@@ -234,7 +234,7 @@ fun SettingsScreen(vm: MusicViewModel, onBack: () -> Unit) {
                             Column(Modifier.weight(1f).padding(horizontal = 12.dp)) {
                                 Text("إدارة المجلدات المخفية", fontWeight = FontWeight.Bold)
                                 Text(
-                                    "\${settings.hiddenFolders.size} مجلد مخفي",
+                                    "${settings.hiddenFolders.size} مجلد مخفي",
                                     style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
@@ -282,7 +282,7 @@ fun SettingsScreen(vm: MusicViewModel, onBack: () -> Unit) {
                 }
 
                 Spacer(Modifier.height(20.dp))
-                Text("موسيقاي \${BuildConfig.VERSION_NAME}", fontWeight = FontWeight.Bold)
+                Text("موسيقاي ${BuildConfig.VERSION_NAME}", fontWeight = FontWeight.Bold)
                 Text(
                     "مشغل موسيقى عربي محلي لنظام Android",
                     color = MaterialTheme.colorScheme.onSurfaceVariant
