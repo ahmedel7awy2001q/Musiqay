@@ -2,6 +2,8 @@ package com.musiqay.app.ui.screens
 
 import android.os.Build
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -12,6 +14,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
+import androidx.compose.material.icons.rounded.Folder
 import androidx.compose.material.icons.rounded.Refresh
 import androidx.compose.material.icons.rounded.Security
 import androidx.compose.material.icons.rounded.Tune
@@ -25,6 +28,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Switch
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
@@ -54,7 +58,13 @@ fun SettingsScreen(vm: MusicViewModel, onBack: () -> Unit) {
             )
         }
     ) { padding ->
-        Column(Modifier.fillMaxSize().padding(padding).padding(horizontal = 16.dp)) {
+        Column(
+            Modifier
+                .fillMaxSize()
+                .padding(padding)
+                .verticalScroll(rememberScrollState())
+                .padding(horizontal = 16.dp)
+        ) {
             Text("المظهر", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
             Spacer(Modifier.height(8.dp))
 
@@ -163,6 +173,47 @@ fun SettingsScreen(vm: MusicViewModel, onBack: () -> Unit) {
                     checked = settings.includeNonMusicAudio,
                     onCheckedChange = vm::setIncludeNonMusicAudio
                 )
+            }
+
+            if (settings.hiddenFolders.isNotEmpty()) {
+                HorizontalDivider(Modifier.padding(vertical = 12.dp))
+                Row(
+                    Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        "المجلدات المخفية",
+                        modifier = Modifier.weight(1f),
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                    TextButton(onClick = vm::clearHiddenFolders) {
+                        Text("إظهار الكل")
+                    }
+                }
+                Text(
+                    "هذه المجلدات لن تظهر في شاشة المجلدات حتى تقوم بإظهارها مرة أخرى.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Spacer(Modifier.height(6.dp))
+                settings.hiddenFolders.sortedWith(String.CASE_INSENSITIVE_ORDER).forEach { folder ->
+                    Row(
+                        Modifier.fillMaxWidth().padding(vertical = 4.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(Icons.Rounded.Folder, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+                        Text(
+                            folder,
+                            modifier = Modifier.weight(1f).padding(horizontal = 12.dp),
+                            maxLines = 1
+                        )
+                        TextButton(onClick = { vm.showFolder(folder) }) {
+                            Text("إظهار")
+                        }
+                    }
+                }
             }
 
             HorizontalDivider(Modifier.padding(vertical = 12.dp))
