@@ -334,6 +334,23 @@ fun NowPlayingScreen(
     ) {
         Box(
             modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .padding(bottom = 90.dp)
+                .size(280.dp)
+                .clip(CircleShape)
+                .background(
+                    Brush.radialGradient(
+                        listOf(
+                            MaterialTheme.colorScheme.secondary.copy(alpha = .10f),
+                            MaterialTheme.colorScheme.tertiary.copy(alpha = .05f),
+                            Color.Transparent
+                        )
+                    )
+                )
+        )
+
+        Box(
+            modifier = Modifier
                 .align(Alignment.TopCenter)
                 .padding(top = 64.dp)
                 .size(310.dp)
@@ -553,18 +570,39 @@ fun NowPlayingScreen(
                         )
                     }
 
-                    FilledIconButton(
-                        onClick = vm.player::togglePlayPause,
+                    Box(
                         modifier = Modifier
-                            .size(88.dp)
-                            .shadow(22.dp, CircleShape),
-                        shape = CircleShape
+                            .size(104.dp)
+                            .background(
+                                Brush.radialGradient(
+                                    listOf(
+                                        MaterialTheme.colorScheme.primary.copy(alpha = .34f),
+                                        MaterialTheme.colorScheme.secondary.copy(alpha = .16f),
+                                        Color.Transparent
+                                    )
+                                ),
+                                CircleShape
+                            ),
+                        contentAlignment = Alignment.Center
                     ) {
-                        Icon(
-                            if (state.isPlaying) Icons.Rounded.Pause else Icons.Rounded.PlayArrow,
-                            contentDescription = if (state.isPlaying) "إيقاف مؤقت" else "تشغيل",
-                            modifier = Modifier.size(46.dp)
-                        )
+                        FilledIconButton(
+                            onClick = vm.player::togglePlayPause,
+                            modifier = Modifier
+                                .size(88.dp)
+                                .shadow(24.dp, CircleShape)
+                                .border(
+                                    1.dp,
+                                    Color.White.copy(alpha = .22f),
+                                    CircleShape
+                                ),
+                            shape = CircleShape
+                        ) {
+                            Icon(
+                                if (state.isPlaying) Icons.Rounded.Pause else Icons.Rounded.PlayArrow,
+                                contentDescription = if (state.isPlaying) "إيقاف مؤقت" else "تشغيل",
+                                modifier = Modifier.size(46.dp)
+                            )
+                        }
                     }
 
                     PremiumControlButton(size = 62, onClick = vm.player::next) {
