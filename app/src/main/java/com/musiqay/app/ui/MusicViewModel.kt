@@ -125,4 +125,16 @@ class MusicViewModel(application: Application) : AndroidViewModel(application) {
             app.settingsRepository.setIncludeNonMusicAudio(enabled)
         }
     }
+
+    fun hideFolder(folder: String) {
+        viewModelScope.launch { app.settingsRepository.hideFolder(folder) }
+    }
+
+    fun showFolder(folder: String) {
+        viewModelScope.launch { app.settingsRepository.showFolder(folder) }
+    }
+
+    fun clearHiddenFolders() {
+        viewModelScope.launch { app.settingsRepository.clearHiddenFolders() }
+    }
 }
