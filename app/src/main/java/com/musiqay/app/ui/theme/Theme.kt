@@ -14,19 +14,20 @@ import com.musiqay.app.data.AppSettings
 import com.musiqay.app.data.ThemeMode
 
 private val DarkColors = darkColorScheme(
-    primary = Color(0xFF9DB2FF),
-    secondary = Color(0xFFB994FF),
-    tertiary = Color(0xFF65D8FF),
-    background = Color(0xFF090E1A),
-    surface = Color(0xFF11182A),
-    surfaceVariant = Color(0xFF1A2340),
-    primaryContainer = Color(0xFF24366F),
-    secondaryContainer = Color(0xFF352A60),
-    onPrimary = Color(0xFF071335),
+    primary = Color(0xFF8FA7FF),
+    secondary = Color(0xFFB967FF),
+    tertiary = Color(0xFF56D7FF),
+    background = Color(0xFF050B19),
+    surface = Color(0xFF0B1430),
+    surfaceVariant = Color(0xFF121F42),
+    primaryContainer = Color(0xFF203B8F),
+    secondaryContainer = Color(0xFF40266E),
+    onPrimary = Color(0xFF07102B),
     onBackground = Color(0xFFF7F8FF),
     onSurface = Color(0xFFF7F8FF),
-    onSurfaceVariant = Color(0xFFC5CCE3),
-    outline = Color(0xFF69759D)
+    onSurfaceVariant = Color(0xFFC7CEEA),
+    outline = Color(0xFF6174AD),
+    outlineVariant = Color(0xFF26375F)
 )
 
 private val LightColors = lightColorScheme(
