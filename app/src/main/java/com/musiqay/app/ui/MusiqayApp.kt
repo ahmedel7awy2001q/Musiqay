@@ -9,6 +9,7 @@ import androidx.compose.material.icons.rounded.LibraryMusic
 import androidx.compose.material.icons.automirrored.rounded.QueueMusic
 import androidx.compose.material.icons.rounded.Search
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
@@ -47,6 +48,7 @@ fun MusiqayApp(vm: MusicViewModel) {
     val songs by vm.songs.collectAsStateWithLifecycle()
     val favorites by vm.favoriteIds.collectAsStateWithLifecycle()
     val playlists by vm.playlists.collectAsStateWithLifecycle()
+    val settings by vm.settings.collectAsStateWithLifecycle()
 
     val rootItems = listOf(
         NavItem("home", "الرئيسية", Icons.Rounded.Home),
@@ -66,7 +68,10 @@ fun MusiqayApp(vm: MusicViewModel) {
                         onToggle = vm.player::togglePlayPause,
                         onNext = vm.player::next
                     )
-                    NavigationBar {
+                    NavigationBar(
+                        containerColor = MaterialTheme.colorScheme.surface.copy(alpha = .96f),
+                        tonalElevation = androidx.compose.ui.unit.Dp.Unspecified
+                    ) {
                         rootItems.forEach { item ->
                             NavigationBarItem(
                                 selected = currentRoute == item.route,
@@ -97,6 +102,7 @@ fun MusiqayApp(vm: MusicViewModel) {
                 HomeScreen(
                     songs = songs,
                     favoriteCount = favorites.size,
+                    hiddenFolders = settings.hiddenFolders,
                     onSong = { song ->
                         vm.play(song)
                         navController.navigate("player")
