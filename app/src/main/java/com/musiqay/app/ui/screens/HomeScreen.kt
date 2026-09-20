@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -47,6 +48,9 @@ import androidx.compose.ui.unit.sp
 import com.musiqay.app.data.Song
 import com.musiqay.app.ui.AlbumArtwork
 import com.musiqay.app.ui.SectionTitle
+import com.musiqay.app.ui.theme.premiumOutlineBrush
+import com.musiqay.app.ui.theme.premiumPanelBrush
+import com.musiqay.app.ui.theme.premiumScreenBrush
 
 @Composable
 fun HomeScreen(
@@ -67,15 +71,9 @@ fun HomeScreen(
     val folders = songs.map { it.folder }.filter { it.isNotBlank() && it !in hiddenFolders }.distinct().size
 
     Box(
-        modifier = Modifier.background(
-            Brush.verticalGradient(
-                listOf(
-                    Color(0xFF050B19),
-                    Color(0xFF09122B),
-                    Color(0xFF050B19)
-                )
-            )
-        )
+        modifier = Modifier
+            .fillMaxSize()
+            .background(premiumScreenBrush())
     ) {
         Box(
             modifier = Modifier
@@ -85,8 +83,8 @@ fun HomeScreen(
                 .background(
                     Brush.radialGradient(
                         listOf(
-                            Color(0xFF536BFF).copy(alpha = .16f),
-                            Color(0xFF9D4DFF).copy(alpha = .07f),
+                            MaterialTheme.colorScheme.primary.copy(alpha = .16f),
+                            MaterialTheme.colorScheme.secondary.copy(alpha = .09f),
                             Color.Transparent
                         )
                     ),
@@ -100,7 +98,7 @@ fun HomeScreen(
                 .background(
                     Brush.radialGradient(
                         listOf(
-                            Color(0xFF29C7FF).copy(alpha = .09f),
+                            MaterialTheme.colorScheme.tertiary.copy(alpha = .10f),
                             Color.Transparent
                         )
                     ),
@@ -343,8 +341,9 @@ private fun PremiumRoundIcon(
     Box(
         Modifier
             .size(50.dp)
-            .background(Color(0xFF111C3B), CircleShape)
-            .border(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = .35f), CircleShape),
+            .shadow(8.dp, CircleShape)
+            .background(premiumPanelBrush(), CircleShape)
+            .border(1.dp, premiumOutlineBrush(), CircleShape),
         contentAlignment = Alignment.Center
     ) {
         IconButton(onClick = onClick) {

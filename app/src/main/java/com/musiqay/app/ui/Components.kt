@@ -55,6 +55,8 @@ import coil.compose.AsyncImage
 import com.musiqay.app.data.PlaylistEntity
 import com.musiqay.app.data.Song
 import com.musiqay.app.playback.NowPlayingState
+import com.musiqay.app.ui.theme.premiumOutlineBrush
+import com.musiqay.app.ui.theme.premiumPanelBrush
 import com.musiqay.app.util.formatDuration
 
 @Composable
@@ -231,25 +233,8 @@ fun MiniPlayer(
             .fillMaxWidth()
             .padding(horizontal = 10.dp, vertical = 6.dp)
             .shadow(12.dp, shape)
-            .background(
-                Brush.linearGradient(
-                    listOf(
-                        Color(0xFF142144).copy(alpha = .96f),
-                        Color(0xFF0C1530).copy(alpha = .96f)
-                    )
-                ),
-                shape
-            )
-            .border(
-                1.dp,
-                Brush.linearGradient(
-                    listOf(
-                        MaterialTheme.colorScheme.primary.copy(alpha = .58f),
-                        MaterialTheme.colorScheme.secondary.copy(alpha = .22f)
-                    )
-                ),
-                shape
-            )
+            .background(premiumPanelBrush(), shape)
+            .border(1.dp, premiumOutlineBrush(), shape)
             .clickable(onClick = onOpen)
     ) {
         Column {
@@ -308,7 +293,9 @@ fun MiniPlayer(
                 progress = { progress },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(2.dp)
+                    .height(2.dp),
+                color = MaterialTheme.colorScheme.primary,
+                trackColor = MaterialTheme.colorScheme.surfaceVariant
             )
         }
     }

@@ -62,6 +62,7 @@ fun MusiqayApp(vm: MusicViewModel) {
     val showBottom = currentRoute in rootItems.map { it.route }
 
     Scaffold(
+        containerColor = MaterialTheme.colorScheme.background,
         bottomBar = {
             if (showBottom) {
                 Column(modifier = Modifier.navigationBarsPadding()) {
@@ -72,7 +73,7 @@ fun MusiqayApp(vm: MusicViewModel) {
                         onNext = vm.player::next
                     )
                     NavigationBar(
-                        containerColor = Color(0xFF0A132B).copy(alpha = .98f),
+                        containerColor = MaterialTheme.colorScheme.surface.copy(alpha = .98f),
                         tonalElevation = 0.dp
                     ) {
                         rootItems.forEach { item ->
@@ -90,11 +91,11 @@ fun MusiqayApp(vm: MusicViewModel) {
                                 icon = { Icon(item.icon, contentDescription = item.label) },
                                 label = { Text(item.label) },
                                 colors = NavigationBarItemDefaults.colors(
-                                    selectedIconColor = Color.White,
-                                    selectedTextColor = Color.White,
-                                    indicatorColor = Color(0xFF4A2A82),
-                                    unselectedIconColor = Color(0xFFB9C2DE),
-                                    unselectedTextColor = Color(0xFFB9C2DE)
+                                    selectedIconColor = MaterialTheme.colorScheme.onPrimary,
+                                    selectedTextColor = MaterialTheme.colorScheme.primary,
+                                    indicatorColor = MaterialTheme.colorScheme.primary,
+                                    unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                             )
                         }

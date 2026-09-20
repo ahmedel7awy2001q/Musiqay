@@ -54,6 +54,9 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.musiqay.app.BuildConfig
 import com.musiqay.app.data.ThemeMode
 import com.musiqay.app.ui.MusicViewModel
+import com.musiqay.app.ui.theme.premiumOutlineBrush
+import com.musiqay.app.ui.theme.premiumPanelBrush
+import com.musiqay.app.ui.theme.premiumScreenBrush
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -61,11 +64,15 @@ fun SettingsScreen(vm: MusicViewModel, onBack: () -> Unit) {
     val settings by vm.settings.collectAsStateWithLifecycle()
 
     Scaffold(
-        containerColor = Color.Transparent,
+        containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             TopAppBar(
                 modifier = Modifier.statusBarsPadding(),
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent),
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.background.copy(alpha = .94f),
+                    titleContentColor = MaterialTheme.colorScheme.onBackground,
+                    navigationIconContentColor = MaterialTheme.colorScheme.onBackground
+                ),
                 title = { Text("الإعدادات", fontWeight = FontWeight.Black, fontSize = 27.sp) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
@@ -78,15 +85,7 @@ fun SettingsScreen(vm: MusicViewModel, onBack: () -> Unit) {
         Box(
             Modifier
                 .fillMaxSize()
-                .background(
-                    Brush.verticalGradient(
-                        listOf(
-                            Color(0xFF050B19),
-                            Color(0xFF0A1430),
-                            Color(0xFF050B19)
-                        )
-                    )
-                )
+                .background(premiumScreenBrush())
         ) {
             Column(
                 Modifier
@@ -312,49 +311,62 @@ private fun ThemeChoice(
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val shape = RoundedCornerShape(20.dp)
+    val shape = RoundedCornerShape(22.dp)
+    val contentColor = if (selected) Color.White else MaterialTheme.colorScheme.onSurface
     Box(
         modifier = modifier
-            .height(104.dp)
-            .shadow(if (selected) 14.dp else 4.dp, shape)
+            .height(112.dp)
+            .shadow(if (selected) 16.dp else 5.dp, shape)
             .background(
-                Brush.linearGradient(
-                    if (selected)
-                        listOf(Color(0xFF203B8F), Color(0xFF40266E))
-                    else
-                        listOf(Color(0xFF111A35), Color(0xFF0C142B))
-                ),
+                if (selected) {
+                    Brush.linearGradient(
+                        listOf(
+                            MaterialTheme.colorScheme.primary,
+                            MaterialTheme.colorScheme.secondary
+                        )
+                    )
+                } else {
+                    premiumPanelBrush()
+                },
                 shape
             )
             .border(
                 1.dp,
-                if (selected)
-                    MaterialTheme.colorScheme.primary
-                else
-                    MaterialTheme.colorScheme.outlineVariant,
+                if (selected) Color.White.copy(alpha = .30f)
+                else MaterialTheme.colorScheme.outlineVariant,
                 shape
             )
             .clickable(onClick = onClick)
-            .padding(10.dp),
+            .padding(horizontal = 8.dp, vertical = 10.dp),
         contentAlignment = Alignment.Center
     ) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             Box(
                 Modifier
-                    .size(42.dp)
+                    .size(44.dp)
                     .background(
-                        if (selected)
-                            MaterialTheme.colorScheme.primary.copy(alpha = .18f)
-                        else
-                            Color.White.copy(alpha = .04f),
+                        if (selected) Color.White.copy(alpha = .16f)
+                        else MaterialTheme.colorScheme.primaryContainer.copy(alpha = .75f),
+                        CircleShape
+                    )
+                    .border(
+                        1.dp,
+                        if (selected) Color.White.copy(alpha = .20f)
+                        else MaterialTheme.colorScheme.outlineVariant.copy(alpha = .70f),
                         CircleShape
                     ),
                 contentAlignment = Alignment.Center
             ) {
-                Icon(icon, null, tint = MaterialTheme.colorScheme.onSurface)
+                Icon(icon, null, tint = contentColor)
             }
             Spacer(Modifier.height(8.dp))
-            Text(title, style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold)
+            Text(
+                title,
+                style = MaterialTheme.typography.labelMedium,
+                fontWeight = FontWeight.Bold,
+                color = contentColor,
+                maxLines = 1
+            )
         }
     }
 }
@@ -368,21 +380,10 @@ private fun SettingCard(
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .background(
-                Brush.linearGradient(
-                    listOf(
-                        MaterialTheme.colorScheme.surfaceVariant.copy(alpha = .72f),
-                        MaterialTheme.colorScheme.surface.copy(alpha = .88f)
-                    )
-                ),
-                shape
-            )
-            .border(
-                1.dp,
-                MaterialTheme.colorScheme.outlineVariant.copy(alpha = .85f),
-                shape
-            )
-            .padding(14.dp)
+            .shadow(4.dp, shape)
+            .background(premiumPanelBrush(), shape)
+            .border(1.dp, premiumOutlineBrush(), shape)
+            .padding(15.dp)
     ) {
         content()
     }

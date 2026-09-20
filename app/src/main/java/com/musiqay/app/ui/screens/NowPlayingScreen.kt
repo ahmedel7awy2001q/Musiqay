@@ -55,6 +55,7 @@ import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
@@ -88,6 +89,9 @@ import com.musiqay.app.data.Song
 import com.musiqay.app.ui.AlbumArtwork
 import com.musiqay.app.ui.MusicViewModel
 import com.musiqay.app.ui.PlaylistPickerDialog
+import com.musiqay.app.ui.theme.premiumOutlineBrush
+import com.musiqay.app.ui.theme.premiumPanelBrush
+import com.musiqay.app.ui.theme.premiumScreenBrush
 import com.musiqay.app.util.formatDuration
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -320,15 +324,7 @@ fun NowPlayingScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(
-                Brush.verticalGradient(
-                    listOf(
-                        Color(0xFF071022),
-                        Color(0xFF0B1430),
-                        Color(0xFF080D1B)
-                    )
-                )
-            )
+            .background(premiumScreenBrush())
             .navigationBarsPadding()
             .statusBarsPadding()
     ) {
@@ -411,27 +407,8 @@ fun NowPlayingScreen(
                     .fillMaxWidth()
                     .height(164.dp)
                     .shadow(18.dp, infoShape)
-                    .background(
-                        Brush.linearGradient(
-                            listOf(
-                                Color(0xFF17234A).copy(alpha = .94f),
-                                Color(0xFF101A39).copy(alpha = .92f),
-                                Color(0xFF131B32).copy(alpha = .95f)
-                            )
-                        ),
-                        infoShape
-                    )
-                    .border(
-                        1.dp,
-                        Brush.linearGradient(
-                            listOf(
-                                MaterialTheme.colorScheme.primary.copy(alpha = .70f),
-                                Color.White.copy(alpha = .20f),
-                                MaterialTheme.colorScheme.secondary.copy(alpha = .32f)
-                            )
-                        ),
-                        infoShape
-                    )
+                    .background(premiumPanelBrush(), infoShape)
+                    .border(1.dp, premiumOutlineBrush(), infoShape)
                     .padding(horizontal = 22.dp, vertical = 16.dp)
             ) {
                 Column(
@@ -595,7 +572,11 @@ fun NowPlayingScreen(
                                     Color.White.copy(alpha = .22f),
                                     CircleShape
                                 ),
-                            shape = CircleShape
+                            shape = CircleShape,
+                            colors = IconButtonDefaults.filledIconButtonColors(
+                                containerColor = MaterialTheme.colorScheme.primary,
+                                contentColor = MaterialTheme.colorScheme.onPrimary
+                            )
                         ) {
                             Icon(
                                 if (state.isPlaying) Icons.Rounded.Pause else Icons.Rounded.PlayArrow,
@@ -635,7 +616,7 @@ fun NowPlayingScreen(
             val timerLabel = if (currentSleepEnd != null) {
                 val remainingMinutes =
                     ((currentSleepEnd - System.currentTimeMillis()) / 60_000L).coerceAtLeast(0L)
-                if (remainingMinutes > 0L) "متبقي \$remainingMinutes د" else "المؤقت مفعل"
+                if (remainingMinutes > 0L) "متبقي $remainingMinutes د" else "المؤقت مفعل"
             } else {
                 "مؤقت النوم"
             }
@@ -696,25 +677,8 @@ private fun GlassActionButton(
         Box(
             modifier = Modifier
                 .size(width = 72.dp, height = 66.dp)
-                .background(
-                    Brush.linearGradient(
-                        listOf(
-                            MaterialTheme.colorScheme.surfaceVariant.copy(alpha = .88f),
-                            MaterialTheme.colorScheme.surface.copy(alpha = .58f)
-                        )
-                    ),
-                    shape
-                )
-                .border(
-                    1.dp,
-                    Brush.linearGradient(
-                        listOf(
-                            MaterialTheme.colorScheme.primary.copy(alpha = .42f),
-                            Color.White.copy(alpha = .08f)
-                        )
-                    ),
-                    shape
-                )
+                .background(premiumPanelBrush(), shape)
+                .border(1.dp, premiumOutlineBrush(), shape)
                 .clickable(onClick = onClick),
             contentAlignment = Alignment.Center
         ) {
@@ -747,9 +711,9 @@ private fun PremiumControlButton(
             .size(size.dp)
             .background(
                 if (active)
-                    MaterialTheme.colorScheme.primary.copy(alpha = .20f)
+                    MaterialTheme.colorScheme.primaryContainer
                 else
-                    MaterialTheme.colorScheme.surfaceVariant.copy(alpha = .36f),
+                    MaterialTheme.colorScheme.surfaceVariant,
                 CircleShape
             )
             .border(
