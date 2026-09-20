@@ -392,7 +392,7 @@ fun NowPlayingScreen(
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(210.dp)
+                    .height(164.dp)
                     .shadow(18.dp, infoShape)
                     .background(
                         Brush.linearGradient(
@@ -415,7 +415,7 @@ fun NowPlayingScreen(
                         ),
                         infoShape
                     )
-                    .padding(horizontal = 24.dp, vertical = 22.dp)
+                    .padding(horizontal = 22.dp, vertical = 16.dp)
             ) {
                 Column(
                     Modifier.align(Alignment.Center),
@@ -423,7 +423,7 @@ fun NowPlayingScreen(
                 ) {
                     Box(
                         modifier = Modifier
-                            .size(58.dp)
+                            .size(44.dp)
                             .background(
                                 Brush.radialGradient(
                                     listOf(
@@ -444,18 +444,18 @@ fun NowPlayingScreen(
                             Icons.Rounded.MusicNote,
                             contentDescription = null,
                             tint = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.size(30.dp)
+                            modifier = Modifier.size(24.dp)
                         )
                     }
 
-                    Spacer(Modifier.height(14.dp))
+                    Spacer(Modifier.height(9.dp))
 
                     Text(
                         state.title,
                         maxLines = 2,
                         overflow = TextOverflow.Ellipsis,
-                        fontSize = 27.sp,
-                        lineHeight = 31.sp,
+                        fontSize = 24.sp,
+                        lineHeight = 28.sp,
                         fontWeight = FontWeight.Black,
                         textAlign = TextAlign.Center
                     )
@@ -467,7 +467,7 @@ fun NowPlayingScreen(
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        fontSize = 17.sp,
+                        fontSize = 15.sp,
                         textAlign = TextAlign.Center
                     )
 
@@ -487,7 +487,7 @@ fun NowPlayingScreen(
                 if (state.mediaId != null) {
                     IconButton(
                         onClick = { vm.toggleFavorite(state.mediaId!!) },
-                        modifier = Modifier.align(Alignment.BottomStart)
+                        modifier = Modifier.align(Alignment.TopStart)
                     ) {
                         Icon(
                             if (state.mediaId in favoriteIds) Icons.Rounded.Favorite else Icons.Rounded.FavoriteBorder,
