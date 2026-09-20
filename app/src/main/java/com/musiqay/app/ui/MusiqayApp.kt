@@ -69,8 +69,7 @@ fun MusiqayApp(vm: MusicViewModel) {
                         onNext = vm.player::next
                     )
                     NavigationBar(
-                        containerColor = MaterialTheme.colorScheme.surface.copy(alpha = .96f),
-                        tonalElevation = androidx.compose.ui.unit.Dp.Unspecified
+                        containerColor = MaterialTheme.colorScheme.surface.copy(alpha = .96f)
                     ) {
                         rootItems.forEach { item ->
                             NavigationBarItem(
