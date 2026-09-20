@@ -24,8 +24,10 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Album
 import androidx.compose.material.icons.rounded.Favorite
 import androidx.compose.material.icons.rounded.Folder
+import androidx.compose.material.icons.rounded.GraphicEq
 import androidx.compose.material.icons.rounded.LibraryMusic
 import androidx.compose.material.icons.rounded.Person
+import androidx.compose.material.icons.rounded.PlayArrow
 import androidx.compose.material.icons.rounded.Settings
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -34,6 +36,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -62,177 +65,241 @@ fun HomeScreen(
     val artists = songs.map { it.artist }.filter { it.isNotBlank() }.distinct().size
     val albums = songs.map { it.album }.filter { it.isNotBlank() }.distinct().size
     val folders = songs.map { it.folder }.filter { it.isNotBlank() && it !in hiddenFolders }.distinct().size
-    val shape = RoundedCornerShape(26.dp)
 
-    LazyColumn(
-        modifier = Modifier.statusBarsPadding(),
-        contentPadding = PaddingValues(bottom = 26.dp)
+    Box(
+        modifier = Modifier.background(
+            Brush.verticalGradient(
+                listOf(
+                    Color(0xFF050B19),
+                    Color(0xFF09122B),
+                    Color(0xFF050B19)
+                )
+            )
+        )
     ) {
-        item {
-            Row(
-                Modifier.fillMaxWidth().padding(horizontal = 18.dp, vertical = 8.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Column(Modifier.weight(1f)) {
-                    Text("موسيقاي", fontSize = 31.sp, fontWeight = FontWeight.Black)
-                    Text(
-                        "موسيقاك... بطريقتك",
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        style = MaterialTheme.typography.bodyMedium
-                    )
-                }
-                Box(
-                    Modifier
-                        .size(48.dp)
-                        .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = .62f), CircleShape)
-                        .border(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = .20f), CircleShape),
-                    contentAlignment = Alignment.Center
+        LazyColumn(
+            modifier = Modifier.statusBarsPadding(),
+            contentPadding = PaddingValues(bottom = 28.dp)
+        ) {
+            item {
+                Row(
+                    Modifier.fillMaxWidth().padding(horizontal = 18.dp, vertical = 10.dp),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    IconButton(onClick = onSettings) {
-                        Icon(Icons.Rounded.Settings, contentDescription = "الإعدادات")
+                    Column(Modifier.weight(1f)) {
+                        Text("موسيقاي", fontSize = 34.sp, fontWeight = FontWeight.Black)
+                        Text(
+                            "موسيقاك... بطريقتك",
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            style = MaterialTheme.typography.bodyLarge
+                        )
+                    }
+                    PremiumRoundIcon(Icons.Rounded.Settings, "الإعدادات", onSettings)
+                }
+            }
+
+            item {
+                val shape = RoundedCornerShape(30.dp)
+                Box(
+                    modifier = Modifier
+                        .padding(horizontal = 18.dp, vertical = 10.dp)
+                        .fillMaxWidth()
+                        .height(178.dp)
+                        .shadow(20.dp, shape)
+                        .background(
+                            Brush.linearGradient(
+                                listOf(
+                                    Color(0xFF446CFF),
+                                    Color(0xFF7456FF),
+                                    Color(0xFFC044E9)
+                                )
+                            ),
+                            shape
+                        )
+                        .border(
+                            1.dp,
+                            Brush.linearGradient(
+                                listOf(
+                                    Color.White.copy(alpha = .72f),
+                                    Color.White.copy(alpha = .08f)
+                                )
+                            ),
+                            shape
+                        )
+                        .clickable(onClick = onAllSongs)
+                        .padding(22.dp)
+                ) {
+                    Box(
+                        Modifier
+                            .align(Alignment.TopStart)
+                            .size(86.dp)
+                            .background(Color.White.copy(alpha = .12f), CircleShape)
+                            .border(1.dp, Color.White.copy(alpha = .30f), CircleShape),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            Icons.Rounded.LibraryMusic,
+                            contentDescription = null,
+                            tint = Color.White,
+                            modifier = Modifier.size(42.dp)
+                        )
+                    }
+
+                    Column(
+                        Modifier.align(Alignment.CenterEnd),
+                        horizontalAlignment = Alignment.End
+                    ) {
+                        Text(
+                            "موسيقى لكل لحظة",
+                            fontSize = 27.sp,
+                            fontWeight = FontWeight.Black,
+                            color = Color.White
+                        )
+                        Spacer(Modifier.height(7.dp))
+                        Text(
+                            if (songs.isEmpty()) "ابدأ بإضافة الموسيقى إلى هاتفك" else "\${songs.size} أغنية جاهزة للتشغيل",
+                            color = Color.White.copy(alpha = .93f),
+                            fontSize = 17.sp
+                        )
+                        Spacer(Modifier.height(12.dp))
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                Icons.Rounded.GraphicEq,
+                                null,
+                                tint = Color.White.copy(alpha = .86f),
+                                modifier = Modifier.size(18.dp)
+                            )
+                            Spacer(Modifier.width(7.dp))
+                            Text(
+                                "دع الموسيقى تتحدث",
+                                color = Color.White.copy(alpha = .80f),
+                                style = MaterialTheme.typography.bodySmall
+                            )
+                        }
+                    }
+
+                    Box(
+                        Modifier
+                            .align(Alignment.BottomStart)
+                            .size(48.dp)
+                            .background(Color.White.copy(alpha = .18f), CircleShape)
+                            .border(1.dp, Color.White.copy(alpha = .32f), CircleShape),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(Icons.Rounded.PlayArrow, null, tint = Color.White, modifier = Modifier.size(30.dp))
                     }
                 }
             }
-        }
 
-        item {
-            Box(
-                modifier = Modifier
-                    .padding(horizontal = 18.dp, vertical = 8.dp)
-                    .fillMaxWidth()
-                    .height(136.dp)
-                    .background(
-                        Brush.linearGradient(
-                            listOf(
-                                Color(0xFF5E7CFF),
-                                Color(0xFF7B5CFF),
-                                Color(0xFFB44FD8)
-                            )
-                        ),
-                        shape
-                    )
-                    .border(
-                        1.dp,
-                        Brush.linearGradient(
-                            listOf(
-                                Color.White.copy(alpha = .58f),
-                                Color.White.copy(alpha = .08f)
-                            )
-                        ),
-                        shape
-                    )
-                    .clickable(onClick = onAllSongs)
-                    .padding(horizontal = 20.dp, vertical = 18.dp)
-            ) {
-                Column(Modifier.align(Alignment.CenterStart)) {
-                    Text(
-                        "موسيقى لكل لحظة",
-                        fontSize = 25.sp,
-                        fontWeight = FontWeight.Black,
-                        color = Color.White
-                    )
-                    Spacer(Modifier.height(5.dp))
-                    Text(
-                        if (songs.isEmpty()) "ابدأ بإضافة الموسيقى إلى هاتفك" else "\${songs.size} أغنية جاهزة للتشغيل",
-                        color = Color.White.copy(alpha = .90f),
-                        style = MaterialTheme.typography.bodyLarge
-                    )
-                    Spacer(Modifier.height(10.dp))
-                    Text(
-                        "مكتبتك المحلية • تشغيل سريع • خصوصية كاملة",
-                        color = Color.White.copy(alpha = .72f),
-                        style = MaterialTheme.typography.bodySmall
-                    )
-                }
-                Box(
-                    Modifier
-                        .align(Alignment.CenterEnd)
-                        .size(58.dp)
-                        .background(Color.White.copy(alpha = .15f), CircleShape)
-                        .border(1.dp, Color.White.copy(alpha = .25f), CircleShape),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        Icons.Rounded.LibraryMusic,
-                        contentDescription = null,
-                        modifier = Modifier.size(32.dp),
-                        tint = Color.White
-                    )
-                }
-            }
-        }
-
-        item {
-            Text(
-                "مكتبتك",
-                modifier = Modifier.padding(horizontal = 18.dp, vertical = 12.dp),
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Black
-            )
-            Column(Modifier.padding(horizontal = 14.dp)) {
-                Row(Modifier.fillMaxWidth()) {
-                    LibraryCard("المفضلة", "\$favoriteCount أغنية", Icons.Rounded.Favorite, onFavorites, Modifier.weight(1f))
-                    Spacer(Modifier.width(10.dp))
-                    LibraryCard("الفنانون", "\$artists فنان", Icons.Rounded.Person, onArtists, Modifier.weight(1f))
-                }
-                Spacer(Modifier.height(9.dp))
-                Row(Modifier.fillMaxWidth()) {
-                    LibraryCard("الألبومات", "\$albums ألبوم", Icons.Rounded.Album, onAlbums, Modifier.weight(1f))
-                    Spacer(Modifier.width(10.dp))
-                    LibraryCard("المجلدات", "\$folders مجلد", Icons.Rounded.Folder, onFolders, Modifier.weight(1f))
-                }
-            }
-        }
-
-        if (recent.isNotEmpty()) {
             item {
-                SectionTitle(
-                    title = "المضافة حديثًا",
-                    action = "عرض الكل",
-                    onAction = onAllSongs,
-                    modifier = Modifier.padding(start = 18.dp, end = 18.dp, top = 16.dp)
+                Text(
+                    "مكتبتك",
+                    modifier = Modifier.padding(horizontal = 18.dp, vertical = 12.dp),
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Black
                 )
+                Column(Modifier.padding(horizontal = 16.dp)) {
+                    Row(Modifier.fillMaxWidth()) {
+                        LibraryCard(
+                            "المفضلة",
+                            "\$favoriteCount أغنية",
+                            Icons.Rounded.Favorite,
+                            listOf(Color(0xFFC94878), Color(0xFF6C2B67)),
+                            onFavorites,
+                            Modifier.weight(1f)
+                        )
+                        Spacer(Modifier.width(10.dp))
+                        LibraryCard(
+                            "الفنانون",
+                            "\$artists فنان",
+                            Icons.Rounded.Person,
+                            listOf(Color(0xFF4667E6), Color(0xFF243878)),
+                            onArtists,
+                            Modifier.weight(1f)
+                        )
+                    }
+                    Spacer(Modifier.height(10.dp))
+                    Row(Modifier.fillMaxWidth()) {
+                        LibraryCard(
+                            "الألبومات",
+                            "\$albums ألبوم",
+                            Icons.Rounded.Album,
+                            listOf(Color(0xFF2698A7), Color(0xFF1F6077)),
+                            onAlbums,
+                            Modifier.weight(1f)
+                        )
+                        Spacer(Modifier.width(10.dp))
+                        LibraryCard(
+                            "المجلدات",
+                            "\$folders مجلد",
+                            Icons.Rounded.Folder,
+                            listOf(Color(0xFF2C7ED3), Color(0xFF244C84)),
+                            onFolders,
+                            Modifier.weight(1f)
+                        )
+                    }
+                }
             }
-            item {
-                LazyRow(
-                    contentPadding = PaddingValues(horizontal = 18.dp),
-                    horizontalArrangement = Arrangement.spacedBy(11.dp)
-                ) {
-                    items(recent, key = { it.id }) { song ->
-                        Column(modifier = Modifier.width(126.dp).clickable { onSong(song) }) {
-                            AlbumArtwork(song.artworkUri, Modifier.size(126.dp), 20)
-                            Spacer(Modifier.height(7.dp))
-                            Text(song.title, maxLines = 1, overflow = TextOverflow.Ellipsis, fontWeight = FontWeight.SemiBold)
-                            Text(
-                                song.artist.ifBlank { "فنان غير معروف" },
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis,
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
+
+            if (recent.isNotEmpty()) {
+                item {
+                    SectionTitle(
+                        title = "مضاف حديثًا",
+                        action = "عرض الكل",
+                        onAction = onAllSongs,
+                        modifier = Modifier.padding(start = 18.dp, end = 18.dp, top = 18.dp)
+                    )
+                }
+                item {
+                    LazyRow(
+                        contentPadding = PaddingValues(horizontal = 18.dp),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        items(recent, key = { it.id }) { song ->
+                            Column(
+                                modifier = Modifier
+                                    .width(116.dp)
+                                    .clickable { onSong(song) }
+                            ) {
+                                AlbumArtwork(song.artworkUri, Modifier.size(116.dp), 18)
+                                Spacer(Modifier.height(7.dp))
+                                Text(
+                                    song.title,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis,
+                                    fontWeight = FontWeight.Bold
+                                )
+                                Text(
+                                    song.artist.ifBlank { "فنان غير معروف" },
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis,
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
                         }
                     }
                 }
             }
         }
+    }
+}
 
-        if (songs.isEmpty()) {
-            item {
-                Column(
-                    Modifier.fillMaxWidth().padding(32.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Icon(
-                        Icons.Rounded.LibraryMusic,
-                        null,
-                        modifier = Modifier.size(54.dp),
-                        tint = MaterialTheme.colorScheme.primary
-                    )
-                    Spacer(Modifier.height(12.dp))
-                    Text("لم نجد ملفات موسيقى على الهاتف", fontWeight = FontWeight.Bold)
-                    Text("عند إضافة ملفات صوتية ستظهر هنا تلقائيًا.", color = MaterialTheme.colorScheme.onSurfaceVariant)
-                }
-            }
+@Composable
+private fun PremiumRoundIcon(
+    icon: ImageVector,
+    description: String,
+    onClick: () -> Unit
+) {
+    Box(
+        Modifier
+            .size(50.dp)
+            .background(Color(0xFF111C3B), CircleShape)
+            .border(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = .35f), CircleShape),
+        contentAlignment = Alignment.Center
+    ) {
+        IconButton(onClick = onClick) {
+            Icon(icon, description, tint = MaterialTheme.colorScheme.onSurface)
         }
     }
 }
@@ -242,51 +309,35 @@ private fun LibraryCard(
     title: String,
     subtitle: String,
     icon: ImageVector,
+    colors: List<Color>,
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val shape = RoundedCornerShape(22.dp)
+    val shape = RoundedCornerShape(24.dp)
     Box(
         modifier = modifier
-            .height(94.dp)
-            .background(
-                Brush.linearGradient(
-                    listOf(
-                        MaterialTheme.colorScheme.surfaceVariant.copy(alpha = .78f),
-                        MaterialTheme.colorScheme.surface.copy(alpha = .52f)
-                    )
-                ),
-                shape
-            )
-            .border(
-                1.dp,
-                Brush.linearGradient(
-                    listOf(
-                        MaterialTheme.colorScheme.primary.copy(alpha = .28f),
-                        Color.White.copy(alpha = .05f)
-                    )
-                ),
-                shape
-            )
+            .height(108.dp)
+            .shadow(12.dp, shape)
+            .background(Brush.linearGradient(colors), shape)
+            .border(1.dp, Color.White.copy(alpha = .14f), shape)
             .clickable(onClick = onClick)
-            .padding(horizontal = 14.dp, vertical = 12.dp)
+            .padding(15.dp)
     ) {
-        Column(Modifier.align(Alignment.CenterStart)) {
-            Box(
-                Modifier
-                    .size(34.dp)
-                    .background(MaterialTheme.colorScheme.primary.copy(alpha = .13f), CircleShape),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(icon, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(21.dp))
-            }
-            Spacer(Modifier.height(7.dp))
-            Text(title, fontWeight = FontWeight.Bold, maxLines = 1)
+        Box(
+            Modifier
+                .align(Alignment.TopStart)
+                .size(40.dp)
+                .background(Color.White.copy(alpha = .13f), CircleShape),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(icon, null, tint = Color.White, modifier = Modifier.size(23.dp))
+        }
+        Column(Modifier.align(Alignment.BottomEnd), horizontalAlignment = Alignment.End) {
+            Text(title, color = Color.White, fontWeight = FontWeight.Black, fontSize = 18.sp)
             Text(
                 subtitle,
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                maxLines = 1
+                color = Color.White.copy(alpha = .80f),
+                style = MaterialTheme.typography.bodySmall
             )
         }
     }
