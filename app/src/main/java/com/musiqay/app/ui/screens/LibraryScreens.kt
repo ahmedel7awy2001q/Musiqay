@@ -374,7 +374,7 @@ fun BrowseGroupsScreen(
                         )
                         if (selected == null) {
                             Text(
-                                "\${visibleEntries.size} عنصر",
+                                "${visibleEntries.size} عنصر",
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -406,7 +406,7 @@ fun BrowseGroupsScreen(
                         modifier = Modifier.fillMaxWidth(),
                         singleLine = true,
                         leadingIcon = { Icon(Icons.Rounded.Search, null) },
-                        placeholder = { Text("البحث في \$title") },
+                        placeholder = { Text("البحث في $title") },
                         shape = RoundedCornerShape(18.dp)
                     )
                 }
@@ -443,7 +443,7 @@ fun BrowseGroupsScreen(
                                     overflow = TextOverflow.Ellipsis
                                 )
                                 Text(
-                                    "\${entry.value.size} أغنية",
+                                    "${entry.value.size} أغنية",
                                     style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
