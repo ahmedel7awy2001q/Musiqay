@@ -46,6 +46,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -129,8 +130,27 @@ fun SongRow(
     modifier: Modifier = Modifier
 ) {
     var menu by remember { mutableStateOf(false) }
+    val rowShape = RoundedCornerShape(18.dp)
     Row(
-        modifier = modifier.fillMaxWidth().clickable(onClick = onClick).padding(horizontal = 12.dp, vertical = 8.dp),
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(horizontal = 10.dp, vertical = 5.dp)
+            .background(
+                Brush.linearGradient(
+                    listOf(
+                        MaterialTheme.colorScheme.surfaceVariant.copy(alpha = .70f),
+                        MaterialTheme.colorScheme.surface.copy(alpha = .82f)
+                    )
+                ),
+                rowShape
+            )
+            .border(
+                1.dp,
+                MaterialTheme.colorScheme.outlineVariant.copy(alpha = .72f),
+                rowShape
+            )
+            .clickable(onClick = onClick)
+            .padding(horizontal = 10.dp, vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         AlbumArtwork(song.artworkUri, Modifier.size(54.dp), 10)
@@ -205,16 +225,17 @@ fun MiniPlayer(
     modifier: Modifier = Modifier
 ) {
     if (state.mediaId == null) return
-    val shape = RoundedCornerShape(22.dp)
+    val shape = RoundedCornerShape(24.dp)
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 10.dp, vertical = 5.dp)
+            .padding(horizontal = 10.dp, vertical = 6.dp)
+            .shadow(12.dp, shape)
             .background(
                 Brush.linearGradient(
                     listOf(
-                        MaterialTheme.colorScheme.surfaceVariant.copy(alpha = .92f),
-                        MaterialTheme.colorScheme.surface.copy(alpha = .86f)
+                        Color(0xFF142144).copy(alpha = .96f),
+                        Color(0xFF0C1530).copy(alpha = .96f)
                     )
                 ),
                 shape
@@ -223,8 +244,8 @@ fun MiniPlayer(
                 1.dp,
                 Brush.linearGradient(
                     listOf(
-                        MaterialTheme.colorScheme.primary.copy(alpha = .38f),
-                        Color.White.copy(alpha = .05f)
+                        MaterialTheme.colorScheme.primary.copy(alpha = .58f),
+                        MaterialTheme.colorScheme.secondary.copy(alpha = .22f)
                     )
                 ),
                 shape
@@ -238,8 +259,8 @@ fun MiniPlayer(
             ) {
                 AlbumArtwork(
                     state.artworkUri,
-                    Modifier.size(50.dp),
-                    12
+                    Modifier.size(52.dp),
+                    14
                 )
 
                 Spacer(Modifier.width(11.dp))
