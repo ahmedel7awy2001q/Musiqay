@@ -1,6 +1,7 @@
 package com.musiqay.app.ui
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -202,13 +203,31 @@ fun MiniPlayer(
     modifier: Modifier = Modifier
 ) {
     if (state.mediaId == null) return
-    Surface(
+    val shape = RoundedCornerShape(22.dp)
+    Box(
         modifier = modifier
             .fillMaxWidth()
             .padding(horizontal = 10.dp, vertical = 5.dp)
-            .clickable(onClick = onOpen),
-        shape = RoundedCornerShape(20.dp),
-        tonalElevation = 6.dp
+            .background(
+                Brush.linearGradient(
+                    listOf(
+                        MaterialTheme.colorScheme.surfaceVariant.copy(alpha = .92f),
+                        MaterialTheme.colorScheme.surface.copy(alpha = .86f)
+                    )
+                ),
+                shape
+            )
+            .border(
+                1.dp,
+                Brush.linearGradient(
+                    listOf(
+                        MaterialTheme.colorScheme.primary.copy(alpha = .38f),
+                        Color.White.copy(alpha = .05f)
+                    )
+                ),
+                shape
+            )
+            .clickable(onClick = onOpen)
     ) {
         Column {
             Row(
