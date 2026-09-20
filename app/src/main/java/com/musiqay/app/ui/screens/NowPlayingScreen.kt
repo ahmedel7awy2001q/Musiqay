@@ -312,78 +312,166 @@ fun NowPlayingScreen(
         }
     }
 
-    LazyColumn(
-        modifier = Modifier.fillMaxSize().navigationBarsPadding().statusBarsPadding(),
-        contentPadding = androidx.compose.foundation.layout.PaddingValues(bottom = 30.dp)
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(
+                Brush.verticalGradient(
+                    listOf(
+                        MaterialTheme.colorScheme.background,
+                        MaterialTheme.colorScheme.surface,
+                        MaterialTheme.colorScheme.background
+                    )
+                )
+            )
+            .navigationBarsPadding()
+            .statusBarsPadding()
     ) {
-        item {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = 18.dp, vertical = 6.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
             Row(
-                Modifier.fillMaxWidth().padding(horizontal = 10.dp, vertical = 4.dp),
+                Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Rounded.ArrowBack, "رجوع") }
-                Column(Modifier.weight(1f), horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text("قيد التشغيل الآن", fontWeight = FontWeight.Bold)
-                    if (queue.isNotEmpty()) Text("${queue.size} في قائمة الانتظار", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                IconButton(onClick = onBack) {
+                    Icon(Icons.AutoMirrored.Rounded.ArrowBack, "رجوع")
                 }
-                IconButton(onClick = { showQueue = true }) { Icon(Icons.Rounded.MoreVert, "القائمة") }
-            }
-        }
 
-        item {
-            Box(Modifier.fillMaxWidth().padding(horizontal = 26.dp, vertical = 10.dp)) {
-                Box(
-                    Modifier.fillMaxWidth().aspectRatio(1f)
-                        .clip(RoundedCornerShape(28.dp))
-                        .background(
-                            Brush.linearGradient(
-                                listOf(
-                                    MaterialTheme.colorScheme.secondary.copy(alpha = .35f),
-                                    MaterialTheme.colorScheme.primary.copy(alpha = .18f),
-                                    MaterialTheme.colorScheme.surfaceVariant
-                                )
-                            )
-                        )
+                Column(
+                    Modifier.weight(1f),
+                    horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    AlbumArtwork(state.artworkUri, Modifier.fillMaxSize(), 28, prominentPlaceholder = true)
+                    Text(
+                        "قيد التشغيل الآن",
+                        fontWeight = FontWeight.Bold,
+                        style = MaterialTheme.typography.titleMedium
+                    )
+                    if (queue.isNotEmpty()) {
+                        Text(
+                            "\${queue.size} في قائمة الانتظار",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+
+                IconButton(onClick = { showQueue = true }) {
+                    Icon(Icons.Rounded.MoreVert, "القائمة")
                 }
             }
-        }
 
-        item {
-            Row(
-                Modifier.fillMaxWidth().padding(horizontal = 26.dp, vertical = 10.dp),
-                verticalAlignment = Alignment.CenterVertically
+            Spacer(Modifier.height(14.dp))
+
+            Surface(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(28.dp),
+                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = .46f),
+                tonalElevation = 5.dp
             ) {
-                Column(Modifier.weight(1f)) {
-                    Text(state.title, maxLines = 2, overflow = TextOverflow.Ellipsis, fontSize = 24.sp, fontWeight = FontWeight.ExtraBold)
+                Column(
+                    Modifier.padding(horizontal = 22.dp, vertical = 22.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(
+                        state.title,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis,
+                        fontSize = 27.sp,
+                        lineHeight = 32.sp,
+                        fontWeight = FontWeight.Black,
+                        textAlign = TextAlign.Center
+                    )
+
+                    Spacer(Modifier.height(8.dp))
+
                     Text(
                         state.artist.ifBlank { "فنان غير معروف" },
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        fontSize = 16.sp
+                        fontSize = 17.sp,
+                        textAlign = TextAlign.Center
                     )
+
                     if (state.album.isNotBlank()) {
-                        Text(state.album, maxLines = 1, overflow = TextOverflow.Ellipsis, color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
-                    }
-                }
-                if (state.mediaId != null) {
-                    IconButton(onClick = { vm.toggleFavorite(state.mediaId!!) }) {
-                        Icon(
-                            if (state.mediaId in favoriteIds) Icons.Rounded.Favorite else Icons.Rounded.FavoriteBorder,
-                            "المفضلة",
-                            tint = if (state.mediaId in favoriteIds) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
+                        Spacer(Modifier.height(3.dp))
+                        Text(
+                            state.album,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = .82f),
+                            style = MaterialTheme.typography.bodySmall,
+                            textAlign = TextAlign.Center
                         )
+                    }
+
+                    Spacer(Modifier.height(14.dp))
+
+                    if (state.mediaId != null) {
+                        IconButton(onClick = { vm.toggleFavorite(state.mediaId!!) }) {
+                            Icon(
+                                if (state.mediaId in favoriteIds) Icons.Rounded.Favorite else Icons.Rounded.FavoriteBorder,
+                                "المفضلة",
+                                tint = if (state.mediaId in favoriteIds)
+                                    MaterialTheme.colorScheme.primary
+                                else
+                                    MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
                     }
                 }
             }
-        }
 
-        item {
-            Column(Modifier.padding(horizontal = 24.dp)) {
+            Spacer(Modifier.height(14.dp))
+
+            Row(
+                Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceEvenly
+            ) {
+                ActionButton(Icons.AutoMirrored.Rounded.QueueMusic, "الانتظار") {
+                    showQueue = true
+                }
+
+                val currentSleepEnd = sleepEnd
+                val timerLabel = if (currentSleepEnd != null) {
+                    val remainingMinutes =
+                        ((currentSleepEnd - System.currentTimeMillis()) / 60_000L)
+                            .coerceAtLeast(0L)
+
+                    if (remainingMinutes > 0L) "متبقي \$remainingMinutes د" else "المؤقت مفعل"
+                } else {
+                    "مؤقت الإيقاف"
+                }
+
+                ActionButton(Icons.Rounded.Timer, timerLabel) {
+                    showTimer = true
+                }
+
+                ActionButton(Icons.Rounded.GraphicEq, "مؤثرات") {
+                    val effectIntent = Intent(AudioEffect.ACTION_DISPLAY_AUDIO_EFFECT_CONTROL_PANEL).apply {
+                        putExtra(AudioEffect.EXTRA_PACKAGE_NAME, context.packageName)
+                        putExtra(AudioEffect.EXTRA_AUDIO_SESSION, 0)
+                    }
+                    runCatching { context.startActivity(effectIntent) }.onFailure {
+                        runCatching { context.startActivity(Intent(Settings.ACTION_SOUND_SETTINGS)) }
+                    }
+                }
+
+                ActionButton(Icons.AutoMirrored.Rounded.PlaylistAdd, "قائمة") {
+                    showPlaylistPicker = currentSong != null
+                }
+            }
+
+            Spacer(Modifier.height(16.dp))
+
+            Column(Modifier.fillMaxWidth()) {
                 val max = state.durationMs.coerceAtLeast(1L).toFloat()
                 val shown = (dragPosition ?: state.positionMs.toFloat()).coerceIn(0f, max)
+
                 Slider(
                     value = shown,
                     onValueChange = { dragPosition = it },
@@ -394,147 +482,93 @@ fun NowPlayingScreen(
                     valueRange = 0f..max,
                     modifier = Modifier.fillMaxWidth()
                 )
-                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+
+                Row(
+                    Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
                     Text(formatDuration(shown.toLong()), style = MaterialTheme.typography.bodySmall)
                     Text(formatDuration(state.durationMs), style = MaterialTheme.typography.bodySmall)
                 }
             }
-        }
 
-        item {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 20.dp, vertical = 18.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+            Spacer(Modifier.height(18.dp))
+
+            androidx.compose.runtime.CompositionLocalProvider(
+                androidx.compose.ui.platform.LocalLayoutDirection provides androidx.compose.ui.unit.LayoutDirection.Ltr
             ) {
-                IconButton(
-                    onClick = vm.player::toggleShuffle,
-                    modifier = Modifier.size(48.dp)
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Icon(
-                        Icons.Rounded.Shuffle,
-                        contentDescription = "عشوائي",
-                        tint = if (state.shuffleEnabled)
-                            MaterialTheme.colorScheme.primary
-                        else
-                            MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-
-                IconButton(
-                    onClick = vm.player::previous,
-                    modifier = Modifier.size(60.dp)
-                ) {
-                    Icon(
-                        Icons.Rounded.SkipPrevious,
-                        contentDescription = "السابق",
-                        modifier = Modifier.size(40.dp)
-                    )
-                }
-
-                FilledIconButton(
-                    onClick = vm.player::togglePlayPause,
-                    modifier = Modifier.size(80.dp)
-                ) {
-                    Icon(
-                        if (state.isPlaying) Icons.Rounded.Pause else Icons.Rounded.PlayArrow,
-                        contentDescription = if (state.isPlaying) "إيقاف مؤقت" else "تشغيل",
-                        modifier = Modifier.size(44.dp)
-                    )
-                }
-
-                IconButton(
-                    onClick = vm.player::next,
-                    modifier = Modifier.size(60.dp)
-                ) {
-                    Icon(
-                        Icons.Rounded.SkipNext,
-                        contentDescription = "التالي",
-                        modifier = Modifier.size(40.dp)
-                    )
-                }
-
-                IconButton(
-                    onClick = vm.player::cycleRepeatMode,
-                    modifier = Modifier.size(48.dp)
-                ) {
-                    Icon(
-                        if (state.repeatMode == Player.REPEAT_MODE_ONE)
-                            Icons.Rounded.RepeatOne
-                        else
-                            Icons.Rounded.Repeat,
-                        contentDescription = "تكرار",
-                        tint = if (state.repeatMode != Player.REPEAT_MODE_OFF)
-                            MaterialTheme.colorScheme.primary
-                        else
-                            MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-            }
-        }
-
-        item {
-            Row(
-                Modifier.fillMaxWidth().padding(horizontal = 18.dp),
-                horizontalArrangement = Arrangement.SpaceEvenly
-            ) {
-                ActionButton(Icons.AutoMirrored.Rounded.PlaylistAdd, "قائمة تشغيل") { showPlaylistPicker = currentSong != null }
-                ActionButton(Icons.Rounded.GraphicEq, "مؤثرات صوتية") {
-                    val effectIntent = Intent(AudioEffect.ACTION_DISPLAY_AUDIO_EFFECT_CONTROL_PANEL).apply {
-                        putExtra(AudioEffect.EXTRA_PACKAGE_NAME, context.packageName)
-                        putExtra(AudioEffect.EXTRA_AUDIO_SESSION, 0)
+                    IconButton(
+                        onClick = vm.player::toggleShuffle,
+                        modifier = Modifier.size(48.dp)
+                    ) {
+                        Icon(
+                            Icons.Rounded.Shuffle,
+                            contentDescription = "عشوائي",
+                            tint = if (state.shuffleEnabled)
+                                MaterialTheme.colorScheme.primary
+                            else
+                                MaterialTheme.colorScheme.onSurfaceVariant
+                        )
                     }
-                    runCatching { context.startActivity(effectIntent) }.onFailure {
-                        runCatching { context.startActivity(Intent(Settings.ACTION_SOUND_SETTINGS)) }
+
+                    IconButton(
+                        onClick = vm.player::previous,
+                        modifier = Modifier.size(58.dp)
+                    ) {
+                        Icon(
+                            Icons.Rounded.SkipPrevious,
+                            contentDescription = "السابق",
+                            modifier = Modifier.size(38.dp)
+                        )
+                    }
+
+                    FilledIconButton(
+                        onClick = vm.player::togglePlayPause,
+                        modifier = Modifier.size(86.dp)
+                    ) {
+                        Icon(
+                            if (state.isPlaying) Icons.Rounded.Pause else Icons.Rounded.PlayArrow,
+                            contentDescription = if (state.isPlaying) "إيقاف مؤقت" else "تشغيل",
+                            modifier = Modifier.size(46.dp)
+                        )
+                    }
+
+                    IconButton(
+                        onClick = vm.player::next,
+                        modifier = Modifier.size(58.dp)
+                    ) {
+                        Icon(
+                            Icons.Rounded.SkipNext,
+                            contentDescription = "التالي",
+                            modifier = Modifier.size(38.dp)
+                        )
+                    }
+
+                    IconButton(
+                        onClick = vm.player::cycleRepeatMode,
+                        modifier = Modifier.size(48.dp)
+                    ) {
+                        Icon(
+                            if (state.repeatMode == Player.REPEAT_MODE_ONE)
+                                Icons.Rounded.RepeatOne
+                            else
+                                Icons.Rounded.Repeat,
+                            contentDescription = "تكرار",
+                            tint = if (state.repeatMode != Player.REPEAT_MODE_OFF)
+                                MaterialTheme.colorScheme.primary
+                            else
+                                MaterialTheme.colorScheme.onSurfaceVariant
+                        )
                     }
                 }
-                val currentSleepEnd = sleepEnd
-
-                val timerLabel = if (currentSleepEnd != null) {
-                    val remainingMinutes =
-                        ((currentSleepEnd - System.currentTimeMillis()) / 60_000L)
-                            .coerceAtLeast(0L)
-
-                    if (remainingMinutes > 0L)
-                        "متبقي $remainingMinutes د"
-                    else
-                        "المؤقت مفعل"
-                } else {
-                    "مؤقت الإيقاف"
-                }
-
-                ActionButton(
-                    Icons.Rounded.Timer,
-                    timerLabel
-                ) {
-                    showTimer = true
-                }
-                ActionButton(Icons.AutoMirrored.Rounded.QueueMusic, "الانتظار") { showQueue = true }
             }
-        }
 
-        item {
-            Card(
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 18.dp, vertical = 20.dp),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = .42f)),
-                shape = RoundedCornerShape(22.dp)
-            ) {
-                Column(Modifier.padding(18.dp)) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(Icons.Rounded.MusicNote, null, tint = MaterialTheme.colorScheme.primary)
-                        Text("كلمات الأغنية", Modifier.weight(1f).padding(horizontal = 10.dp), fontWeight = FontWeight.Bold)
-                        Icon(Icons.Rounded.ExpandMore, null)
-                    }
-                    Spacer(Modifier.height(14.dp))
-                    Text(
-                        "موسيقاي لا يرسل اسم الأغنية إلى أي خدمة خارجية. لذلك لا يتم جلب كلمات من الإنترنت تلقائيًا، حفاظًا على الخصوصية.",
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        textAlign = TextAlign.Start
-                    )
-                }
-            }
+            Spacer(Modifier.weight(1f))
         }
     }
 }
