@@ -12,11 +12,14 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.NavHost
@@ -69,7 +72,8 @@ fun MusiqayApp(vm: MusicViewModel) {
                         onNext = vm.player::next
                     )
                     NavigationBar(
-                        containerColor = MaterialTheme.colorScheme.surface.copy(alpha = .96f)
+                        containerColor = Color(0xFF0A132B).copy(alpha = .98f),
+                        tonalElevation = 0.dp
                     ) {
                         rootItems.forEach { item ->
                             NavigationBarItem(
@@ -84,7 +88,14 @@ fun MusiqayApp(vm: MusicViewModel) {
                                     }
                                 },
                                 icon = { Icon(item.icon, contentDescription = item.label) },
-                                label = { Text(item.label) }
+                                label = { Text(item.label) },
+                                colors = NavigationBarItemDefaults.colors(
+                                    selectedIconColor = Color.White,
+                                    selectedTextColor = Color.White,
+                                    indicatorColor = Color(0xFF4A2A82),
+                                    unselectedIconColor = Color(0xFFB9C2DE),
+                                    unselectedTextColor = Color(0xFFB9C2DE)
+                                )
                             )
                         }
                     }
