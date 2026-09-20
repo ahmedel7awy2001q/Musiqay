@@ -157,7 +157,7 @@ fun HomeScreen(
                         )
                         Spacer(Modifier.height(7.dp))
                         Text(
-                            if (songs.isEmpty()) "ابدأ بإضافة الموسيقى إلى هاتفك" else "\${songs.size} أغنية جاهزة للتشغيل",
+                            if (songs.isEmpty()) "ابدأ بإضافة الموسيقى إلى هاتفك" else "${songs.size} أغنية جاهزة للتشغيل",
                             color = Color.White.copy(alpha = .93f),
                             fontSize = 17.sp
                         )
