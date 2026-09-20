@@ -77,6 +77,37 @@ fun HomeScreen(
             )
         )
     ) {
+        Box(
+            modifier = Modifier
+                .align(Alignment.TopEnd)
+                .padding(top = 54.dp)
+                .size(280.dp)
+                .background(
+                    Brush.radialGradient(
+                        listOf(
+                            Color(0xFF536BFF).copy(alpha = .16f),
+                            Color(0xFF9D4DFF).copy(alpha = .07f),
+                            Color.Transparent
+                        )
+                    ),
+                    CircleShape
+                )
+        )
+        Box(
+            modifier = Modifier
+                .align(Alignment.BottomStart)
+                .size(230.dp)
+                .background(
+                    Brush.radialGradient(
+                        listOf(
+                            Color(0xFF29C7FF).copy(alpha = .09f),
+                            Color.Transparent
+                        )
+                    ),
+                    CircleShape
+                )
+        )
+
         LazyColumn(
             modifier = Modifier.statusBarsPadding(),
             contentPadding = PaddingValues(bottom = 28.dp)
@@ -129,6 +160,24 @@ fun HomeScreen(
                         .clickable(onClick = onAllSongs)
                         .padding(22.dp)
                 ) {
+                    Box(
+                        Modifier
+                            .align(Alignment.TopEnd)
+                            .padding(top = 10.dp, end = 14.dp)
+                            .fillMaxWidth(.58f)
+                            .height(2.dp)
+                            .background(
+                                Brush.horizontalGradient(
+                                    listOf(
+                                        Color.Transparent,
+                                        Color.White.copy(alpha = .62f),
+                                        Color.Transparent
+                                    )
+                                ),
+                                CircleShape
+                            )
+                    )
+
                     Box(
                         Modifier
                             .align(Alignment.TopStart)
