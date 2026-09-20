@@ -202,7 +202,7 @@ fun HomeScreen(
                     Row(Modifier.fillMaxWidth()) {
                         LibraryCard(
                             "المفضلة",
-                            "\$favoriteCount أغنية",
+                            "$favoriteCount أغنية",
                             Icons.Rounded.Favorite,
                             listOf(Color(0xFFC94878), Color(0xFF6C2B67)),
                             onFavorites,
@@ -211,7 +211,7 @@ fun HomeScreen(
                         Spacer(Modifier.width(10.dp))
                         LibraryCard(
                             "الفنانون",
-                            "\$artists فنان",
+                            "$artists فنان",
                             Icons.Rounded.Person,
                             listOf(Color(0xFF4667E6), Color(0xFF243878)),
                             onArtists,
@@ -222,7 +222,7 @@ fun HomeScreen(
                     Row(Modifier.fillMaxWidth()) {
                         LibraryCard(
                             "الألبومات",
-                            "\$albums ألبوم",
+                            "$albums ألبوم",
                             Icons.Rounded.Album,
                             listOf(Color(0xFF2698A7), Color(0xFF1F6077)),
                             onAlbums,
@@ -231,7 +231,7 @@ fun HomeScreen(
                         Spacer(Modifier.width(10.dp))
                         LibraryCard(
                             "المجلدات",
-                            "\$folders مجلد",
+                            "$folders مجلد",
                             Icons.Rounded.Folder,
                             listOf(Color(0xFF2C7ED3), Color(0xFF244C84)),
                             onFolders,
