@@ -374,7 +374,7 @@ fun NowPlayingScreen(
                     )
                     if (queue.isNotEmpty()) {
                         Text(
-                            "\${queue.size} في قائمة الانتظار",
+                            "${queue.size} في قائمة الانتظار",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
