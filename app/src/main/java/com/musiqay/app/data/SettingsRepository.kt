@@ -5,6 +5,7 @@ import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
+import androidx.datastore.preferences.core.stringSetPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -17,7 +18,8 @@ data class AppSettings(
     val themeMode: ThemeMode = ThemeMode.DARK,
     val dynamicColors: Boolean = false,
     val minimumAudioDurationSeconds: Int = 10,
-    val includeNonMusicAudio: Boolean = false
+    val includeNonMusicAudio: Boolean = false,
+    val hiddenFolders: Set<String> = emptySet()
 )
 
 class SettingsRepository(private val context: Context) {
@@ -27,6 +29,7 @@ class SettingsRepository(private val context: Context) {
         val DYNAMIC = booleanPreferencesKey("dynamic_colors")
         val MIN_AUDIO_DURATION = intPreferencesKey("minimum_audio_duration_seconds")
         val INCLUDE_NON_MUSIC = booleanPreferencesKey("include_non_music_audio")
+        val HIDDEN_FOLDERS = stringSetPreferencesKey("hidden_folders")
     }
 
     val settings: Flow<AppSettings> = context.dataStore.data.map { prefs ->
@@ -43,7 +46,9 @@ class SettingsRepository(private val context: Context) {
                 prefs[Keys.MIN_AUDIO_DURATION] ?: 10,
 
             includeNonMusicAudio =
-                prefs[Keys.INCLUDE_NON_MUSIC] ?: false
+                prefs[Keys.INCLUDE_NON_MUSIC] ?: false,
+
+            hiddenFolders = prefs[Keys.HIDDEN_FOLDERS] ?: emptySet()
         )
     }
 
@@ -71,5 +76,25 @@ class SettingsRepository(private val context: Context) {
         context.dataStore.edit {
             it[Keys.INCLUDE_NON_MUSIC] = enabled
         }
+    }
+
+    suspend fun hideFolder(folder: String) {
+        val clean = folder.trim()
+        if (clean.isBlank()) return
+        context.dataStore.edit { prefs ->
+            val current = prefs[Keys.HIDDEN_FOLDERS] ?: emptySet()
+            prefs[Keys.HIDDEN_FOLDERS] = current + clean
+        }
+    }
+
+    suspend fun showFolder(folder: String) {
+        context.dataStore.edit { prefs ->
+            val current = prefs[Keys.HIDDEN_FOLDERS] ?: emptySet()
+            prefs[Keys.HIDDEN_FOLDERS] = current - folder
+        }
+    }
+
+    suspend fun clearHiddenFolders() {
+        context.dataStore.edit { prefs -> prefs.remove(Keys.HIDDEN_FOLDERS) }
     }
 }
