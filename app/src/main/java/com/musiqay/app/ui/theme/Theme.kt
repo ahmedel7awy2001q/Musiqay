@@ -14,28 +14,34 @@ import com.musiqay.app.data.AppSettings
 import com.musiqay.app.data.ThemeMode
 
 private val DarkColors = darkColorScheme(
-    primary = Color(0xFFFF67AD),
-    secondary = Color(0xFFB783FF),
-    tertiary = Color(0xFF6DB8FF),
-    background = Color(0xFF07111E),
-    surface = Color(0xFF0D1929),
-    surfaceVariant = Color(0xFF17243A),
-    onPrimary = Color.White,
-    onBackground = Color(0xFFF4F5FA),
-    onSurface = Color(0xFFF4F5FA),
-    onSurfaceVariant = Color(0xFFB9C2D3)
+    primary = Color(0xFF9DB2FF),
+    secondary = Color(0xFFB994FF),
+    tertiary = Color(0xFF65D8FF),
+    background = Color(0xFF090E1A),
+    surface = Color(0xFF11182A),
+    surfaceVariant = Color(0xFF1A2340),
+    primaryContainer = Color(0xFF24366F),
+    secondaryContainer = Color(0xFF352A60),
+    onPrimary = Color(0xFF071335),
+    onBackground = Color(0xFFF7F8FF),
+    onSurface = Color(0xFFF7F8FF),
+    onSurfaceVariant = Color(0xFFC5CCE3),
+    outline = Color(0xFF69759D)
 )
 
 private val LightColors = lightColorScheme(
-    primary = Color(0xFFC62F79),
-    secondary = Color(0xFF7247C7),
-    tertiary = Color(0xFF286AA8),
-    background = Color(0xFFF8F8FC),
-    surface = Color.White,
-    surfaceVariant = Color(0xFFEEF0F7),
-    onBackground = Color(0xFF171923),
-    onSurface = Color(0xFF171923),
-    onSurfaceVariant = Color(0xFF555B6B)
+    primary = Color(0xFF4965D6),
+    secondary = Color(0xFF7652C8),
+    tertiary = Color(0xFF247DA5),
+    background = Color(0xFFF6F7FD),
+    surface = Color(0xFFFFFFFF),
+    surfaceVariant = Color(0xFFE9EDFA),
+    primaryContainer = Color(0xFFDDE5FF),
+    secondaryContainer = Color(0xFFEADFFF),
+    onBackground = Color(0xFF101425),
+    onSurface = Color(0xFF101425),
+    onSurfaceVariant = Color(0xFF555D76),
+    outline = Color(0xFF7A829B)
 )
 
 @Composable
