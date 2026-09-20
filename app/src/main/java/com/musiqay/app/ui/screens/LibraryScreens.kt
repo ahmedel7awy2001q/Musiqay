@@ -340,6 +340,7 @@ fun BrowseGroupsScreen(
     onOpenPlayer: () -> Unit
 ) {
     var selected by rememberSaveable { mutableStateOf<String?>(null) }
+    var query by rememberSaveable { mutableStateOf("") }
     val appSettings by vm.settings.collectAsState()
     val title = when (type) {
         "artist" -> "الفنانون"
@@ -355,12 +356,31 @@ fun BrowseGroupsScreen(
                 .groupBy { it.folder }
         }.toSortedMap(String.CASE_INSENSITIVE_ORDER)
     }
+    val visibleEntries = remember(grouped, query) {
+        grouped.entries.filter { query.isBlank() || it.key.contains(query, ignoreCase = true) }
+    }
 
     Scaffold(
         topBar = {
             TopAppBar(
                 modifier = Modifier.statusBarsPadding(),
-                title = { Text(selected ?: title, maxLines = 1, overflow = TextOverflow.Ellipsis, fontWeight = FontWeight.Bold) },
+                title = {
+                    Column {
+                        Text(
+                            selected ?: title,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                            fontWeight = FontWeight.Black
+                        )
+                        if (selected == null) {
+                            Text(
+                                "\${visibleEntries.size} عنصر",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+                },
                 navigationIcon = {
                     IconButton(onClick = { if (selected != null) selected = null else onBack() }) {
                         Icon(Icons.AutoMirrored.Rounded.ArrowBack, "رجوع")
@@ -371,37 +391,74 @@ fun BrowseGroupsScreen(
     ) { padding ->
         val current = selected
         if (current == null) {
-            LazyColumn(Modifier.fillMaxSize().padding(padding)) {
-                items(grouped.entries.toList(), key = { it.key }) { entry ->
-                    Row(
-                        Modifier.fillMaxWidth().clickable { selected = entry.key }.padding(16.dp),
-                        verticalAlignment = Alignment.CenterVertically
+            LazyColumn(
+                modifier = Modifier.fillMaxSize().padding(padding),
+                contentPadding = androidx.compose.foundation.layout.PaddingValues(
+                    horizontal = 12.dp,
+                    vertical = 10.dp
+                ),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                item {
+                    OutlinedTextField(
+                        value = query,
+                        onValueChange = { query = it },
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true,
+                        leadingIcon = { Icon(Icons.Rounded.Search, null) },
+                        placeholder = { Text("البحث في \$title") },
+                        shape = RoundedCornerShape(18.dp)
+                    )
+                }
+
+                items(visibleEntries, key = { it.key }) { entry ->
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { selected = entry.key },
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = .52f)
+                        ),
+                        shape = RoundedCornerShape(18.dp)
                     ) {
-                        Icon(
-                            when (type) {
-                                "artist" -> Icons.Rounded.Person
-                                "album" -> Icons.Rounded.Album
-                                else -> Icons.Rounded.Folder
-                            },
-                            null,
-                            tint = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.size(34.dp)
-                        )
-                        Column(Modifier.weight(1f).padding(horizontal = 14.dp)) {
-                            Text(entry.key, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                            Text("${entry.value.size} أغنية", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                        }
-                        if (type == "folder") {
-                            IconButton(onClick = { vm.hideFolder(entry.key) }) {
-                                Icon(
-                                    Icons.Rounded.VisibilityOff,
-                                    contentDescription = "إخفاء المجلد",
-                                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                        Row(
+                            Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 12.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                when (type) {
+                                    "artist" -> Icons.Rounded.Person
+                                    "album" -> Icons.Rounded.Album
+                                    else -> Icons.Rounded.Folder
+                                },
+                                null,
+                                tint = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.size(34.dp)
+                            )
+                            Column(Modifier.weight(1f).padding(horizontal = 14.dp)) {
+                                Text(
+                                    entry.key,
+                                    fontWeight = FontWeight.Bold,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
                                 )
+                                Text(
+                                    "\${entry.value.size} أغنية",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                            if (type == "folder") {
+                                IconButton(onClick = { vm.hideFolder(entry.key) }) {
+                                    Icon(
+                                        Icons.Rounded.VisibilityOff,
+                                        contentDescription = "إخفاء المجلد",
+                                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
                             }
                         }
                     }
-                    HorizontalDivider()
                 }
             }
         } else {
