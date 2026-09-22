@@ -34,6 +34,7 @@ import androidx.compose.material.icons.rounded.GraphicEq
 import androidx.compose.material.icons.rounded.KeyboardArrowDown
 import androidx.compose.material.icons.rounded.KeyboardArrowUp
 import androidx.compose.material.icons.rounded.MoreVert
+import androidx.compose.material.icons.rounded.MusicNote
 import androidx.compose.material.icons.rounded.Pause
 import androidx.compose.material.icons.rounded.PlayArrow
 import androidx.compose.material.icons.automirrored.rounded.PlaylistAdd
@@ -400,101 +401,101 @@ fun NowPlayingScreen(
 
             Spacer(Modifier.height(26.dp))
 
-            val artworkShape = RoundedCornerShape(32.dp)
+            val infoShape = RoundedCornerShape(30.dp)
             Box(
                 modifier = Modifier
-                    .fillMaxWidth(.8f)
-                    .aspectRatio(1f)
-                    .shadow(
-                        elevation = 26.dp,
-                        shape = artworkShape,
-                        ambientColor = MaterialTheme.colorScheme.primary.copy(alpha = .55f),
-                        spotColor = MaterialTheme.colorScheme.secondary.copy(alpha = .55f)
-                    )
-                    .border(1.dp, premiumOutlineBrush(), artworkShape)
+                    .fillMaxWidth()
+                    .height(164.dp)
+                    .shadow(18.dp, infoShape)
+                    .background(premiumPanelBrush(), infoShape)
+                    .border(1.dp, premiumOutlineBrush(), infoShape)
+                    .padding(horizontal = 22.dp, vertical = 16.dp)
             ) {
-                AlbumArtwork(
-                    model = state.artworkUri,
-                    modifier = Modifier.matchParentSize(),
-                    cornerRadius = 32,
-                    prominentPlaceholder = true
-                )
-
-                // تدرج خفيف أسفل الغلاف لإبراز أي عناصر عائمة فوقه
-                Box(
-                    modifier = Modifier
-                        .matchParentSize()
-                        .clip(artworkShape)
-                        .background(
-                            Brush.verticalGradient(
-                                listOf(
-                                    Color.Transparent,
-                                    Color.Transparent,
-                                    Color.Black.copy(alpha = .22f)
-                                )
+                Column(
+                    Modifier.align(Alignment.Center),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(44.dp)
+                            .background(
+                                Brush.radialGradient(
+                                    listOf(
+                                        MaterialTheme.colorScheme.primary.copy(alpha = .34f),
+                                        MaterialTheme.colorScheme.primary.copy(alpha = .08f)
+                                    )
+                                ),
+                                CircleShape
                             )
+                            .border(
+                                1.dp,
+                                MaterialTheme.colorScheme.primary.copy(alpha = .45f),
+                                CircleShape
+                            ),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            Icons.Rounded.MusicNote,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(24.dp)
                         )
-                )
+                    }
+
+                    Spacer(Modifier.height(9.dp))
+
+                    Text(
+                        state.title,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis,
+                        fontSize = 24.sp,
+                        lineHeight = 28.sp,
+                        fontWeight = FontWeight.Black,
+                        textAlign = TextAlign.Center
+                    )
+
+                    Spacer(Modifier.height(7.dp))
+
+                    Text(
+                        state.artist.ifBlank { "فنان غير معروف" },
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        fontSize = 15.sp,
+                        textAlign = TextAlign.Center
+                    )
+
+                    if (state.album.isNotBlank()) {
+                        Spacer(Modifier.height(3.dp))
+                        Text(
+                            state.album,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = .78f),
+                            style = MaterialTheme.typography.bodySmall,
+                            textAlign = TextAlign.Center
+                        )
+                    }
+                }
 
                 if (state.mediaId != null) {
-                    FilledIconButton(
+                    IconButton(
                         onClick = { vm.toggleFavorite(state.mediaId!!) },
-                        modifier = Modifier
-                            .align(Alignment.TopEnd)
-                            .padding(12.dp)
-                            .size(42.dp),
-                        colors = IconButtonDefaults.filledIconButtonColors(
-                            containerColor = Color.Black.copy(alpha = .34f),
-                            contentColor = Color.White
-                        )
+                        modifier = Modifier.align(Alignment.TopStart)
                     ) {
                         Icon(
                             if (state.mediaId in favoriteIds) Icons.Rounded.Favorite else Icons.Rounded.FavoriteBorder,
                             "المفضلة",
-                            modifier = Modifier.size(21.dp)
+                            tint = if (state.mediaId in favoriteIds)
+                                MaterialTheme.colorScheme.primary
+                            else
+                                MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 }
             }
 
-            Spacer(Modifier.height(22.dp))
-
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Text(
-                    state.title,
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis,
-                    fontSize = 23.sp,
-                    lineHeight = 27.sp,
-                    fontWeight = FontWeight.Black,
-                    textAlign = TextAlign.Center
-                )
-
-                Spacer(Modifier.height(6.dp))
-
-                Text(
-                    state.artist.ifBlank { "فنان غير معروف" },
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    fontSize = 15.sp,
-                    textAlign = TextAlign.Center
-                )
-
-                if (state.album.isNotBlank()) {
-                    Spacer(Modifier.height(3.dp))
-                    Text(
-                        state.album,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = .78f),
-                        style = MaterialTheme.typography.bodySmall,
-                        textAlign = TextAlign.Center
-                    )
-                }
-            }
-
-            Spacer(Modifier.height(18.dp))
+            Spacer(Modifier.height(20.dp))
 
             Column(Modifier.fillMaxWidth()) {
                 val max = state.durationMs.coerceAtLeast(1L).toFloat()
