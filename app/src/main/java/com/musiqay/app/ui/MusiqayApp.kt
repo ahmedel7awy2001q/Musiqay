@@ -53,6 +53,14 @@ fun MusiqayApp(vm: MusicViewModel) {
     val playlists by vm.playlists.collectAsStateWithLifecycle()
     val settings by vm.settings.collectAsStateWithLifecycle()
 
+    // Hidden folders stay in storage and remain restorable from Settings, but their
+    // tracks are excluded from every library-facing surface.
+    val visibleSongs = songs.filter { song ->
+        song.folder !in settings.hiddenFolders
+    }
+    val visibleSongIds = visibleSongs.asSequence().map { it.id }.toSet()
+    val visibleFavoriteIds = favorites.filter { it in visibleSongIds }
+
     val rootItems = listOf(
         NavItem("home", "الرئيسية", Icons.Rounded.Home),
         NavItem("songs", "الأغاني", Icons.Rounded.LibraryMusic),
@@ -111,11 +119,11 @@ fun MusiqayApp(vm: MusicViewModel) {
         ) {
             composable("home") {
                 HomeScreen(
-                    songs = songs,
-                    favoriteCount = favorites.size,
+                    songs = visibleSongs,
+                    favoriteCount = visibleFavoriteIds.size,
                     hiddenFolders = settings.hiddenFolders,
                     onSong = { song ->
-                        vm.play(song)
+                        vm.play(song, visibleSongs)
                         navController.navigate("player")
                     },
                     onSettings = { navController.navigate("settings") },
@@ -128,8 +136,8 @@ fun MusiqayApp(vm: MusicViewModel) {
             }
             composable("songs") {
                 SongsScreen(
-                    songs = songs,
-                    favoriteIds = favorites.toSet(),
+                    songs = visibleSongs,
+                    favoriteIds = visibleFavoriteIds.toSet(),
                     playlists = playlists,
                     vm = vm,
                     onOpenPlayer = { navController.navigate("player") }
@@ -138,7 +146,7 @@ fun MusiqayApp(vm: MusicViewModel) {
             composable("playlists") {
                 PlaylistsScreen(
                     playlists = playlists,
-                    favoriteCount = favorites.size,
+                    favoriteCount = visibleFavoriteIds.size,
                     onFavorites = { navController.navigate("favorites") },
                     onPlaylist = { navController.navigate("playlist/$it") },
                     onCreate = { vm.createPlaylist(it) },
@@ -147,8 +155,8 @@ fun MusiqayApp(vm: MusicViewModel) {
             }
             composable("search") {
                 SearchScreen(
-                    songs = songs,
-                    favoriteIds = favorites.toSet(),
+                    songs = visibleSongs,
+                    favoriteIds = visibleFavoriteIds.toSet(),
                     playlists = playlists,
                     vm = vm,
                     onOpenPlayer = { navController.navigate("player") }
@@ -168,8 +176,8 @@ fun MusiqayApp(vm: MusicViewModel) {
             }
             composable("favorites") {
                 FavoritesScreen(
-                    songs = songs.filter { it.id in favorites },
-                    favoriteIds = favorites.toSet(),
+                    songs = visibleSongs.filter { it.id in visibleFavoriteIds },
+                    favoriteIds = visibleFavoriteIds.toSet(),
                     playlists = playlists,
                     vm = vm,
                     onBack = { navController.popBackStack() },
@@ -179,8 +187,8 @@ fun MusiqayApp(vm: MusicViewModel) {
             composable("browse/{type}") { entry ->
                 BrowseGroupsScreen(
                     type = entry.arguments?.getString("type").orEmpty(),
-                    songs = songs,
-                    favoriteIds = favorites.toSet(),
+                    songs = visibleSongs,
+                    favoriteIds = visibleFavoriteIds.toSet(),
                     playlists = playlists,
                     vm = vm,
                     onBack = { navController.popBackStack() },
@@ -193,8 +201,8 @@ fun MusiqayApp(vm: MusicViewModel) {
                 PlaylistDetailScreen(
                     playlistId = id,
                     title = name,
-                    allSongs = songs,
-                    favoriteIds = favorites.toSet(),
+                    allSongs = visibleSongs,
+                    favoriteIds = visibleFavoriteIds.toSet(),
                     playlists = playlists,
                     vm = vm,
                     onBack = { navController.popBackStack() },
