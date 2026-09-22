@@ -71,3 +71,5 @@ jobs:
           path: Musiqay-v1.3.0-source.zip
           if-no-files-found: error
           retention-days: 30
+
+# build-trigger: premium-v3
