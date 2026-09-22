@@ -399,14 +399,14 @@ fun NowPlayingScreen(
                 }
             }
 
-            Spacer(Modifier.height(26.dp))
+            Spacer(Modifier.height(14.dp))
 
             val infoShape = RoundedCornerShape(30.dp)
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(164.dp)
-                    .shadow(18.dp, infoShape)
+                    .height(154.dp)
+                    .shadow(22.dp, infoShape)
                     .background(premiumPanelBrush(), infoShape)
                     .border(1.dp, premiumOutlineBrush(), infoShape)
                     .padding(horizontal = 22.dp, vertical = 16.dp)
@@ -495,9 +495,19 @@ fun NowPlayingScreen(
                 }
             }
 
-            Spacer(Modifier.height(20.dp))
+            Spacer(Modifier.height(14.dp))
 
-            Column(Modifier.fillMaxWidth()) {
+            PremiumWaveform()
+
+            Spacer(Modifier.height(8.dp))
+
+            Column(
+                Modifier
+                    .fillMaxWidth()
+                    .background(premiumPanelBrush(), RoundedCornerShape(22.dp))
+                    .border(1.dp, premiumOutlineBrush(), RoundedCornerShape(22.dp))
+                    .padding(horizontal = 14.dp, vertical = 8.dp)
+            ) {
                 val max = state.durationMs.coerceAtLeast(1L).toFloat()
                 val shown = (dragPosition ?: state.positionMs.toFloat()).coerceIn(0f, max)
 
@@ -672,11 +682,12 @@ private fun GlassActionButton(
     val shape = RoundedCornerShape(20.dp)
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = Modifier.width(78.dp)
+        modifier = Modifier.width(76.dp)
     ) {
         Box(
             modifier = Modifier
-                .size(width = 72.dp, height = 66.dp)
+                .size(width = 68.dp, height = 60.dp)
+                .shadow(6.dp, shape)
                 .background(premiumPanelBrush(), shape)
                 .border(1.dp, premiumOutlineBrush(), shape)
                 .clickable(onClick = onClick),
@@ -728,5 +739,34 @@ private fun PremiumControlButton(
         contentAlignment = Alignment.Center
     ) {
         content()
+    }
+}
+
+
+@Composable
+private fun PremiumWaveform() {
+    val bars = listOf(10, 18, 26, 15, 32, 22, 38, 18, 29, 14, 34, 24, 40, 20, 31, 16, 27, 13)
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(44.dp),
+        horizontalArrangement = Arrangement.Center,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        bars.forEachIndexed { index, barHeight ->
+            Box(
+                Modifier
+                    .padding(horizontal = 2.dp)
+                    .width(3.dp)
+                    .height(barHeight.dp)
+                    .background(
+                        if (index % 3 == 0)
+                            MaterialTheme.colorScheme.secondary.copy(alpha = .86f)
+                        else
+                            MaterialTheme.colorScheme.primary.copy(alpha = .78f),
+                        CircleShape
+                    )
+            )
+        }
     }
 }

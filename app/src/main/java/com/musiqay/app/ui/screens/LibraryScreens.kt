@@ -118,13 +118,26 @@ fun SongsScreen(
                 ),
                 title = {
                     Column {
-                        Text("الأغاني", fontWeight = FontWeight.Bold)
+                        Text("الأغاني", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Black)
                         Text("${songs.size} أغنية", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                 },
                 actions = {
                     Box {
-                        IconButton(onClick = { sortMenu = true }) { Icon(Icons.AutoMirrored.Rounded.Sort, contentDescription = "الترتيب") }
+                        Box(
+                            Modifier.background(
+                                MaterialTheme.colorScheme.primaryContainer,
+                                CircleShape
+                            )
+                        ) {
+                            IconButton(onClick = { sortMenu = true }) {
+                                Icon(
+                                    Icons.AutoMirrored.Rounded.Sort,
+                                    contentDescription = "الترتيب",
+                                    tint = MaterialTheme.colorScheme.primary
+                                )
+                            }
+                        }
                         DropdownMenu(expanded = sortMenu, onDismissRequest = { sortMenu = false }) {
                             SongSort.entries.forEach { option ->
                                 DropdownMenuItem(

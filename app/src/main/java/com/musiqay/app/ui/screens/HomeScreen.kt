@@ -48,6 +48,7 @@ import androidx.compose.ui.unit.sp
 import com.musiqay.app.data.Song
 import com.musiqay.app.ui.AlbumArtwork
 import com.musiqay.app.ui.SectionTitle
+import com.musiqay.app.ui.theme.premiumHeroBrush
 import com.musiqay.app.ui.theme.premiumOutlineBrush
 import com.musiqay.app.ui.theme.premiumPanelBrush
 import com.musiqay.app.ui.theme.premiumScreenBrush
@@ -111,16 +112,23 @@ fun HomeScreen(
             contentPadding = PaddingValues(bottom = 28.dp)
         ) {
             item {
+                val headerShape = RoundedCornerShape(26.dp)
                 Row(
-                    Modifier.fillMaxWidth().padding(horizontal = 18.dp, vertical = 10.dp),
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 8.dp)
+                        .shadow(6.dp, headerShape)
+                        .background(premiumPanelBrush(), headerShape)
+                        .border(1.dp, premiumOutlineBrush(), headerShape)
+                        .padding(horizontal = 16.dp, vertical = 13.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Column(Modifier.weight(1f)) {
-                        Text("موسيقاي", fontSize = 34.sp, fontWeight = FontWeight.Black)
+                        Text("موسيقاي", fontSize = 30.sp, fontWeight = FontWeight.Black)
                         Text(
                             "موسيقاك... بطريقتك",
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            style = MaterialTheme.typography.bodyLarge
+                            style = MaterialTheme.typography.bodyMedium
                         )
                     }
                     PremiumRoundIcon(Icons.Rounded.Settings, "الإعدادات", onSettings)
@@ -133,18 +141,9 @@ fun HomeScreen(
                     modifier = Modifier
                         .padding(horizontal = 18.dp, vertical = 10.dp)
                         .fillMaxWidth()
-                        .height(178.dp)
-                        .shadow(20.dp, shape)
-                        .background(
-                            Brush.linearGradient(
-                                listOf(
-                                    Color(0xFF446CFF),
-                                    Color(0xFF7456FF),
-                                    Color(0xFFC044E9)
-                                )
-                            ),
-                            shape
-                        )
+                        .height(184.dp)
+                        .shadow(24.dp, shape)
+                        .background(premiumHeroBrush(), shape)
                         .border(
                             1.dp,
                             Brush.linearGradient(
@@ -364,8 +363,8 @@ private fun LibraryCard(
     val shape = RoundedCornerShape(24.dp)
     Box(
         modifier = modifier
-            .height(108.dp)
-            .shadow(12.dp, shape)
+            .height(114.dp)
+            .shadow(15.dp, shape)
             .background(Brush.linearGradient(colors), shape)
             .border(1.dp, Color.White.copy(alpha = .14f), shape)
             .clickable(onClick = onClick)
@@ -374,8 +373,9 @@ private fun LibraryCard(
         Box(
             Modifier
                 .align(Alignment.TopStart)
-                .size(40.dp)
-                .background(Color.White.copy(alpha = .13f), CircleShape),
+                .size(44.dp)
+                .background(Color.White.copy(alpha = .16f), CircleShape)
+                .border(1.dp, Color.White.copy(alpha = .16f), CircleShape),
             contentAlignment = Alignment.Center
         ) {
             Icon(icon, null, tint = Color.White, modifier = Modifier.size(23.dp))

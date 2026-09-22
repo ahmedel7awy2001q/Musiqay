@@ -174,25 +174,49 @@ fun SettingsScreen(vm: MusicViewModel, onBack: () -> Unit) {
                 SettingCard {
                     Column {
                         Text("الحد الأدنى لمدة الملف", fontWeight = FontWeight.Bold)
-                        Spacer(Modifier.height(6.dp))
-                        listOf(
-                            0 to "بدون فلترة",
-                            10 to "10 ثواني",
-                            20 to "20 ثانية",
-                            60 to "60 ثانية"
-                        ).forEach { (seconds, label) ->
-                            Row(
-                                Modifier
-                                    .fillMaxWidth()
-                                    .clickable { vm.setMinimumAudioDuration(seconds) }
-                                    .padding(vertical = 2.dp),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                RadioButton(
-                                    selected = settings.minimumAudioDurationSeconds == seconds,
-                                    onClick = { vm.setMinimumAudioDuration(seconds) }
-                                )
-                                Text(label, Modifier.weight(1f))
+                        Text(
+                            "استبعد المقاطع القصيرة من مكتبتك",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Spacer(Modifier.height(12.dp))
+                        Row(
+                            Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            listOf(
+                                0 to "بدون",
+                                10 to "10ث",
+                                20 to "20ث",
+                                60 to "60ث"
+                            ).forEach { (seconds, label) ->
+                                val selected = settings.minimumAudioDurationSeconds == seconds
+                                Box(
+                                    Modifier
+                                        .weight(1f)
+                                        .background(
+                                            if (selected) MaterialTheme.colorScheme.primary
+                                            else MaterialTheme.colorScheme.surfaceVariant,
+                                            RoundedCornerShape(14.dp)
+                                        )
+                                        .border(
+                                            1.dp,
+                                            if (selected) MaterialTheme.colorScheme.primary
+                                            else MaterialTheme.colorScheme.outlineVariant,
+                                            RoundedCornerShape(14.dp)
+                                        )
+                                        .clickable { vm.setMinimumAudioDuration(seconds) }
+                                        .padding(vertical = 10.dp),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Text(
+                                        label,
+                                        color = if (selected) MaterialTheme.colorScheme.onPrimary
+                                        else MaterialTheme.colorScheme.onSurface,
+                                        fontWeight = FontWeight.Bold,
+                                        style = MaterialTheme.typography.labelMedium
+                                    )
+                                }
                             }
                         }
                     }
@@ -251,7 +275,12 @@ fun SettingsScreen(vm: MusicViewModel, onBack: () -> Unit) {
                                 Row(
                                     Modifier
                                         .fillMaxWidth()
-                                        .padding(top = 8.dp),
+                                        .padding(top = 10.dp)
+                                        .background(
+                                            MaterialTheme.colorScheme.surfaceVariant.copy(alpha = .55f),
+                                            RoundedCornerShape(14.dp)
+                                        )
+                                        .padding(horizontal = 12.dp, vertical = 6.dp),
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
                                     Text(folder, modifier = Modifier.weight(1f), maxLines = 1)

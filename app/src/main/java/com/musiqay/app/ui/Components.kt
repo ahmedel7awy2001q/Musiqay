@@ -29,8 +29,10 @@ import androidx.compose.material.icons.rounded.SkipNext
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -132,11 +134,12 @@ fun SongRow(
     modifier: Modifier = Modifier
 ) {
     var menu by remember { mutableStateOf(false) }
-    val rowShape = RoundedCornerShape(18.dp)
+    val rowShape = RoundedCornerShape(20.dp)
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 10.dp, vertical = 5.dp)
+            .padding(horizontal = 10.dp, vertical = 4.dp)
+            .shadow(4.dp, rowShape)
             .background(
                 Brush.linearGradient(
                     listOf(
@@ -155,7 +158,7 @@ fun SongRow(
             .padding(horizontal = 10.dp, vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        AlbumArtwork(song.artworkUri, Modifier.size(54.dp), 10)
+        AlbumArtwork(song.artworkUri, Modifier.size(50.dp), 12)
         Spacer(Modifier.width(12.dp))
         Column(Modifier.weight(1f)) {
             Text(song.title, maxLines = 1, overflow = TextOverflow.Ellipsis, fontWeight = FontWeight.SemiBold)
@@ -227,12 +230,12 @@ fun MiniPlayer(
     modifier: Modifier = Modifier
 ) {
     if (state.mediaId == null) return
-    val shape = RoundedCornerShape(24.dp)
+    val shape = RoundedCornerShape(26.dp)
     Box(
         modifier = modifier
             .fillMaxWidth()
             .padding(horizontal = 10.dp, vertical = 6.dp)
-            .shadow(12.dp, shape)
+            .shadow(18.dp, shape)
             .background(premiumPanelBrush(), shape)
             .border(1.dp, premiumOutlineBrush(), shape)
             .clickable(onClick = onOpen)
@@ -268,7 +271,14 @@ fun MiniPlayer(
                     )
                 }
 
-                IconButton(onClick = onToggle) {
+                FilledIconButton(
+                    onClick = onToggle,
+                    modifier = Modifier.size(42.dp),
+                    colors = IconButtonDefaults.filledIconButtonColors(
+                        containerColor = MaterialTheme.colorScheme.primary,
+                        contentColor = MaterialTheme.colorScheme.onPrimary
+                    )
+                ) {
                     Icon(
                         imageVector = if (state.isPlaying) Icons.Rounded.Pause else Icons.Rounded.PlayArrow,
                         contentDescription = if (state.isPlaying) "إيقاف مؤقت" else "تشغيل"

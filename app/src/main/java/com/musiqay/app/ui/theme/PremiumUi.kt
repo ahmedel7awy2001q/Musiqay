@@ -17,16 +17,19 @@ fun premiumScreenBrush(): Brush {
         Brush.verticalGradient(
             listOf(
                 colors.background,
-                colors.surfaceVariant.copy(alpha = .78f),
+                colors.primary.copy(alpha = .10f),
+                colors.surfaceVariant.copy(alpha = .72f),
+                colors.secondary.copy(alpha = .07f),
                 colors.background
             )
         )
     } else {
         Brush.verticalGradient(
             listOf(
-                Color(0xFFFBFCFF),
-                colors.primaryContainer.copy(alpha = .34f),
-                colors.secondaryContainer.copy(alpha = .22f),
+                Color(0xFFFCFDFF),
+                colors.primaryContainer.copy(alpha = .42f),
+                colors.surface,
+                colors.secondaryContainer.copy(alpha = .26f),
                 colors.background
             )
         )
@@ -65,3 +68,15 @@ fun premiumOutlineBrush(): Brush {
         )
     )
 }
+
+
+@Composable
+fun premiumHeroBrush(): Brush =
+    Brush.linearGradient(
+        listOf(
+            Color(0xFF4169FF),
+            MaterialTheme.colorScheme.primary,
+            MaterialTheme.colorScheme.secondary,
+            Color(0xFFC13FEA)
+        )
+    )
