@@ -4,6 +4,7 @@ import android.content.Intent
 import android.media.audiofx.AudioEffect
 import android.provider.Settings
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -14,6 +15,7 @@ import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -39,6 +41,7 @@ import androidx.compose.material.icons.automirrored.rounded.PlaylistAdd
 import androidx.compose.material.icons.automirrored.rounded.QueueMusic
 import androidx.compose.material.icons.rounded.Repeat
 import androidx.compose.material.icons.rounded.RepeatOne
+import androidx.compose.material.icons.rounded.Share
 import androidx.compose.material.icons.rounded.Shuffle
 import androidx.compose.material.icons.rounded.SkipNext
 import androidx.compose.material.icons.rounded.SkipPrevious
@@ -52,13 +55,20 @@ import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Slider
+import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -67,7 +77,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -83,6 +96,10 @@ import com.musiqay.app.data.Song
 import com.musiqay.app.ui.AlbumArtwork
 import com.musiqay.app.ui.MusicViewModel
 import com.musiqay.app.ui.PlaylistPickerDialog
+import com.musiqay.app.ui.theme.premiumOutlineBrush
+import com.musiqay.app.ui.theme.premiumPanelBrush
+import com.musiqay.app.ui.theme.premiumAmbientSurface
+import com.musiqay.app.ui.theme.premiumScreenBrush
 import com.musiqay.app.util.formatDuration
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -312,78 +329,197 @@ fun NowPlayingScreen(
         }
     }
 
-    LazyColumn(
-        modifier = Modifier.fillMaxSize().navigationBarsPadding().statusBarsPadding(),
-        contentPadding = androidx.compose.foundation.layout.PaddingValues(bottom = 30.dp)
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(premiumScreenBrush())
+            .premiumAmbientSurface()
+            .navigationBarsPadding()
+            .statusBarsPadding()
     ) {
-        item {
-            Row(
-                Modifier.fillMaxWidth().padding(horizontal = 10.dp, vertical = 4.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Rounded.ArrowBack, "رجوع") }
-                Column(Modifier.weight(1f), horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text("قيد التشغيل الآن", fontWeight = FontWeight.Bold)
-                    if (queue.isNotEmpty()) Text("${queue.size} في قائمة الانتظار", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                }
-                IconButton(onClick = { showQueue = true }) { Icon(Icons.Rounded.MoreVert, "القائمة") }
-            }
-        }
-
-        item {
-            Box(Modifier.fillMaxWidth().padding(horizontal = 26.dp, vertical = 10.dp)) {
-                Box(
-                    Modifier.fillMaxWidth().aspectRatio(1f)
-                        .clip(RoundedCornerShape(28.dp))
-                        .background(
-                            Brush.linearGradient(
-                                listOf(
-                                    MaterialTheme.colorScheme.secondary.copy(alpha = .35f),
-                                    MaterialTheme.colorScheme.primary.copy(alpha = .18f),
-                                    MaterialTheme.colorScheme.surfaceVariant
-                                )
-                            )
+        Box(
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .padding(bottom = 90.dp)
+                .size(280.dp)
+                .clip(CircleShape)
+                .background(
+                    Brush.radialGradient(
+                        listOf(
+                            MaterialTheme.colorScheme.secondary.copy(alpha = .10f),
+                            MaterialTheme.colorScheme.tertiary.copy(alpha = .05f),
+                            Color.Transparent
                         )
-                ) {
-                    AlbumArtwork(state.artworkUri, Modifier.fillMaxSize().navigationBarsPadding(), 28)
-                }
-            }
-        }
+                    )
+                )
+        )
 
-        item {
+        Box(
+            modifier = Modifier
+                .align(Alignment.TopCenter)
+                .padding(top = 64.dp)
+                .size(310.dp)
+                .clip(CircleShape)
+                .background(
+                    Brush.radialGradient(
+                        listOf(
+                            MaterialTheme.colorScheme.primary.copy(alpha = .22f),
+                            MaterialTheme.colorScheme.secondary.copy(alpha = .10f),
+                            Color.Transparent
+                        )
+                    )
+                )
+        )
+
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = 20.dp, vertical = 6.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
             Row(
-                Modifier.fillMaxWidth().padding(horizontal = 26.dp, vertical = 10.dp),
+                Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Column(Modifier.weight(1f)) {
-                    Text(state.title, maxLines = 2, overflow = TextOverflow.Ellipsis, fontSize = 24.sp, fontWeight = FontWeight.ExtraBold)
+                IconButton(onClick = onBack) {
+                    Icon(Icons.AutoMirrored.Rounded.ArrowBack, "رجوع")
+                }
+
+                Column(
+                    Modifier.weight(1f),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(
+                        "قيد التشغيل الآن",
+                        fontWeight = FontWeight.ExtraBold,
+                        fontSize = 21.sp
+                    )
+                    if (queue.isNotEmpty()) {
+                        Text(
+                            "${queue.size} في قائمة الانتظار",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+
+                IconButton(onClick = { showQueue = true }) {
+                    Icon(Icons.Rounded.MoreVert, "المزيد")
+                }
+            }
+
+            Spacer(Modifier.height(14.dp))
+
+            val infoShape = RoundedCornerShape(30.dp)
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(154.dp)
+                    .shadow(22.dp, infoShape)
+                    .background(premiumPanelBrush(), infoShape)
+                    .border(1.dp, premiumOutlineBrush(), infoShape)
+                    .padding(horizontal = 22.dp, vertical = 16.dp)
+            ) {
+                Column(
+                    Modifier.align(Alignment.Center),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(44.dp)
+                            .background(
+                                Brush.radialGradient(
+                                    listOf(
+                                        MaterialTheme.colorScheme.primary.copy(alpha = .34f),
+                                        MaterialTheme.colorScheme.primary.copy(alpha = .08f)
+                                    )
+                                ),
+                                CircleShape
+                            )
+                            .border(
+                                1.dp,
+                                MaterialTheme.colorScheme.primary.copy(alpha = .45f),
+                                CircleShape
+                            ),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            Icons.Rounded.MusicNote,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(24.dp)
+                        )
+                    }
+
+                    Spacer(Modifier.height(9.dp))
+
+                    Text(
+                        state.title,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis,
+                        fontSize = 24.sp,
+                        lineHeight = 28.sp,
+                        fontWeight = FontWeight.Black,
+                        textAlign = TextAlign.Center
+                    )
+
+                    Spacer(Modifier.height(7.dp))
+
                     Text(
                         state.artist.ifBlank { "فنان غير معروف" },
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        fontSize = 16.sp
+                        fontSize = 15.sp,
+                        textAlign = TextAlign.Center
                     )
+
                     if (state.album.isNotBlank()) {
-                        Text(state.album, maxLines = 1, overflow = TextOverflow.Ellipsis, color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
+                        Spacer(Modifier.height(3.dp))
+                        Text(
+                            state.album,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = .78f),
+                            style = MaterialTheme.typography.bodySmall,
+                            textAlign = TextAlign.Center
+                        )
                     }
                 }
+
                 if (state.mediaId != null) {
-                    IconButton(onClick = { vm.toggleFavorite(state.mediaId!!) }) {
+                    IconButton(
+                        onClick = { vm.toggleFavorite(state.mediaId!!) },
+                        modifier = Modifier.align(Alignment.TopStart)
+                    ) {
                         Icon(
                             if (state.mediaId in favoriteIds) Icons.Rounded.Favorite else Icons.Rounded.FavoriteBorder,
                             "المفضلة",
-                            tint = if (state.mediaId in favoriteIds) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
+                            tint = if (state.mediaId in favoriteIds)
+                                MaterialTheme.colorScheme.primary
+                            else
+                                MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 }
             }
-        }
 
-        item {
-            Column(Modifier.padding(horizontal = 24.dp)) {
+            Spacer(Modifier.height(14.dp))
+
+            PremiumWaveform(isPlaying = state.isPlaying)
+
+            Spacer(Modifier.height(8.dp))
+
+            Column(
+                Modifier
+                    .fillMaxWidth()
+                    .background(premiumPanelBrush(), RoundedCornerShape(22.dp))
+                    .border(1.dp, premiumOutlineBrush(), RoundedCornerShape(22.dp))
+                    .padding(horizontal = 14.dp, vertical = 8.dp)
+            ) {
                 val max = state.durationMs.coerceAtLeast(1L).toFloat()
                 val shown = (dragPosition ?: state.positionMs.toFloat()).coerceIn(0f, max)
+
                 Slider(
                     value = shown,
                     onValueChange = { dragPosition = it },
@@ -392,96 +528,174 @@ fun NowPlayingScreen(
                         dragPosition = null
                     },
                     valueRange = 0f..max,
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = SliderDefaults.colors(
+                        thumbColor = MaterialTheme.colorScheme.primary,
+                        activeTrackColor = MaterialTheme.colorScheme.primary,
+                        inactiveTrackColor = MaterialTheme.colorScheme.surfaceVariant
+                    )
                 )
-                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+
+                Row(
+                    Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
                     Text(formatDuration(shown.toLong()), style = MaterialTheme.typography.bodySmall)
                     Text(formatDuration(state.durationMs), style = MaterialTheme.typography.bodySmall)
                 }
             }
-        }
 
-        item {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 20.dp, vertical = 18.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+            Spacer(Modifier.height(16.dp))
+
+            androidx.compose.runtime.CompositionLocalProvider(
+                androidx.compose.ui.platform.LocalLayoutDirection provides androidx.compose.ui.unit.LayoutDirection.Ltr
             ) {
-                IconButton(
-                    onClick = vm.player::toggleShuffle,
-                    modifier = Modifier.size(48.dp)
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Icon(
-                        Icons.Rounded.Shuffle,
-                        contentDescription = "عشوائي",
-                        tint = if (state.shuffleEnabled)
-                            MaterialTheme.colorScheme.primary
-                        else
-                            MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
+                    PremiumControlButton(
+                        active = state.shuffleEnabled,
+                        size = 52,
+                        onClick = vm.player::toggleShuffle
+                    ) {
+                        Icon(Icons.Rounded.Shuffle, "عشوائي")
+                    }
 
-                IconButton(
-                    onClick = vm.player::previous,
-                    modifier = Modifier.size(60.dp)
-                ) {
-                    Icon(
-                        Icons.Rounded.SkipPrevious,
-                        contentDescription = "السابق",
-                        modifier = Modifier.size(40.dp)
-                    )
-                }
+                    PremiumControlButton(size = 62, onClick = vm.player::previous) {
+                        Icon(
+                            Icons.Rounded.SkipPrevious,
+                            "السابق",
+                            modifier = Modifier.size(36.dp)
+                        )
+                    }
 
-                FilledIconButton(
-                    onClick = vm.player::togglePlayPause,
-                    modifier = Modifier.size(80.dp)
-                ) {
-                    Icon(
-                        if (state.isPlaying) Icons.Rounded.Pause else Icons.Rounded.PlayArrow,
-                        contentDescription = if (state.isPlaying) "إيقاف مؤقت" else "تشغيل",
-                        modifier = Modifier.size(44.dp)
+                    val playPulse = rememberInfiniteTransition(label = "playPulse")
+                    val playScale by playPulse.animateFloat(
+                        initialValue = 1f,
+                        targetValue = if (state.isPlaying) 1.045f else 1f,
+                        animationSpec = infiniteRepeatable(
+                            animation = tween(950),
+                            repeatMode = RepeatMode.Reverse
+                        ),
+                        label = "playScale"
                     )
-                }
+                    val glowAlpha by playPulse.animateFloat(
+                        initialValue = .24f,
+                        targetValue = if (state.isPlaying) .44f else .24f,
+                        animationSpec = infiniteRepeatable(
+                            animation = tween(1100),
+                            repeatMode = RepeatMode.Reverse
+                        ),
+                        label = "playGlow"
+                    )
 
-                IconButton(
-                    onClick = vm.player::next,
-                    modifier = Modifier.size(60.dp)
-                ) {
-                    Icon(
-                        Icons.Rounded.SkipNext,
-                        contentDescription = "التالي",
-                        modifier = Modifier.size(40.dp)
-                    )
-                }
+                    Box(
+                        modifier = Modifier
+                            .size(104.dp)
+                            .graphicsLayer {
+                                scaleX = playScale
+                                scaleY = playScale
+                            }
+                            .background(
+                                Brush.radialGradient(
+                                    listOf(
+                                        MaterialTheme.colorScheme.primary.copy(alpha = glowAlpha),
+                                        MaterialTheme.colorScheme.secondary.copy(alpha = glowAlpha * .48f),
+                                        Color.Transparent
+                                    )
+                                ),
+                                CircleShape
+                            ),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        FilledIconButton(
+                            onClick = vm.player::togglePlayPause,
+                            modifier = Modifier
+                                .size(88.dp)
+                                .shadow(24.dp, CircleShape)
+                                .border(
+                                    1.dp,
+                                    Color.White.copy(alpha = .22f),
+                                    CircleShape
+                                ),
+                            shape = CircleShape,
+                            colors = IconButtonDefaults.filledIconButtonColors(
+                                containerColor = MaterialTheme.colorScheme.primary,
+                                contentColor = MaterialTheme.colorScheme.onPrimary
+                            )
+                        ) {
+                            Icon(
+                                if (state.isPlaying) Icons.Rounded.Pause else Icons.Rounded.PlayArrow,
+                                contentDescription = if (state.isPlaying) "إيقاف مؤقت" else "تشغيل",
+                                modifier = Modifier.size(46.dp)
+                            )
+                        }
+                    }
 
-                IconButton(
-                    onClick = vm.player::cycleRepeatMode,
-                    modifier = Modifier.size(48.dp)
-                ) {
-                    Icon(
-                        if (state.repeatMode == Player.REPEAT_MODE_ONE)
-                            Icons.Rounded.RepeatOne
-                        else
-                            Icons.Rounded.Repeat,
-                        contentDescription = "تكرار",
-                        tint = if (state.repeatMode != Player.REPEAT_MODE_OFF)
-                            MaterialTheme.colorScheme.primary
-                        else
-                            MaterialTheme.colorScheme.onSurfaceVariant
-                    )
+                    PremiumControlButton(size = 62, onClick = vm.player::next) {
+                        Icon(
+                            Icons.Rounded.SkipNext,
+                            "التالي",
+                            modifier = Modifier.size(36.dp)
+                        )
+                    }
+
+                    PremiumControlButton(
+                        active = state.repeatMode != Player.REPEAT_MODE_OFF,
+                        size = 52,
+                        onClick = vm.player::cycleRepeatMode
+                    ) {
+                        Icon(
+                            if (state.repeatMode == Player.REPEAT_MODE_ONE)
+                                Icons.Rounded.RepeatOne
+                            else
+                                Icons.Rounded.Repeat,
+                            "تكرار"
+                        )
+                    }
                 }
             }
-        }
 
-        item {
+            Spacer(Modifier.height(22.dp))
+
+            val currentSleepEnd = sleepEnd
+            val timerLabel = if (currentSleepEnd != null) {
+                val remainingMinutes =
+                    ((currentSleepEnd - System.currentTimeMillis()) / 60_000L).coerceAtLeast(0L)
+                if (remainingMinutes > 0L) "متبقي $remainingMinutes د" else "المؤقت مفعل"
+            } else {
+                "مؤقت النوم"
+            }
+
             Row(
-                Modifier.fillMaxWidth().padding(horizontal = 18.dp),
-                horizontalArrangement = Arrangement.SpaceEvenly
+                Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                ActionButton(Icons.AutoMirrored.Rounded.PlaylistAdd, "قائمة تشغيل") { showPlaylistPicker = currentSong != null }
-                ActionButton(Icons.Rounded.GraphicEq, "مؤثرات صوتية") {
+                GlassActionButton(Icons.Rounded.Share, "مشاركة") {
+                    val shareText = buildString {
+                        append(state.title)
+                        if (state.artist.isNotBlank()) append(" - ").append(state.artist)
+                    }
+                    val shareIntent = Intent(Intent.ACTION_SEND).apply {
+                        type = "text/plain"
+                        putExtra(Intent.EXTRA_TEXT, shareText)
+                    }
+                    runCatching {
+                        context.startActivity(Intent.createChooser(shareIntent, "مشاركة"))
+                    }
+                }
+
+                GlassActionButton(
+                    icon = Icons.Rounded.Timer,
+                    label = timerLabel,
+                    active = currentSleepEnd != null
+                ) {
+                    showTimer = true
+                }
+
+                GlassActionButton(Icons.Rounded.GraphicEq, "المؤثرات") {
                     val effectIntent = Intent(AudioEffect.ACTION_DISPLAY_AUDIO_EFFECT_CONTROL_PANEL).apply {
                         putExtra(AudioEffect.EXTRA_PACKAGE_NAME, context.packageName)
                         putExtra(AudioEffect.EXTRA_AUDIO_SESSION, 0)
@@ -490,69 +704,171 @@ fun NowPlayingScreen(
                         runCatching { context.startActivity(Intent(Settings.ACTION_SOUND_SETTINGS)) }
                     }
                 }
-                val currentSleepEnd = sleepEnd
 
-                val timerLabel = if (currentSleepEnd != null) {
-                    val remainingMinutes =
-                        ((currentSleepEnd - System.currentTimeMillis()) / 60_000L)
-                            .coerceAtLeast(0L)
-
-                    if (remainingMinutes > 0L)
-                        "متبقي $remainingMinutes د"
-                    else
-                        "المؤقت مفعل"
-                } else {
-                    "مؤقت الإيقاف"
-                }
-
-                ActionButton(
-                    Icons.Rounded.Timer,
-                    timerLabel
-                ) {
-                    showTimer = true
-                }
-                ActionButton(Icons.AutoMirrored.Rounded.QueueMusic, "الانتظار") { showQueue = true }
-            }
-        }
-
-        item {
-            Card(
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 18.dp, vertical = 20.dp),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = .42f)),
-                shape = RoundedCornerShape(22.dp)
-            ) {
-                Column(Modifier.padding(18.dp)) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(Icons.Rounded.MusicNote, null, tint = MaterialTheme.colorScheme.primary)
-                        Text("كلمات الأغنية", Modifier.weight(1f).padding(horizontal = 10.dp), fontWeight = FontWeight.Bold)
-                        Icon(Icons.Rounded.ExpandMore, null)
-                    }
-                    Spacer(Modifier.height(14.dp))
-                    Text(
-                        "موسيقاي لا يرسل اسم الأغنية إلى أي خدمة خارجية. لذلك لا يتم جلب كلمات من الإنترنت تلقائيًا، حفاظًا على الخصوصية.",
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        textAlign = TextAlign.Start
-                    )
+                GlassActionButton(Icons.AutoMirrored.Rounded.PlaylistAdd, "القائمة") {
+                    showPlaylistPicker = currentSong != null
                 }
             }
+
+            Spacer(Modifier.weight(1f))
         }
     }
 }
 
 @Composable
-private fun ActionButton(
+private fun GlassActionButton(
     icon: androidx.compose.ui.graphics.vector.ImageVector,
     label: String,
+    active: Boolean = false,
     onClick: () -> Unit
 ) {
+    val shape = RoundedCornerShape(20.dp)
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = Modifier.clickable(onClick = onClick).padding(6.dp)
+        modifier = Modifier.width(76.dp)
     ) {
-        Surface(shape = CircleShape, color = MaterialTheme.colorScheme.surfaceVariant, modifier = Modifier.size(48.dp)) {
-            Box(contentAlignment = Alignment.Center) { Icon(icon, contentDescription = label) }
+        Box(
+            modifier = Modifier
+                .size(width = 68.dp, height = 60.dp)
+                .shadow(6.dp, shape)
+                .background(
+                    if (active) {
+                        Brush.linearGradient(
+                            listOf(
+                                MaterialTheme.colorScheme.primaryContainer,
+                                MaterialTheme.colorScheme.secondaryContainer
+                            )
+                        )
+                    } else {
+                        premiumPanelBrush()
+                    },
+                    shape
+                )
+                .border(
+                    if (active) 1.5.dp else 1.dp,
+                    if (active) {
+                        Brush.linearGradient(
+                            listOf(
+                                MaterialTheme.colorScheme.primary.copy(alpha = .82f),
+                                MaterialTheme.colorScheme.secondary.copy(alpha = .62f)
+                            )
+                        )
+                    } else {
+                        premiumOutlineBrush()
+                    },
+                    shape
+                )
+                .clickable(onClick = onClick),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                icon,
+                contentDescription = label,
+                tint = if (active) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
+                modifier = Modifier.size(27.dp)
+            )
         }
-        Spacer(Modifier.height(6.dp))
-        Text(label, style = MaterialTheme.typography.labelSmall, maxLines = 1)
+        Spacer(Modifier.height(7.dp))
+        Text(
+            label,
+            style = MaterialTheme.typography.labelSmall,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
+        )
+    }
+}
+
+@Composable
+private fun PremiumControlButton(
+    size: Int,
+    active: Boolean = false,
+    onClick: () -> Unit,
+    content: @Composable () -> Unit
+) {
+    Box(
+        modifier = Modifier
+            .size(size.dp)
+            .background(
+                if (active)
+                    MaterialTheme.colorScheme.primaryContainer
+                else
+                    MaterialTheme.colorScheme.surfaceVariant,
+                CircleShape
+            )
+            .border(
+                1.dp,
+                if (active)
+                    MaterialTheme.colorScheme.primary.copy(alpha = .72f)
+                else
+                    MaterialTheme.colorScheme.primary.copy(alpha = .20f),
+                CircleShape
+            )
+            .clickable(onClick = onClick),
+        contentAlignment = Alignment.Center
+    ) {
+        content()
+    }
+}
+
+
+@Composable
+private fun PremiumWaveform(isPlaying: Boolean) {
+    val transition = rememberInfiniteTransition(label = "waveform")
+    val phaseA by transition.animateFloat(
+        initialValue = .72f,
+        targetValue = if (isPlaying) 1f else .72f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(520),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "waveA"
+    )
+    val phaseB by transition.animateFloat(
+        initialValue = .82f,
+        targetValue = if (isPlaying) 1.16f else .82f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(690),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "waveB"
+    )
+    val phaseC by transition.animateFloat(
+        initialValue = .68f,
+        targetValue = if (isPlaying) 1.08f else .68f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(840),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "waveC"
+    )
+
+    val bars = listOf(10, 18, 26, 15, 32, 22, 38, 18, 29, 14, 34, 24, 40, 20, 31, 16, 27, 13)
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(46.dp),
+        horizontalArrangement = Arrangement.Center,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        bars.forEachIndexed { index, baseHeight ->
+            val factor = when (index % 3) {
+                0 -> phaseA
+                1 -> phaseB
+                else -> phaseC
+            }
+            Box(
+                Modifier
+                    .padding(horizontal = 2.dp)
+                    .width(3.dp)
+                    .height((baseHeight * factor).dp)
+                    .background(
+                        if (index % 3 == 0)
+                            MaterialTheme.colorScheme.secondary.copy(alpha = .88f)
+                        else
+                            MaterialTheme.colorScheme.primary.copy(alpha = .82f),
+                        CircleShape
+                    )
+            )
+        }
     }
 }

@@ -1,5 +1,12 @@
 package com.musiqay.app.ui
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
@@ -9,13 +16,18 @@ import androidx.compose.material.icons.rounded.LibraryMusic
 import androidx.compose.material.icons.automirrored.rounded.QueueMusic
 import androidx.compose.material.icons.rounded.Search
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.NavHost
@@ -47,6 +59,15 @@ fun MusiqayApp(vm: MusicViewModel) {
     val songs by vm.songs.collectAsStateWithLifecycle()
     val favorites by vm.favoriteIds.collectAsStateWithLifecycle()
     val playlists by vm.playlists.collectAsStateWithLifecycle()
+    val settings by vm.settings.collectAsStateWithLifecycle()
+
+    // Hidden folders stay in storage and remain restorable from Settings, but their
+    // tracks are excluded from every library-facing surface.
+    val visibleSongs = songs.filter { song ->
+        song.folder !in settings.hiddenFolders
+    }
+    val visibleSongIds = visibleSongs.asSequence().map { it.id }.toSet()
+    val visibleFavoriteIds = favorites.filter { it in visibleSongIds }
 
     val rootItems = listOf(
         NavItem("home", "الرئيسية", Icons.Rounded.Home),
@@ -57,19 +78,41 @@ fun MusiqayApp(vm: MusicViewModel) {
     val showBottom = currentRoute in rootItems.map { it.route }
 
     Scaffold(
+        containerColor = MaterialTheme.colorScheme.background,
         bottomBar = {
             if (showBottom) {
                 Column(modifier = Modifier.navigationBarsPadding()) {
-                    MiniPlayer(
-                        state = playerState,
-                        onOpen = { navController.navigate("player") },
-                        onToggle = vm.player::togglePlayPause,
-                        onNext = vm.player::next
-                    )
-                    NavigationBar {
+                    AnimatedVisibility(
+                        visible = playerState.mediaId != null,
+                        enter = fadeIn(tween(180)) + slideInVertically(
+                            animationSpec = tween(220),
+                            initialOffsetY = { it / 3 }
+                        ),
+                        exit = fadeOut(tween(140)) + slideOutVertically(
+                            animationSpec = tween(180),
+                            targetOffsetY = { it / 3 }
+                        )
+                    ) {
+                        MiniPlayer(
+                            state = playerState,
+                            onOpen = { navController.navigate("player") },
+                            onToggle = vm.player::togglePlayPause,
+                            onNext = vm.player::next
+                        )
+                    }
+                    NavigationBar(
+                        containerColor = MaterialTheme.colorScheme.surface.copy(alpha = .98f),
+                        tonalElevation = 0.dp
+                    ) {
                         rootItems.forEach { item ->
+                            val selected = currentRoute == item.route
+                            val iconScale by animateFloatAsState(
+                                targetValue = if (selected) 1.14f else 1f,
+                                animationSpec = tween(220),
+                                label = "navIconScale"
+                            )
                             NavigationBarItem(
-                                selected = currentRoute == item.route,
+                                selected = selected,
                                 onClick = {
                                     navController.navigate(item.route) {
                                         popUpTo(navController.graph.findStartDestination().id) {
@@ -79,8 +122,24 @@ fun MusiqayApp(vm: MusicViewModel) {
                                         restoreState = true
                                     }
                                 },
-                                icon = { Icon(item.icon, contentDescription = item.label) },
-                                label = { Text(item.label) }
+                                icon = {
+                                    Icon(
+                                        item.icon,
+                                        contentDescription = item.label,
+                                        modifier = Modifier.graphicsLayer {
+                                            scaleX = iconScale
+                                            scaleY = iconScale
+                                        }
+                                    )
+                                },
+                                label = { Text(item.label) },
+                                colors = NavigationBarItemDefaults.colors(
+                                    selectedIconColor = MaterialTheme.colorScheme.onPrimary,
+                                    selectedTextColor = MaterialTheme.colorScheme.primary,
+                                    indicatorColor = MaterialTheme.colorScheme.primary,
+                                    unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
                             )
                         }
                     }
@@ -95,10 +154,11 @@ fun MusiqayApp(vm: MusicViewModel) {
         ) {
             composable("home") {
                 HomeScreen(
-                    songs = songs,
-                    favoriteCount = favorites.size,
+                    songs = visibleSongs,
+                    favoriteCount = visibleFavoriteIds.size,
+                    hiddenFolders = settings.hiddenFolders,
                     onSong = { song ->
-                        vm.play(song)
+                        vm.play(song, visibleSongs)
                         navController.navigate("player")
                     },
                     onSettings = { navController.navigate("settings") },
@@ -111,8 +171,8 @@ fun MusiqayApp(vm: MusicViewModel) {
             }
             composable("songs") {
                 SongsScreen(
-                    songs = songs,
-                    favoriteIds = favorites.toSet(),
+                    songs = visibleSongs,
+                    favoriteIds = visibleFavoriteIds.toSet(),
                     playlists = playlists,
                     vm = vm,
                     onOpenPlayer = { navController.navigate("player") }
@@ -121,7 +181,7 @@ fun MusiqayApp(vm: MusicViewModel) {
             composable("playlists") {
                 PlaylistsScreen(
                     playlists = playlists,
-                    favoriteCount = favorites.size,
+                    favoriteCount = visibleFavoriteIds.size,
                     onFavorites = { navController.navigate("favorites") },
                     onPlaylist = { navController.navigate("playlist/$it") },
                     onCreate = { vm.createPlaylist(it) },
@@ -130,8 +190,8 @@ fun MusiqayApp(vm: MusicViewModel) {
             }
             composable("search") {
                 SearchScreen(
-                    songs = songs,
-                    favoriteIds = favorites.toSet(),
+                    songs = visibleSongs,
+                    favoriteIds = visibleFavoriteIds.toSet(),
                     playlists = playlists,
                     vm = vm,
                     onOpenPlayer = { navController.navigate("player") }
@@ -140,8 +200,8 @@ fun MusiqayApp(vm: MusicViewModel) {
             composable("player") {
                 NowPlayingScreen(
                     vm = vm,
-                    songs = songs,
-                    favoriteIds = favorites.toSet(),
+                    songs = visibleSongs,
+                    favoriteIds = visibleFavoriteIds.toSet(),
                     playlists = playlists,
                     onBack = { navController.popBackStack() }
                 )
@@ -151,8 +211,8 @@ fun MusiqayApp(vm: MusicViewModel) {
             }
             composable("favorites") {
                 FavoritesScreen(
-                    songs = songs.filter { it.id in favorites },
-                    favoriteIds = favorites.toSet(),
+                    songs = visibleSongs.filter { it.id in visibleFavoriteIds },
+                    favoriteIds = visibleFavoriteIds.toSet(),
                     playlists = playlists,
                     vm = vm,
                     onBack = { navController.popBackStack() },
@@ -162,8 +222,8 @@ fun MusiqayApp(vm: MusicViewModel) {
             composable("browse/{type}") { entry ->
                 BrowseGroupsScreen(
                     type = entry.arguments?.getString("type").orEmpty(),
-                    songs = songs,
-                    favoriteIds = favorites.toSet(),
+                    songs = visibleSongs,
+                    favoriteIds = visibleFavoriteIds.toSet(),
                     playlists = playlists,
                     vm = vm,
                     onBack = { navController.popBackStack() },
@@ -176,8 +236,8 @@ fun MusiqayApp(vm: MusicViewModel) {
                 PlaylistDetailScreen(
                     playlistId = id,
                     title = name,
-                    allSongs = songs,
-                    favoriteIds = favorites.toSet(),
+                    allSongs = visibleSongs,
+                    favoriteIds = visibleFavoriteIds.toSet(),
                     playlists = playlists,
                     vm = vm,
                     onBack = { navController.popBackStack() },

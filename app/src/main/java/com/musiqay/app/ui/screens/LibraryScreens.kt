@@ -8,18 +8,23 @@ import android.provider.MediaStore
 import android.os.Build
 import android.app.RecoverableSecurityException
 import android.app.Activity
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Add
@@ -28,6 +33,8 @@ import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.rounded.Delete
 import androidx.compose.material.icons.rounded.Favorite
 import androidx.compose.material.icons.rounded.Folder
+import androidx.compose.material.icons.rounded.MusicNote
+import androidx.compose.material.icons.rounded.VisibilityOff
 import androidx.compose.material.icons.rounded.Person
 import androidx.compose.material.icons.rounded.PlayArrow
 import androidx.compose.material.icons.automirrored.rounded.QueueMusic
@@ -35,21 +42,20 @@ import androidx.compose.material.icons.rounded.Search
 import androidx.compose.material.icons.automirrored.rounded.Sort
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledTonalButton
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -59,6 +65,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -67,6 +74,10 @@ import com.musiqay.app.data.Song
 import com.musiqay.app.ui.MusicViewModel
 import com.musiqay.app.ui.PlaylistPickerDialog
 import com.musiqay.app.ui.SongRow
+import com.musiqay.app.ui.theme.premiumOutlineBrush
+import com.musiqay.app.ui.theme.premiumPanelBrush
+import com.musiqay.app.ui.theme.premiumAmbientSurface
+import com.musiqay.app.ui.theme.premiumScreenBrush
 
 private enum class SongSort(val label: String) {
     NEWEST("الأحدث"),
@@ -96,18 +107,38 @@ fun SongsScreen(
     }
 
     Scaffold(
+        containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             TopAppBar(
                 modifier = Modifier.statusBarsPadding(),
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.background.copy(alpha = .96f),
+                    titleContentColor = MaterialTheme.colorScheme.onBackground,
+                    navigationIconContentColor = MaterialTheme.colorScheme.onBackground,
+                    actionIconContentColor = MaterialTheme.colorScheme.onBackground
+                ),
                 title = {
                     Column {
-                        Text("الأغاني", fontWeight = FontWeight.Bold)
+                        Text("الأغاني", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Black)
                         Text("${songs.size} أغنية", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                 },
                 actions = {
                     Box {
-                        IconButton(onClick = { sortMenu = true }) { Icon(Icons.AutoMirrored.Rounded.Sort, contentDescription = "الترتيب") }
+                        Box(
+                            Modifier.background(
+                                MaterialTheme.colorScheme.primaryContainer,
+                                CircleShape
+                            )
+                        ) {
+                            IconButton(onClick = { sortMenu = true }) {
+                                Icon(
+                                    Icons.AutoMirrored.Rounded.Sort,
+                                    contentDescription = "الترتيب",
+                                    tint = MaterialTheme.colorScheme.primary
+                                )
+                            }
+                        }
                         DropdownMenu(expanded = sortMenu, onDismissRequest = { sortMenu = false }) {
                             SongSort.entries.forEach { option ->
                                 DropdownMenuItem(
@@ -128,7 +159,10 @@ fun SongsScreen(
             playlists = playlists,
             vm = vm,
             onOpenPlayer = onOpenPlayer,
-            modifier = Modifier.padding(padding)
+            modifier = Modifier
+                .background(premiumScreenBrush())
+                .premiumAmbientSurface()
+                .padding(padding)
         )
     }
 }
@@ -152,7 +186,13 @@ fun SearchScreen(
         }
     }
 
-    Column(Modifier.fillMaxSize().statusBarsPadding()) {
+    Column(
+        Modifier
+            .fillMaxSize()
+            .background(premiumScreenBrush())
+                .premiumAmbientSurface()
+            .statusBarsPadding()
+    ) {
         Text(
             "البحث",
             modifier = Modifier.padding(horizontal = 18.dp, vertical = 12.dp),
@@ -166,7 +206,13 @@ fun SearchScreen(
             singleLine = true,
             leadingIcon = { Icon(Icons.Rounded.Search, null) },
             placeholder = { Text("ابحث باسم الأغنية أو الفنان أو الألبوم") },
-            shape = RoundedCornerShape(18.dp)
+            shape = RoundedCornerShape(18.dp),
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedContainerColor = MaterialTheme.colorScheme.surface.copy(alpha = .96f),
+                unfocusedContainerColor = MaterialTheme.colorScheme.surface.copy(alpha = .86f),
+                focusedBorderColor = MaterialTheme.colorScheme.primary,
+                unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant
+            )
         )
         if (query.isBlank()) {
             Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -197,9 +243,16 @@ fun FavoritesScreen(
     onOpenPlayer: () -> Unit
 ) {
     Scaffold(
+        containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             TopAppBar(
                 modifier = Modifier.statusBarsPadding(),
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.background.copy(alpha = .96f),
+                    titleContentColor = MaterialTheme.colorScheme.onBackground,
+                    navigationIconContentColor = MaterialTheme.colorScheme.onBackground,
+                    actionIconContentColor = MaterialTheme.colorScheme.onBackground
+                ),
                 title = { Text("المفضلة", fontWeight = FontWeight.Bold) },
                 navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Rounded.ArrowBack, "رجوع") } },
                 actions = {
@@ -265,16 +318,27 @@ fun PlaylistsScreen(
     }
 
     Scaffold(
+        containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             TopAppBar(
                 modifier = Modifier.statusBarsPadding(),
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.background.copy(alpha = .96f),
+                    titleContentColor = MaterialTheme.colorScheme.onBackground,
+                    navigationIconContentColor = MaterialTheme.colorScheme.onBackground,
+                    actionIconContentColor = MaterialTheme.colorScheme.onBackground
+                ),
                 title = { Text("قوائم التشغيل", fontWeight = FontWeight.Bold) },
                 actions = { IconButton(onClick = { createDialog = true }) { Icon(Icons.Rounded.Add, "إنشاء") } }
             )
         }
     ) { padding ->
         LazyColumn(
-            modifier = Modifier.fillMaxSize().padding(padding),
+            modifier = Modifier
+                .fillMaxSize()
+                .background(premiumScreenBrush())
+                .premiumAmbientSurface()
+                .padding(padding),
             contentPadding = androidx.compose.foundation.layout.PaddingValues(14.dp),
             verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
@@ -311,16 +375,42 @@ private fun PlaylistCard(
     onClick: () -> Unit,
     trailing: (@Composable () -> Unit)? = null
 ) {
-    Card(
-        modifier = Modifier.fillMaxWidth().clickable(onClick = onClick),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = .48f)),
-        shape = RoundedCornerShape(18.dp)
+    val shape = RoundedCornerShape(22.dp)
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .shadow(6.dp, shape)
+            .background(premiumPanelBrush(), shape)
+            .border(1.dp, premiumOutlineBrush(), shape)
+            .clickable(onClick = onClick)
+            .padding(16.dp)
     ) {
-        Row(Modifier.fillMaxWidth().padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
-            Icon(icon, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(34.dp))
+        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+            Box(
+                Modifier
+                    .size(46.dp)
+                    .background(MaterialTheme.colorScheme.primaryContainer, CircleShape)
+                    .border(
+                        1.dp,
+                        MaterialTheme.colorScheme.primary.copy(alpha = .24f),
+                        CircleShape
+                    ),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    icon,
+                    null,
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(25.dp)
+                )
+            }
             Column(Modifier.weight(1f).padding(horizontal = 14.dp)) {
-                Text(title, fontWeight = FontWeight.Bold)
-                Text(subtitle, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(title, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
+                Text(
+                    subtitle,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
             }
             trailing?.invoke()
         }
@@ -339,24 +429,54 @@ fun BrowseGroupsScreen(
     onOpenPlayer: () -> Unit
 ) {
     var selected by rememberSaveable { mutableStateOf<String?>(null) }
+    var query by rememberSaveable { mutableStateOf("") }
+    val appSettings by vm.settings.collectAsState()
     val title = when (type) {
         "artist" -> "الفنانون"
         "album" -> "الألبومات"
         else -> "المجلدات"
     }
-    val grouped = remember(songs, type) {
+    val grouped = remember(songs, type, appSettings.hiddenFolders) {
         when (type) {
             "artist" -> songs.groupBy { it.artist }
             "album" -> songs.groupBy { it.album }
-            else -> songs.groupBy { it.folder }
+            else -> songs
+                .filter { it.folder !in appSettings.hiddenFolders }
+                .groupBy { it.folder }
         }.toSortedMap(String.CASE_INSENSITIVE_ORDER)
+    }
+    val visibleEntries = remember(grouped, query) {
+        grouped.entries.filter { query.isBlank() || it.key.contains(query, ignoreCase = true) }
     }
 
     Scaffold(
+        containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             TopAppBar(
                 modifier = Modifier.statusBarsPadding(),
-                title = { Text(selected ?: title, maxLines = 1, overflow = TextOverflow.Ellipsis, fontWeight = FontWeight.Bold) },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.background.copy(alpha = .96f),
+                    titleContentColor = MaterialTheme.colorScheme.onBackground,
+                    navigationIconContentColor = MaterialTheme.colorScheme.onBackground,
+                    actionIconContentColor = MaterialTheme.colorScheme.onBackground
+                ),
+                title = {
+                    Column {
+                        Text(
+                            selected ?: title,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                            fontWeight = FontWeight.Black
+                        )
+                        if (selected == null) {
+                            Text(
+                                "${visibleEntries.size} عنصر",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+                },
                 navigationIcon = {
                     IconButton(onClick = { if (selected != null) selected = null else onBack() }) {
                         Icon(Icons.AutoMirrored.Rounded.ArrowBack, "رجوع")
@@ -367,28 +487,101 @@ fun BrowseGroupsScreen(
     ) { padding ->
         val current = selected
         if (current == null) {
-            LazyColumn(Modifier.fillMaxSize().padding(padding)) {
-                items(grouped.entries.toList(), key = { it.key }) { entry ->
-                    Row(
-                        Modifier.fillMaxWidth().clickable { selected = entry.key }.padding(16.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Icon(
-                            when (type) {
-                                "artist" -> Icons.Rounded.Person
-                                "album" -> Icons.Rounded.Album
-                                else -> Icons.Rounded.Folder
-                            },
-                            null,
-                            tint = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.size(34.dp)
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(premiumScreenBrush())
+                .premiumAmbientSurface()
+                    .padding(padding),
+                contentPadding = androidx.compose.foundation.layout.PaddingValues(
+                    horizontal = 12.dp,
+                    vertical = 10.dp
+                ),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                item {
+                    OutlinedTextField(
+                        value = query,
+                        onValueChange = { query = it },
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true,
+                        leadingIcon = { Icon(Icons.Rounded.Search, null) },
+                        placeholder = { Text("البحث في $title") },
+                        shape = RoundedCornerShape(18.dp),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedContainerColor = MaterialTheme.colorScheme.surface.copy(alpha = .96f),
+                            unfocusedContainerColor = MaterialTheme.colorScheme.surface.copy(alpha = .86f),
+                            focusedBorderColor = MaterialTheme.colorScheme.primary,
+                            unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant
                         )
-                        Column(Modifier.weight(1f).padding(horizontal = 14.dp)) {
-                            Text(entry.key, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                            Text("${entry.value.size} أغنية", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    )
+                }
+
+                items(visibleEntries, key = { it.key }) { entry ->
+                    val shape = RoundedCornerShape(22.dp)
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .shadow(5.dp, shape)
+                            .background(premiumPanelBrush(), shape)
+                            .border(1.dp, premiumOutlineBrush(), shape)
+                            .clickable { selected = entry.key }
+                            .padding(horizontal = 14.dp, vertical = 13.dp)
+                    ) {
+                        Row(
+                            Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Box(
+                                Modifier
+                                    .size(48.dp)
+                                    .background(
+                                        MaterialTheme.colorScheme.primaryContainer.copy(alpha = .88f),
+                                        CircleShape
+                                    )
+                                    .border(
+                                        1.dp,
+                                        MaterialTheme.colorScheme.primary.copy(alpha = .22f),
+                                        CircleShape
+                                    ),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    when (type) {
+                                        "artist" -> Icons.Rounded.Person
+                                        "album" -> Icons.Rounded.Album
+                                        else -> Icons.Rounded.Folder
+                                    },
+                                    null,
+                                    tint = MaterialTheme.colorScheme.primary,
+                                    modifier = Modifier.size(26.dp)
+                                )
+                            }
+                            Column(Modifier.weight(1f).padding(horizontal = 14.dp)) {
+                                Text(
+                                    entry.key.ifBlank { "غير معروف" },
+                                    color = MaterialTheme.colorScheme.onSurface,
+                                    fontWeight = FontWeight.Bold,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
+                                )
+                                Text(
+                                    "${entry.value.size} أغنية",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                            if (type == "folder") {
+                                IconButton(onClick = { vm.hideFolder(entry.key) }) {
+                                    Icon(
+                                        Icons.Rounded.VisibilityOff,
+                                        contentDescription = "إخفاء المجلد",
+                                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
+                            }
                         }
                     }
-                    HorizontalDivider()
                 }
             }
         } else {
@@ -400,7 +593,10 @@ fun BrowseGroupsScreen(
                 playlists = playlists,
                 vm = vm,
                 onOpenPlayer = onOpenPlayer,
-                modifier = Modifier.padding(padding)
+                modifier = Modifier
+                    .background(premiumScreenBrush())
+                .premiumAmbientSurface()
+                    .padding(padding)
             )
         }
     }
@@ -423,9 +619,16 @@ fun PlaylistDetailScreen(
     val songs = remember(ids, byId) { ids.mapNotNull(byId::get) }
 
     Scaffold(
+        containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             TopAppBar(
                 modifier = Modifier.statusBarsPadding(),
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.background.copy(alpha = .96f),
+                    titleContentColor = MaterialTheme.colorScheme.onBackground,
+                    navigationIconContentColor = MaterialTheme.colorScheme.onBackground,
+                    actionIconContentColor = MaterialTheme.colorScheme.onBackground
+                ),
                 title = {
                     Column {
                         Text(title, maxLines = 1, overflow = TextOverflow.Ellipsis, fontWeight = FontWeight.Bold)
@@ -482,6 +685,7 @@ private fun SongList(
     var retryDeleteAfterGrant by remember { mutableStateOf(false) }
 
     val context = LocalContext.current
+    val playerState by vm.player.state.collectAsState()
 
     val deleteLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.StartIntentSenderForResult()
@@ -634,17 +838,55 @@ private fun SongList(
         )
     }
     if (songs.isEmpty()) {
-        Box(modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            Text(emptyMessage, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(24.dp))
+        Box(
+            modifier
+                .fillMaxSize()
+                .background(premiumScreenBrush())
+                .premiumAmbientSurface(),
+            contentAlignment = Alignment.Center
+        ) {
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Box(
+                    Modifier
+                        .size(70.dp)
+                        .background(MaterialTheme.colorScheme.primaryContainer, CircleShape)
+                        .border(
+                            1.dp,
+                            MaterialTheme.colorScheme.primary.copy(alpha = .24f),
+                            CircleShape
+                        ),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        Icons.Rounded.MusicNote,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(34.dp)
+                    )
+                }
+                Spacer(Modifier.height(14.dp))
+                Text(
+                    emptyMessage,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(horizontal = 28.dp)
+                )
+            }
         }
         return
     }
 
-    LazyColumn(modifier.fillMaxSize()) {
+    LazyColumn(
+        modifier
+            .fillMaxSize()
+            .background(premiumScreenBrush())
+                .premiumAmbientSurface()
+    ) {
         items(songs, key = { it.id }) { song ->
             SongRow(
                 song = song,
                 isFavorite = song.id in favoriteIds,
+                isCurrent = playerState.mediaId == song.id,
+                isPlaying = playerState.mediaId == song.id && playerState.isPlaying,
                 onClick = {
                     vm.play(song, allSongsForPlayback)
                     onOpenPlayer()

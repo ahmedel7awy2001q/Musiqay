@@ -60,3 +60,16 @@ jobs:
             app/build/outputs/apk/debug/app-debug.sha256
           if-no-files-found: error
           retention-days: 30
+
+      - name: Package source ZIP
+        run: git archive --format=zip --output=Musiqay-v1.3.0-source.zip HEAD
+
+      - name: Upload source ZIP
+        uses: actions/upload-artifact@v4
+        with:
+          name: Musiqay-source
+          path: Musiqay-v1.3.0-source.zip
+          if-no-files-found: error
+          retention-days: 30
+
+# build-trigger: premium-v3 final
