@@ -738,8 +738,16 @@ private fun GlassActionButton(
                 )
                 .border(
                     if (active) 1.5.dp else 1.dp,
-                    if (active) MaterialTheme.colorScheme.primary.copy(alpha = .72f)
-                    else premiumOutlineBrush(),
+                    if (active) {
+                        Brush.linearGradient(
+                            listOf(
+                                MaterialTheme.colorScheme.primary.copy(alpha = .82f),
+                                MaterialTheme.colorScheme.secondary.copy(alpha = .62f)
+                            )
+                        )
+                    } else {
+                        premiumOutlineBrush()
+                    },
                     shape
                 )
                 .clickable(onClick = onClick),
