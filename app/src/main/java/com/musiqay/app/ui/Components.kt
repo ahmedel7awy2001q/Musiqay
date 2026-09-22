@@ -19,6 +19,7 @@ import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material.icons.rounded.Delete
 import androidx.compose.material.icons.rounded.Favorite
 import androidx.compose.material.icons.rounded.FavoriteBorder
+import androidx.compose.material.icons.rounded.GraphicEq
 import androidx.compose.material.icons.rounded.MoreVert
 import androidx.compose.material.icons.rounded.MusicNote
 import androidx.compose.material.icons.rounded.Pause
@@ -124,6 +125,8 @@ fun SectionTitle(
 fun SongRow(
     song: Song,
     isFavorite: Boolean,
+    isCurrent: Boolean = false,
+    isPlaying: Boolean = false,
     onClick: () -> Unit,
     onToggleFavorite: () -> Unit,
     onPlayNext: () -> Unit,
@@ -141,33 +144,73 @@ fun SongRow(
             .padding(horizontal = 10.dp, vertical = 4.dp)
             .shadow(4.dp, rowShape)
             .background(
-                Brush.linearGradient(
-                    listOf(
-                        MaterialTheme.colorScheme.surfaceVariant.copy(alpha = .70f),
-                        MaterialTheme.colorScheme.surface.copy(alpha = .82f)
+                if (isCurrent) {
+                    Brush.linearGradient(
+                        listOf(
+                            MaterialTheme.colorScheme.primaryContainer.copy(alpha = .92f),
+                            MaterialTheme.colorScheme.surface.copy(alpha = .94f),
+                            MaterialTheme.colorScheme.secondaryContainer.copy(alpha = .62f)
+                        )
                     )
-                ),
+                } else {
+                    Brush.linearGradient(
+                        listOf(
+                            MaterialTheme.colorScheme.surfaceVariant.copy(alpha = .70f),
+                            MaterialTheme.colorScheme.surface.copy(alpha = .82f)
+                        )
+                    )
+                },
                 rowShape
             )
             .border(
-                1.dp,
-                MaterialTheme.colorScheme.outlineVariant.copy(alpha = .72f),
+                if (isCurrent) 1.5.dp else 1.dp,
+                if (isCurrent)
+                    MaterialTheme.colorScheme.primary.copy(alpha = .78f)
+                else
+                    MaterialTheme.colorScheme.outlineVariant.copy(alpha = .72f),
                 rowShape
             )
             .clickable(onClick = onClick)
             .padding(horizontal = 10.dp, vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        AlbumArtwork(song.artworkUri, Modifier.size(50.dp), 12)
+        Box(contentAlignment = Alignment.BottomEnd) {
+            AlbumArtwork(song.artworkUri, Modifier.size(50.dp), 12)
+            if (isCurrent) {
+                Box(
+                    Modifier
+                        .size(20.dp)
+                        .background(MaterialTheme.colorScheme.primary, CircleShape)
+                        .border(1.dp, MaterialTheme.colorScheme.surface, CircleShape),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        Icons.Rounded.GraphicEq,
+                        contentDescription = if (isPlaying) "قيد التشغيل" else "الأغنية الحالية",
+                        tint = MaterialTheme.colorScheme.onPrimary,
+                        modifier = Modifier.size(13.dp)
+                    )
+                }
+            }
+        }
         Spacer(Modifier.width(12.dp))
         Column(Modifier.weight(1f)) {
-            Text(song.title, maxLines = 1, overflow = TextOverflow.Ellipsis, fontWeight = FontWeight.SemiBold)
+            Text(
+                song.title,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                fontWeight = if (isCurrent) FontWeight.Black else FontWeight.SemiBold,
+                color = if (isCurrent) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
+            )
             Text(
                 "${song.artist} • ${formatDuration(song.durationMs)}",
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
                 style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                color = if (isCurrent)
+                    MaterialTheme.colorScheme.onSurface
+                else
+                    MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
         trailingContent?.invoke()

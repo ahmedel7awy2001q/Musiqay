@@ -679,6 +679,7 @@ private fun SongList(
     var retryDeleteAfterGrant by remember { mutableStateOf(false) }
 
     val context = LocalContext.current
+    val playerState by vm.player.state.collectAsState()
 
     val deleteLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.StartIntentSenderForResult()
@@ -876,6 +877,8 @@ private fun SongList(
             SongRow(
                 song = song,
                 isFavorite = song.id in favoriteIds,
+                isCurrent = playerState.mediaId == song.id,
+                isPlaying = playerState.mediaId == song.id && playerState.isPlaying,
                 onClick = {
                     vm.play(song, allSongsForPlayback)
                     onOpenPlayer()

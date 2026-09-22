@@ -116,15 +116,15 @@ fun HomeScreen(
                 Row(
                     Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 8.dp)
+                        .padding(horizontal = 16.dp, vertical = 6.dp)
                         .shadow(6.dp, headerShape)
                         .background(premiumPanelBrush(), headerShape)
                         .border(1.dp, premiumOutlineBrush(), headerShape)
-                        .padding(horizontal = 16.dp, vertical = 13.dp),
+                        .padding(horizontal = 15.dp, vertical = 10.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Column(Modifier.weight(1f)) {
-                        Text("موسيقاي", fontSize = 30.sp, fontWeight = FontWeight.Black)
+                        Text("موسيقاي", fontSize = 28.sp, fontWeight = FontWeight.Black)
                         Text(
                             "موسيقاك... بطريقتك",
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -139,9 +139,9 @@ fun HomeScreen(
                 val shape = RoundedCornerShape(30.dp)
                 Box(
                     modifier = Modifier
-                        .padding(horizontal = 18.dp, vertical = 10.dp)
+                        .padding(horizontal = 18.dp, vertical = 8.dp)
                         .fillMaxWidth()
-                        .height(184.dp)
+                        .height(156.dp)
                         .shadow(24.dp, shape)
                         .background(premiumHeroBrush(), shape)
                         .border(
@@ -155,7 +155,7 @@ fun HomeScreen(
                             shape
                         )
                         .clickable(onClick = onAllSongs)
-                        .padding(22.dp)
+                        .padding(18.dp)
                 ) {
                     Box(
                         Modifier
@@ -178,7 +178,7 @@ fun HomeScreen(
                     Box(
                         Modifier
                             .align(Alignment.TopStart)
-                            .size(86.dp)
+                            .size(72.dp)
                             .background(Color.White.copy(alpha = .12f), CircleShape)
                             .border(1.dp, Color.White.copy(alpha = .30f), CircleShape),
                         contentAlignment = Alignment.Center
@@ -187,7 +187,7 @@ fun HomeScreen(
                             Icons.Rounded.LibraryMusic,
                             contentDescription = null,
                             tint = Color.White,
-                            modifier = Modifier.size(42.dp)
+                            modifier = Modifier.size(34.dp)
                         )
                     }
 
@@ -197,17 +197,17 @@ fun HomeScreen(
                     ) {
                         Text(
                             "موسيقى لكل لحظة",
-                            fontSize = 27.sp,
+                            fontSize = 24.sp,
                             fontWeight = FontWeight.Black,
                             color = Color.White
                         )
-                        Spacer(Modifier.height(7.dp))
+                        Spacer(Modifier.height(5.dp))
                         Text(
                             if (songs.isEmpty()) "ابدأ بإضافة الموسيقى إلى هاتفك" else "${songs.size} أغنية جاهزة للتشغيل",
                             color = Color.White.copy(alpha = .93f),
-                            fontSize = 17.sp
+                            fontSize = 15.sp
                         )
-                        Spacer(Modifier.height(12.dp))
+                        Spacer(Modifier.height(8.dp))
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Icon(
                                 Icons.Rounded.GraphicEq,
@@ -227,12 +227,12 @@ fun HomeScreen(
                     Box(
                         Modifier
                             .align(Alignment.BottomStart)
-                            .size(48.dp)
+                            .size(42.dp)
                             .background(Color.White.copy(alpha = .18f), CircleShape)
                             .border(1.dp, Color.White.copy(alpha = .32f), CircleShape),
                         contentAlignment = Alignment.Center
                     ) {
-                        Icon(Icons.Rounded.PlayArrow, null, tint = Color.White, modifier = Modifier.size(30.dp))
+                        Icon(Icons.Rounded.PlayArrow, null, tint = Color.White, modifier = Modifier.size(26.dp))
                     }
                 }
             }
@@ -240,7 +240,7 @@ fun HomeScreen(
             item {
                 Text(
                     "مكتبتك",
-                    modifier = Modifier.padding(horizontal = 18.dp, vertical = 12.dp),
+                    modifier = Modifier.padding(horizontal = 18.dp, vertical = 8.dp),
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Black
                 )
@@ -264,7 +264,7 @@ fun HomeScreen(
                             Modifier.weight(1f)
                         )
                     }
-                    Spacer(Modifier.height(10.dp))
+                    Spacer(Modifier.height(8.dp))
                     Row(Modifier.fillMaxWidth()) {
                         LibraryCard(
                             "الألبومات",
@@ -293,21 +293,21 @@ fun HomeScreen(
                         title = "مضاف حديثًا",
                         action = "عرض الكل",
                         onAction = onAllSongs,
-                        modifier = Modifier.padding(start = 18.dp, end = 18.dp, top = 18.dp)
+                        modifier = Modifier.padding(start = 18.dp, end = 18.dp, top = 12.dp)
                     )
                 }
                 item {
                     LazyRow(
                         contentPadding = PaddingValues(horizontal = 18.dp),
-                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                        horizontalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
                         items(recent, key = { it.id }) { song ->
                             Column(
                                 modifier = Modifier
-                                    .width(116.dp)
+                                    .width(100.dp)
                                     .clickable { onSong(song) }
                             ) {
-                                AlbumArtwork(song.artworkUri, Modifier.size(116.dp), 18)
+                                AlbumArtwork(song.artworkUri, Modifier.size(100.dp), 18)
                                 Spacer(Modifier.height(7.dp))
                                 Text(
                                     song.title,
@@ -339,7 +339,7 @@ private fun PremiumRoundIcon(
 ) {
     Box(
         Modifier
-            .size(50.dp)
+            .size(44.dp)
             .shadow(8.dp, CircleShape)
             .background(premiumPanelBrush(), CircleShape)
             .border(1.dp, premiumOutlineBrush(), CircleShape),
@@ -363,25 +363,41 @@ private fun LibraryCard(
     val shape = RoundedCornerShape(24.dp)
     Box(
         modifier = modifier
-            .height(114.dp)
-            .shadow(15.dp, shape)
+            .height(92.dp)
+            .shadow(12.dp, shape)
             .background(Brush.linearGradient(colors), shape)
             .border(1.dp, Color.White.copy(alpha = .14f), shape)
             .clickable(onClick = onClick)
-            .padding(15.dp)
+            .padding(12.dp)
     ) {
         Box(
             Modifier
+                .align(Alignment.TopEnd)
+                .fillMaxWidth(.55f)
+                .height(1.dp)
+                .background(
+                    Brush.horizontalGradient(
+                        listOf(
+                            Color.Transparent,
+                            Color.White.copy(alpha = .42f),
+                            Color.Transparent
+                        )
+                    ),
+                    CircleShape
+                )
+        )
+        Box(
+            Modifier
                 .align(Alignment.TopStart)
-                .size(44.dp)
+                .size(36.dp)
                 .background(Color.White.copy(alpha = .16f), CircleShape)
                 .border(1.dp, Color.White.copy(alpha = .16f), CircleShape),
             contentAlignment = Alignment.Center
         ) {
-            Icon(icon, null, tint = Color.White, modifier = Modifier.size(23.dp))
+            Icon(icon, null, tint = Color.White, modifier = Modifier.size(20.dp))
         }
         Column(Modifier.align(Alignment.BottomEnd), horizontalAlignment = Alignment.End) {
-            Text(title, color = Color.White, fontWeight = FontWeight.Black, fontSize = 18.sp)
+            Text(title, color = Color.White, fontWeight = FontWeight.Black, fontSize = 16.sp)
             Text(
                 subtitle,
                 color = Color.White.copy(alpha = .80f),
