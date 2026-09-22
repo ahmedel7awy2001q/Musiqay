@@ -60,6 +60,7 @@ import com.musiqay.app.data.PlaylistEntity
 import com.musiqay.app.data.Song
 import com.musiqay.app.playback.NowPlayingState
 import com.musiqay.app.ui.theme.premiumOutlineBrush
+import com.musiqay.app.ui.theme.premiumAmbientSurface
 import com.musiqay.app.ui.theme.premiumPanelBrush
 import com.musiqay.app.util.formatDuration
 
@@ -283,6 +284,7 @@ fun MiniPlayer(
         modifier = modifier
             .fillMaxWidth()
             .padding(horizontal = 10.dp, vertical = 6.dp)
+            .premiumAmbientSurface()
             .shadow(miniElevation, shape)
             .background(premiumPanelBrush(), shape)
             .border(1.dp, premiumOutlineBrush(), shape)

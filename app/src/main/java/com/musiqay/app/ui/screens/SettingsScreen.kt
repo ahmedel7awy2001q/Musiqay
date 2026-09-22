@@ -56,6 +56,7 @@ import com.musiqay.app.data.ThemeMode
 import com.musiqay.app.ui.MusicViewModel
 import com.musiqay.app.ui.theme.premiumOutlineBrush
 import com.musiqay.app.ui.theme.premiumPanelBrush
+import com.musiqay.app.ui.theme.premiumAmbientSurface
 import com.musiqay.app.ui.theme.premiumScreenBrush
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -86,6 +87,7 @@ fun SettingsScreen(vm: MusicViewModel, onBack: () -> Unit) {
             Modifier
                 .fillMaxSize()
                 .background(premiumScreenBrush())
+                .premiumAmbientSurface()
         ) {
             Column(
                 Modifier

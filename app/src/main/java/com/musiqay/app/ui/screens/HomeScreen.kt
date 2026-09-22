@@ -51,6 +51,7 @@ import com.musiqay.app.ui.SectionTitle
 import com.musiqay.app.ui.theme.premiumHeroBrush
 import com.musiqay.app.ui.theme.premiumOutlineBrush
 import com.musiqay.app.ui.theme.premiumPanelBrush
+import com.musiqay.app.ui.theme.premiumAmbientSurface
 import com.musiqay.app.ui.theme.premiumScreenBrush
 
 @Composable
@@ -75,6 +76,7 @@ fun HomeScreen(
         modifier = Modifier
             .fillMaxSize()
             .background(premiumScreenBrush())
+            .premiumAmbientSurface()
     ) {
         Box(
             modifier = Modifier
@@ -302,12 +304,24 @@ fun HomeScreen(
                         horizontalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
                         items(recent, key = { it.id }) { song ->
+                            val recentShape = RoundedCornerShape(20.dp)
                             Column(
                                 modifier = Modifier
                                     .width(100.dp)
+                                    .shadow(6.dp, recentShape)
+                                    .background(
+                                        MaterialTheme.colorScheme.surface.copy(alpha = .82f),
+                                        recentShape
+                                    )
+                                    .border(
+                                        1.dp,
+                                        MaterialTheme.colorScheme.outlineVariant.copy(alpha = .52f),
+                                        recentShape
+                                    )
                                     .clickable { onSong(song) }
+                                    .padding(5.dp)
                             ) {
-                                AlbumArtwork(song.artworkUri, Modifier.size(100.dp), 18)
+                                AlbumArtwork(song.artworkUri, Modifier.size(90.dp), 16)
                                 Spacer(Modifier.height(7.dp))
                                 Text(
                                     song.title,

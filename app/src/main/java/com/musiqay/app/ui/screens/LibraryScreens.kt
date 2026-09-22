@@ -76,6 +76,7 @@ import com.musiqay.app.ui.PlaylistPickerDialog
 import com.musiqay.app.ui.SongRow
 import com.musiqay.app.ui.theme.premiumOutlineBrush
 import com.musiqay.app.ui.theme.premiumPanelBrush
+import com.musiqay.app.ui.theme.premiumAmbientSurface
 import com.musiqay.app.ui.theme.premiumScreenBrush
 
 private enum class SongSort(val label: String) {
@@ -160,6 +161,7 @@ fun SongsScreen(
             onOpenPlayer = onOpenPlayer,
             modifier = Modifier
                 .background(premiumScreenBrush())
+                .premiumAmbientSurface()
                 .padding(padding)
         )
     }
@@ -188,6 +190,7 @@ fun SearchScreen(
         Modifier
             .fillMaxSize()
             .background(premiumScreenBrush())
+                .premiumAmbientSurface()
             .statusBarsPadding()
     ) {
         Text(
@@ -334,6 +337,7 @@ fun PlaylistsScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .background(premiumScreenBrush())
+                .premiumAmbientSurface()
                 .padding(padding),
             contentPadding = androidx.compose.foundation.layout.PaddingValues(14.dp),
             verticalArrangement = Arrangement.spacedBy(10.dp)
@@ -487,6 +491,7 @@ fun BrowseGroupsScreen(
                 modifier = Modifier
                     .fillMaxSize()
                     .background(premiumScreenBrush())
+                .premiumAmbientSurface()
                     .padding(padding),
                 contentPadding = androidx.compose.foundation.layout.PaddingValues(
                     horizontal = 12.dp,
@@ -590,6 +595,7 @@ fun BrowseGroupsScreen(
                 onOpenPlayer = onOpenPlayer,
                 modifier = Modifier
                     .background(premiumScreenBrush())
+                .premiumAmbientSurface()
                     .padding(padding)
             )
         }
@@ -835,7 +841,8 @@ private fun SongList(
         Box(
             modifier
                 .fillMaxSize()
-                .background(premiumScreenBrush()),
+                .background(premiumScreenBrush())
+                .premiumAmbientSurface(),
             contentAlignment = Alignment.Center
         ) {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -872,6 +879,7 @@ private fun SongList(
         modifier
             .fillMaxSize()
             .background(premiumScreenBrush())
+                .premiumAmbientSurface()
     ) {
         items(songs, key = { it.id }) { song ->
             SongRow(

@@ -60,6 +60,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Slider
+import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -97,6 +98,7 @@ import com.musiqay.app.ui.MusicViewModel
 import com.musiqay.app.ui.PlaylistPickerDialog
 import com.musiqay.app.ui.theme.premiumOutlineBrush
 import com.musiqay.app.ui.theme.premiumPanelBrush
+import com.musiqay.app.ui.theme.premiumAmbientSurface
 import com.musiqay.app.ui.theme.premiumScreenBrush
 import com.musiqay.app.util.formatDuration
 
@@ -331,6 +333,7 @@ fun NowPlayingScreen(
         modifier = Modifier
             .fillMaxSize()
             .background(premiumScreenBrush())
+            .premiumAmbientSurface()
             .navigationBarsPadding()
             .statusBarsPadding()
     ) {
@@ -525,7 +528,12 @@ fun NowPlayingScreen(
                         dragPosition = null
                     },
                     valueRange = 0f..max,
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = SliderDefaults.colors(
+                        thumbColor = MaterialTheme.colorScheme.primary,
+                        activeTrackColor = MaterialTheme.colorScheme.primary,
+                        inactiveTrackColor = MaterialTheme.colorScheme.surfaceVariant
+                    )
                 )
 
                 Row(

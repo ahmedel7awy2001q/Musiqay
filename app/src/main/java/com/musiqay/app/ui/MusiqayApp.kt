@@ -1,5 +1,10 @@
 package com.musiqay.app.ui
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.Column
@@ -77,12 +82,24 @@ fun MusiqayApp(vm: MusicViewModel) {
         bottomBar = {
             if (showBottom) {
                 Column(modifier = Modifier.navigationBarsPadding()) {
-                    MiniPlayer(
-                        state = playerState,
-                        onOpen = { navController.navigate("player") },
-                        onToggle = vm.player::togglePlayPause,
-                        onNext = vm.player::next
-                    )
+                    AnimatedVisibility(
+                        visible = playerState.mediaId != null,
+                        enter = fadeIn(tween(180)) + slideInVertically(
+                            animationSpec = tween(220),
+                            initialOffsetY = { it / 3 }
+                        ),
+                        exit = fadeOut(tween(140)) + slideOutVertically(
+                            animationSpec = tween(180),
+                            targetOffsetY = { it / 3 }
+                        )
+                    ) {
+                        MiniPlayer(
+                            state = playerState,
+                            onOpen = { navController.navigate("player") },
+                            onToggle = vm.player::togglePlayPause,
+                            onNext = vm.player::next
+                        )
+                    }
                     NavigationBar(
                         containerColor = MaterialTheme.colorScheme.surface.copy(alpha = .98f),
                         tonalElevation = 0.dp
@@ -183,8 +200,8 @@ fun MusiqayApp(vm: MusicViewModel) {
             composable("player") {
                 NowPlayingScreen(
                     vm = vm,
-                    songs = songs,
-                    favoriteIds = favorites.toSet(),
+                    songs = visibleSongs,
+                    favoriteIds = visibleFavoriteIds.toSet(),
                     playlists = playlists,
                     onBack = { navController.popBackStack() }
                 )
