@@ -63,6 +63,11 @@ import androidx.compose.material3.Slider
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -72,6 +77,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
@@ -497,7 +503,7 @@ fun NowPlayingScreen(
 
             Spacer(Modifier.height(14.dp))
 
-            PremiumWaveform()
+            PremiumWaveform(isPlaying = state.isPlaying)
 
             Spacer(Modifier.height(8.dp))
 
@@ -557,14 +563,38 @@ fun NowPlayingScreen(
                         )
                     }
 
+                    val playPulse = rememberInfiniteTransition(label = "playPulse")
+                    val playScale by playPulse.animateFloat(
+                        initialValue = 1f,
+                        targetValue = if (state.isPlaying) 1.045f else 1f,
+                        animationSpec = infiniteRepeatable(
+                            animation = tween(950),
+                            repeatMode = RepeatMode.Reverse
+                        ),
+                        label = "playScale"
+                    )
+                    val glowAlpha by playPulse.animateFloat(
+                        initialValue = .24f,
+                        targetValue = if (state.isPlaying) .44f else .24f,
+                        animationSpec = infiniteRepeatable(
+                            animation = tween(1100),
+                            repeatMode = RepeatMode.Reverse
+                        ),
+                        label = "playGlow"
+                    )
+
                     Box(
                         modifier = Modifier
                             .size(104.dp)
+                            .graphicsLayer {
+                                scaleX = playScale
+                                scaleY = playScale
+                            }
                             .background(
                                 Brush.radialGradient(
                                     listOf(
-                                        MaterialTheme.colorScheme.primary.copy(alpha = .34f),
-                                        MaterialTheme.colorScheme.secondary.copy(alpha = .16f),
+                                        MaterialTheme.colorScheme.primary.copy(alpha = glowAlpha),
+                                        MaterialTheme.colorScheme.secondary.copy(alpha = glowAlpha * .48f),
                                         Color.Transparent
                                     )
                                 ),
@@ -649,7 +679,11 @@ fun NowPlayingScreen(
                     }
                 }
 
-                GlassActionButton(Icons.Rounded.Timer, timerLabel) {
+                GlassActionButton(
+                    icon = Icons.Rounded.Timer,
+                    label = timerLabel,
+                    active = currentSleepEnd != null
+                ) {
                     showTimer = true
                 }
 
@@ -677,6 +711,7 @@ fun NowPlayingScreen(
 private fun GlassActionButton(
     icon: androidx.compose.ui.graphics.vector.ImageVector,
     label: String,
+    active: Boolean = false,
     onClick: () -> Unit
 ) {
     val shape = RoundedCornerShape(20.dp)
@@ -688,15 +723,32 @@ private fun GlassActionButton(
             modifier = Modifier
                 .size(width = 68.dp, height = 60.dp)
                 .shadow(6.dp, shape)
-                .background(premiumPanelBrush(), shape)
-                .border(1.dp, premiumOutlineBrush(), shape)
+                .background(
+                    if (active) {
+                        Brush.linearGradient(
+                            listOf(
+                                MaterialTheme.colorScheme.primaryContainer,
+                                MaterialTheme.colorScheme.secondaryContainer
+                            )
+                        )
+                    } else {
+                        premiumPanelBrush()
+                    },
+                    shape
+                )
+                .border(
+                    if (active) 1.5.dp else 1.dp,
+                    if (active) MaterialTheme.colorScheme.primary.copy(alpha = .72f)
+                    else premiumOutlineBrush(),
+                    shape
+                )
                 .clickable(onClick = onClick),
             contentAlignment = Alignment.Center
         ) {
             Icon(
                 icon,
                 contentDescription = label,
-                tint = MaterialTheme.colorScheme.onSurface,
+                tint = if (active) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
                 modifier = Modifier.size(27.dp)
             )
         }
@@ -744,26 +796,60 @@ private fun PremiumControlButton(
 
 
 @Composable
-private fun PremiumWaveform() {
+private fun PremiumWaveform(isPlaying: Boolean) {
+    val transition = rememberInfiniteTransition(label = "waveform")
+    val phaseA by transition.animateFloat(
+        initialValue = .72f,
+        targetValue = if (isPlaying) 1f else .72f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(520),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "waveA"
+    )
+    val phaseB by transition.animateFloat(
+        initialValue = .82f,
+        targetValue = if (isPlaying) 1.16f else .82f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(690),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "waveB"
+    )
+    val phaseC by transition.animateFloat(
+        initialValue = .68f,
+        targetValue = if (isPlaying) 1.08f else .68f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(840),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "waveC"
+    )
+
     val bars = listOf(10, 18, 26, 15, 32, 22, 38, 18, 29, 14, 34, 24, 40, 20, 31, 16, 27, 13)
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .height(44.dp),
+            .height(46.dp),
         horizontalArrangement = Arrangement.Center,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        bars.forEachIndexed { index, barHeight ->
+        bars.forEachIndexed { index, baseHeight ->
+            val factor = when (index % 3) {
+                0 -> phaseA
+                1 -> phaseB
+                else -> phaseC
+            }
             Box(
                 Modifier
                     .padding(horizontal = 2.dp)
                     .width(3.dp)
-                    .height(barHeight.dp)
+                    .height((baseHeight * factor).dp)
                     .background(
                         if (index % 3 == 0)
-                            MaterialTheme.colorScheme.secondary.copy(alpha = .86f)
+                            MaterialTheme.colorScheme.secondary.copy(alpha = .88f)
                         else
-                            MaterialTheme.colorScheme.primary.copy(alpha = .78f),
+                            MaterialTheme.colorScheme.primary.copy(alpha = .82f),
                         CircleShape
                     )
             )

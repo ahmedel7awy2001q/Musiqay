@@ -38,6 +38,7 @@ import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -274,11 +275,15 @@ fun MiniPlayer(
 ) {
     if (state.mediaId == null) return
     val shape = RoundedCornerShape(26.dp)
+    val miniElevation by animateDpAsState(
+        targetValue = if (state.isPlaying) 20.dp else 10.dp,
+        label = "miniElevation"
+    )
     Box(
         modifier = modifier
             .fillMaxWidth()
             .padding(horizontal = 10.dp, vertical = 6.dp)
-            .shadow(18.dp, shape)
+            .shadow(miniElevation, shape)
             .background(premiumPanelBrush(), shape)
             .border(1.dp, premiumOutlineBrush(), shape)
             .clickable(onClick = onOpen)

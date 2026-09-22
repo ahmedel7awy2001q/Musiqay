@@ -1,5 +1,6 @@
 package com.musiqay.app.ui
 
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
@@ -19,6 +20,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavGraph.Companion.findStartDestination
@@ -85,8 +87,14 @@ fun MusiqayApp(vm: MusicViewModel) {
                         tonalElevation = 0.dp
                     ) {
                         rootItems.forEach { item ->
+                            val selected = currentRoute == item.route
+                            val iconScale by animateFloatAsState(
+                                targetValue = if (selected) 1.14f else 1f,
+                                animationSpec = tween(220),
+                                label = "navIconScale"
+                            )
                             NavigationBarItem(
-                                selected = currentRoute == item.route,
+                                selected = selected,
                                 onClick = {
                                     navController.navigate(item.route) {
                                         popUpTo(navController.graph.findStartDestination().id) {
@@ -96,7 +104,16 @@ fun MusiqayApp(vm: MusicViewModel) {
                                         restoreState = true
                                     }
                                 },
-                                icon = { Icon(item.icon, contentDescription = item.label) },
+                                icon = {
+                                    Icon(
+                                        item.icon,
+                                        contentDescription = item.label,
+                                        modifier = Modifier.graphicsLayer {
+                                            scaleX = iconScale
+                                            scaleY = iconScale
+                                        }
+                                    )
+                                },
                                 label = { Text(item.label) },
                                 colors = NavigationBarItemDefaults.colors(
                                     selectedIconColor = MaterialTheme.colorScheme.onPrimary,
