@@ -1,0 +1,71 @@
+name: Build Musiqay 1.4 Radio UI Fix
+
+on:
+  push:
+    branches:
+      - "build/v1.4-radio-ui-fix"
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+
+    steps:
+      - name: Checkout build carrier
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Install Android SDK packages
+        run: |
+          SDKMANAGER="$(find "${ANDROID_HOME:-/usr/local/lib/android/sdk}" /usr/local/lib/android/sdk -type f -name sdkmanager 2>/dev/null | head -n 1)"
+          if [ -z "$SDKMANAGER" ]; then
+            echo "sdkmanager not found"
+            exit 1
+          fi
+          yes | "$SDKMANAGER" --licenses >/dev/null || true
+          "$SDKMANAGER" "platforms;android-36" "build-tools;35.0.0"
+
+      - name: Set up Gradle 8.13
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: "8.13"
+
+      - name: Extract authoritative source
+        run: |
+          rm -rf build-source
+          mkdir -p build-source
+          unzip -q Musiqay-1.4-Radio-UI-Fix-UNBUILT-source.zip -d build-source
+          test -f build-source/Musiqay-1.4-radio/gradlew
+          chmod +x build-source/Musiqay-1.4-radio/gradlew
+
+      - name: Unit tests and lint
+        working-directory: build-source/Musiqay-1.4-radio
+        run: ./gradlew --no-daemon :app:testDebugUnitTest :app:lintDebug
+
+      - name: Build preview APK
+        working-directory: build-source/Musiqay-1.4-radio
+        run: ./gradlew --no-daemon -PpreviewBuild=true :app:assembleDebug
+
+      - name: Collect build outputs
+        run: |
+          mkdir -p out
+          cp build-source/Musiqay-1.4-radio/app/build/outputs/apk/debug/app-debug.apk out/Musiqay-1.4-Radio-UI-Fix-Preview-runner.apk
+          sha256sum out/Musiqay-1.4-Radio-UI-Fix-Preview-runner.apk > out/Musiqay-1.4-Radio-UI-Fix-Preview-runner.sha256
+          cp "${ANDROID_HOME:-/usr/local/lib/android/sdk}/build-tools/35.0.0/lib/apksigner.jar" out/apksigner.jar
+          cp Musiqay-1.4-Radio-UI-Fix-UNBUILT-source.zip out/Musiqay-1.4-Radio-UI-Fix-source.zip
+
+      - name: Upload APK and signing tool
+        uses: actions/upload-artifact@v4
+        with:
+          name: Musiqay-1.4-Radio-UI-Fix-Build
+          path: out/*
+          if-no-files-found: error
+          retention-days: 30
