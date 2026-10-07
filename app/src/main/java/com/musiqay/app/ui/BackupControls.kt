@@ -39,7 +39,7 @@ fun BackupControls(vm: MusicViewModel) {
         }
     }
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        Text("المفضلة والقوائم والعلامات ومواضع المتابعة والإعدادات. الملفات الصوتية نفسها لا تُنسخ.", style = MaterialTheme.typography.bodySmall)
+        Text("المفضلة والقوائم والعلامات ومواضع المتابعة والإعدادات. الملفات الصوتية نفسها لا تُنسخ. مراجع الملفات مخصصة لهذا الهاتف؛ نقلها إلى هاتف آخر يحتاج إعادة ربطها.", style = MaterialTheme.typography.bodySmall)
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             OutlinedButton(enabled = !busy, onClick = { create.launch("Musiqay-backup.json") }) { Text("تصدير") }
             OutlinedButton(enabled = !busy, onClick = { open.launch(arrayOf("application/json", "text/plain", "application/octet-stream")) }) { Text("استيراد") }

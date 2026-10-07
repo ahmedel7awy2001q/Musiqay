@@ -138,6 +138,7 @@ class PlaybackService : MediaSessionService() {
         val http = DefaultHttpDataSource.Factory().setUserAgent("Musiqay/1.4.2 (Android)")
             .setConnectTimeoutMs(10_000).setReadTimeoutMs(12_000).setAllowCrossProtocolRedirects(true)
         val exoPlayer = ExoPlayer.Builder(this)
+            .setWakeMode(C.WAKE_MODE_LOCAL)
             .setMediaSourceFactory(DefaultMediaSourceFactory(DefaultDataSource.Factory(this, http)))
             .setAudioAttributes(AudioAttributes.Builder().setUsage(C.USAGE_MEDIA)
                 .setContentType(C.AUDIO_CONTENT_TYPE_MUSIC).build(), true)
