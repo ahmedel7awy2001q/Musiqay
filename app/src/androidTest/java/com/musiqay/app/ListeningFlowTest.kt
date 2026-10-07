@@ -12,6 +12,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.rule.GrantPermissionRule
+import androidx.test.platform.app.InstrumentationRegistry
 import com.musiqay.app.ui.MusicViewModel
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.*
@@ -106,8 +107,14 @@ class ListeningFlowTest {
     private fun capture(name: String) {
         compose.waitForIdle()
         val folder = File(compose.activity.getExternalFilesDir(null), "screenshots").apply { mkdirs() }
-        File(folder, "$name.png").outputStream().use {
+        val file = File(folder, "$name.png")
+        file.outputStream().use {
             compose.onAllNodes(isRoot()).onLast().captureToImage().asAndroidBitmap().compress(Bitmap.CompressFormat.PNG, 100, it)
         }
+        // Gradle removes the test app after the suite. Keep visual evidence before cleanup.
+        val shell = InstrumentationRegistry.getInstrumentation().uiAutomation.executeShellCommand(
+            "mkdir -p /data/local/tmp/musiqay-shots && cp ${file.absolutePath} /data/local/tmp/musiqay-shots/$name.png")
+        val output = android.os.ParcelFileDescriptor.AutoCloseInputStream(shell).bufferedReader().use { it.readText() }
+        assertTrue(output, output.isBlank())
     }
 }

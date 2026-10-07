@@ -1,3 +1,5 @@
+> Historical source-batch notes from before the 1.4.1 build. The current 1.4.2 branch and its validation are described in CHANGELOG-1.4.2.md; the deferred status below does not describe the current build.
+
 # Musiqay 1.4 — Radio crash hardening + UI polish (UNBUILT)
 
 Date: 2026-10-07
