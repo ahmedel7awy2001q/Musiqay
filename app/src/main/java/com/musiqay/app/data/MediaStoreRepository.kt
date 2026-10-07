@@ -4,8 +4,13 @@ import android.content.ContentUris
 import android.content.Context
 import android.os.Build
 import android.provider.MediaStore
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import com.musiqay.app.util.cleanMediaAlbum
+import com.musiqay.app.util.cleanMediaArtist
+import com.musiqay.app.util.cleanMediaTitle
 
 class MediaStoreRepository(private val context: Context) {
 
@@ -20,10 +25,11 @@ class MediaStoreRepository(private val context: Context) {
             add(MediaStore.Audio.Media.DURATION)
             add(MediaStore.Audio.Media.DATE_ADDED)
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) add(MediaStore.Audio.Media.RELATIVE_PATH)
+            else add(MediaStore.Audio.Media.DATA)
         }.toTypedArray()
 
         val songs = mutableListOf<Song>()
-        try {
+        run {
             val safeMinimumSeconds = minimumDurationSeconds.coerceIn(0, 3600)
             val minimumDurationMs = safeMinimumSeconds * 1000L
 
@@ -49,21 +55,24 @@ class MediaStoreRepository(private val context: Context) {
                 val albumIdCol = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.ALBUM_ID)
                 val durationCol = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.DURATION)
                 val dateAddedCol = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.DATE_ADDED)
-                val pathCol = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) cursor.getColumnIndex(MediaStore.Audio.Media.RELATIVE_PATH) else -1
+                val pathCol = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) cursor.getColumnIndex(MediaStore.Audio.Media.RELATIVE_PATH) else cursor.getColumnIndex(MediaStore.Audio.Media.DATA)
 
                 while (cursor.moveToNext()) {
+                    currentCoroutineContext().ensureActive()
                     val id = cursor.getLong(idCol)
                     val albumId = cursor.getLong(albumIdCol)
                     val relativePath = if (pathCol >= 0) cursor.getString(pathCol).orEmpty() else ""
-                    val folder = relativePath.trimEnd('/')
-                        .substringAfterLast('/', missingDelimiterValue = relativePath.trimEnd('/'))
+                    val folderPath = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) relativePath.trimEnd('/')
+                        else relativePath.substringBeforeLast('/', "")
+                    val folder = folderPath.trimEnd('/')
+                        .substringAfterLast('/', missingDelimiterValue = folderPath.trimEnd('/'))
                         .ifBlank { "الموسيقى" }
 
                     songs += Song(
                         id = id,
-                        title = cursor.getString(titleCol)?.takeIf { it.isNotBlank() } ?: "بدون عنوان",
-                        artist = cursor.getString(artistCol)?.takeIf { it.isNotBlank() && it != "<unknown>" } ?: "فنان غير معروف",
-                        album = cursor.getString(albumCol)?.takeIf { it.isNotBlank() && it != "<unknown>" } ?: "ألبوم غير معروف",
+                        title = cleanMediaTitle(cursor.getString(titleCol)),
+                        artist = cleanMediaArtist(cursor.getString(artistCol)),
+                        album = cleanMediaAlbum(cursor.getString(albumCol)),
                         albumId = albumId,
                         durationMs = cursor.getLong(durationCol),
                         dateAddedSeconds = cursor.getLong(dateAddedCol),
@@ -71,12 +80,11 @@ class MediaStoreRepository(private val context: Context) {
                         artworkUri = albumId.takeIf { it > 0 }?.let {
                             ContentUris.withAppendedId(android.net.Uri.parse("content://media/external/audio/albumart"), it)
                         },
-                        folder = folder
+                        folder = folder,
+                        folderKey = folderPath.ifBlank { "الموسيقى" }
                     )
                 }
             }
-        } catch (_: SecurityException) {
-            return@withContext emptyList()
         }
         songs
     }

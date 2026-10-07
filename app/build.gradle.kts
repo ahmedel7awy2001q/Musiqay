@@ -13,8 +13,37 @@ android {
         applicationId = "com.musiqay.app"
         minSdk = 26
         targetSdk = 36
-        versionCode = 3
-        versionName = "1.3.0"
+        versionCode = 6
+        versionName = "1.4.2"
+        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+    }
+
+    signingConfigs {
+        val releaseStore = providers.environmentVariable("MUSIQAY_KEYSTORE_PATH").orNull
+        if (!releaseStore.isNullOrBlank()) {
+            create("release") {
+                storeFile = file(releaseStore)
+                storePassword = providers.environmentVariable("MUSIQAY_KEYSTORE_PASSWORD").orNull
+                keyAlias = providers.environmentVariable("MUSIQAY_KEY_ALIAS").orNull
+                keyPassword = providers.environmentVariable("MUSIQAY_KEY_PASSWORD").orNull
+            }
+        }
+    }
+    buildTypes {
+        debug {
+            // Optional separate test install when the previous signing key is unavailable.
+            if (providers.gradleProperty("previewBuild").orNull == "true") {
+                applicationIdSuffix = ".preview"
+                versionNameSuffix = "-preview"
+                resValue("string", "app_name", "موسيقاي • تجربة")
+            }
+        }
+        release {
+            isMinifyEnabled = true
+            isShrinkResources = true
+            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
+            signingConfig = signingConfigs.findByName("release")
+        }
     }
 
     buildFeatures {
@@ -27,15 +56,16 @@ android {
         targetCompatibility = JavaVersion.VERSION_17
     }
 
-    kotlinOptions {
-        jvmTarget = "17"
-    }
 
     packaging {
         resources {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
         }
     }
+}
+
+kotlin {
+    compilerOptions { jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17) }
 }
 
 dependencies {
@@ -57,6 +87,7 @@ dependencies {
     debugImplementation("androidx.compose.ui:ui-tooling")
 
     implementation("androidx.media3:media3-exoplayer:1.11.1")
+    implementation("androidx.media3:media3-exoplayer-hls:1.11.1")
     implementation("androidx.media3:media3-session:1.11.1")
 
     implementation("androidx.room:room-runtime:2.8.5")
@@ -68,4 +99,9 @@ dependencies {
     implementation("io.coil-kt:coil-compose:2.7.0")
 
     testImplementation("junit:junit:4.13.2")
+    androidTestImplementation(composeBom)
+    androidTestImplementation("androidx.compose.ui:ui-test-junit4")
+    androidTestImplementation("androidx.test:runner:1.6.2")
+    androidTestImplementation("androidx.test:rules:1.6.1")
+    androidTestImplementation("androidx.test.ext:junit:1.2.1")
 }

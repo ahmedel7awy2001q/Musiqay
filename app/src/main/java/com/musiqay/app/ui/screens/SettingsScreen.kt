@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -53,6 +54,9 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.musiqay.app.BuildConfig
 import com.musiqay.app.data.ThemeMode
+import com.musiqay.app.data.StartPage
+import androidx.compose.material3.FilterChip
+import com.musiqay.app.ui.BackupControls
 import com.musiqay.app.ui.MusicViewModel
 import com.musiqay.app.ui.theme.premiumOutlineBrush
 import com.musiqay.app.ui.theme.premiumPanelBrush
@@ -63,18 +67,18 @@ import com.musiqay.app.ui.theme.premiumScreenBrush
 @Composable
 fun SettingsScreen(vm: MusicViewModel, onBack: () -> Unit) {
     val settings by vm.settings.collectAsStateWithLifecycle()
+    val status by vm.libraryStatus.collectAsStateWithLifecycle()
 
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             TopAppBar(
-                modifier = Modifier.statusBarsPadding(),
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.background.copy(alpha = .94f),
                     titleContentColor = MaterialTheme.colorScheme.onBackground,
                     navigationIconContentColor = MaterialTheme.colorScheme.onBackground
                 ),
-                title = { Text("الإعدادات", fontWeight = FontWeight.Black, fontSize = 27.sp) },
+                title = { Text("الإعدادات", fontWeight = FontWeight.Black, fontSize = 23.sp) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(Icons.AutoMirrored.Rounded.ArrowBack, "رجوع")
@@ -96,6 +100,12 @@ fun SettingsScreen(vm: MusicViewModel, onBack: () -> Unit) {
                     .verticalScroll(rememberScrollState())
                     .padding(horizontal = 16.dp)
             ) {
+                SectionLabel("صفحة البداية")
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    StartPage.entries.forEach { page ->
+                        FilterChip(selected = settings.startPage == page, onClick = { vm.setStartPage(page) }, label = { Text(page.label) })
+                    }
+                }
                 SectionLabel("المظهر")
 
                 Row(
@@ -149,11 +159,22 @@ fun SettingsScreen(vm: MusicViewModel, onBack: () -> Unit) {
                     }
                 }
 
+                Spacer(Modifier.height(12.dp))
+                SettingCard {
+                    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                        Column(Modifier.weight(1f)) {
+                            Text("تقليل الحركة", fontWeight = FontWeight.Bold)
+                            Text("إيقاف النبضات وتخفيف حركة الانتقال", style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        }
+                        Switch(checked = settings.reduceMotion, onCheckedChange = vm::setReduceMotion)
+                    }
+                }
                 Spacer(Modifier.height(18.dp))
                 SectionLabel("المكتبة")
 
                 SettingCard(
-                    modifier = Modifier.clickable { vm.refreshLibrary() }
+                    modifier = Modifier.clickable(enabled = !status.loading) { vm.refreshLibrary() }
                 ) {
                     Row(
                         Modifier.fillMaxWidth(),
@@ -161,9 +182,10 @@ fun SettingsScreen(vm: MusicViewModel, onBack: () -> Unit) {
                     ) {
                         Icon(Icons.Rounded.Refresh, null, tint = MaterialTheme.colorScheme.primary)
                         Column(Modifier.weight(1f).padding(horizontal = 12.dp)) {
-                            Text("إعادة فحص الموسيقى", fontWeight = FontWeight.Bold)
+                            Text(if (status.loading) "جارٍ تحديث المكتبة…" else "إعادة فحص الموسيقى", fontWeight = FontWeight.Bold)
                             Text(
-                                "تحديث الأغاني والألبومات والمجلدات من الهاتف",
+                                status.error ?: status.scannedAt?.let { "آخر تحديث " + java.text.DateFormat.getTimeInstance(java.text.DateFormat.SHORT).format(java.util.Date(it)) }
+                                    ?: "تُحدّث المكتبة تلقائيًا عند تغيّر الملفات",
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -208,6 +230,7 @@ fun SettingsScreen(vm: MusicViewModel, onBack: () -> Unit) {
                                             RoundedCornerShape(14.dp)
                                         )
                                         .clickable { vm.setMinimumAudioDuration(seconds) }
+                                        .heightIn(min = 48.dp)
                                         .padding(vertical = 10.dp),
                                     contentAlignment = Alignment.Center
                                 ) {
@@ -285,7 +308,11 @@ fun SettingsScreen(vm: MusicViewModel, onBack: () -> Unit) {
                                         .padding(horizontal = 12.dp, vertical = 6.dp),
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
-                                    Text(folder, modifier = Modifier.weight(1f), maxLines = 1)
+                                    Column(Modifier.weight(1f)) {
+                                        Text(folder.removePrefix("path:").substringAfterLast('/'), maxLines = 1)
+                                        Text(if (folder.startsWith("path:")) folder.removePrefix("path:") else "كل المجلدات بهذا الاسم",
+                                            maxLines = 2, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                    }
                                     TextButton(onClick = { vm.showFolder(folder) }) {
                                         Text("إظهار")
                                     }
@@ -295,6 +322,8 @@ fun SettingsScreen(vm: MusicViewModel, onBack: () -> Unit) {
                 }
 
                 Spacer(Modifier.height(18.dp))
+                SectionLabel("النسخ الاحتياطي")
+                BackupControls(vm)
                 SectionLabel("الخصوصية")
 
                 SettingCard {
@@ -303,7 +332,7 @@ fun SettingsScreen(vm: MusicViewModel, onBack: () -> Unit) {
                         Column(Modifier.padding(horizontal = 12.dp)) {
                             Text("خصوصيتك أولًا", fontWeight = FontWeight.Bold)
                             Text(
-                                "موسيقاي مشغل محلي. الأغاني والمفضلة وقوائم التشغيل تبقى على هاتفك.",
+                                "ملفاتك ومفضلتك وعلاماتك تبقى على هاتفك. الراديو يتصل بمصدر البث، ويُحدّث دليل المحطات عند فتحه.",
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 style = MaterialTheme.typography.bodyMedium
                             )
@@ -330,7 +359,7 @@ private fun SectionLabel(text: String) {
         color = MaterialTheme.colorScheme.primary,
         fontWeight = FontWeight.Black,
         fontSize = 18.sp,
-        modifier = Modifier.padding(vertical = 10.dp)
+        modifier = Modifier.padding(vertical = 8.dp)
     )
 }
 
@@ -342,18 +371,18 @@ private fun ThemeChoice(
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val shape = RoundedCornerShape(22.dp)
-    val contentColor = if (selected) Color.White else MaterialTheme.colorScheme.onSurface
+    val shape = RoundedCornerShape(16.dp)
+    val contentColor = if (selected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface
     Box(
         modifier = modifier
-            .height(112.dp)
-            .shadow(if (selected) 16.dp else 5.dp, shape)
+            .heightIn(min = 84.dp)
+            .shadow(if (selected) 1.dp else 0.dp, shape)
             .background(
                 if (selected) {
                     Brush.linearGradient(
                         listOf(
-                            MaterialTheme.colorScheme.primary,
-                            MaterialTheme.colorScheme.secondary
+                            MaterialTheme.colorScheme.primary.copy(alpha = .94f),
+                            MaterialTheme.colorScheme.primary.copy(alpha = .80f)
                         )
                     )
                 } else {
@@ -362,35 +391,35 @@ private fun ThemeChoice(
                 shape
             )
             .border(
-                1.dp,
-                if (selected) Color.White.copy(alpha = .30f)
-                else MaterialTheme.colorScheme.outlineVariant,
+                .7.dp,
+                if (selected) Color.White.copy(alpha = .24f)
+                else MaterialTheme.colorScheme.outlineVariant.copy(alpha = .32f),
                 shape
             )
             .clickable(onClick = onClick)
-            .padding(horizontal = 8.dp, vertical = 10.dp),
+            .padding(horizontal = 7.dp, vertical = 7.dp),
         contentAlignment = Alignment.Center
     ) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             Box(
                 Modifier
-                    .size(44.dp)
+                    .size(36.dp)
                     .background(
                         if (selected) Color.White.copy(alpha = .16f)
-                        else MaterialTheme.colorScheme.primaryContainer.copy(alpha = .75f),
+                        else MaterialTheme.colorScheme.primaryContainer.copy(alpha = .58f),
                         CircleShape
                     )
                     .border(
                         1.dp,
                         if (selected) Color.White.copy(alpha = .20f)
-                        else MaterialTheme.colorScheme.outlineVariant.copy(alpha = .70f),
+                        else MaterialTheme.colorScheme.outlineVariant.copy(alpha = .30f),
                         CircleShape
                     ),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(icon, null, tint = contentColor)
             }
-            Spacer(Modifier.height(8.dp))
+            Spacer(Modifier.height(6.dp))
             Text(
                 title,
                 style = MaterialTheme.typography.labelMedium,
@@ -407,14 +436,14 @@ private fun SettingCard(
     modifier: Modifier = Modifier,
     content: @Composable () -> Unit
 ) {
-    val shape = RoundedCornerShape(20.dp)
+    val shape = RoundedCornerShape(16.dp)
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .shadow(4.dp, shape)
+            .shadow(.5.dp, shape)
             .background(premiumPanelBrush(), shape)
-            .border(1.dp, premiumOutlineBrush(), shape)
-            .padding(15.dp)
+            .border(.4.dp, premiumOutlineBrush(), shape)
+            .padding(horizontal = 12.dp, vertical = 10.dp)
     ) {
         content()
     }

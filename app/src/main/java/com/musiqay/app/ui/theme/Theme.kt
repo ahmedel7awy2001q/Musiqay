@@ -10,15 +10,22 @@ import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.Font
+import androidx.compose.ui.text.font.FontFamily
+import com.musiqay.app.R
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.musiqay.app.data.AppSettings
 import com.musiqay.app.data.ThemeMode
+
+val LocalReduceMotion = staticCompositionLocalOf { false }
 
 private val DarkColors = darkColorScheme(
     primary = Color(0xFF8EA2FF),
@@ -66,6 +73,11 @@ private val LightColors = lightColorScheme(
     outlineVariant = Color(0xFFC9CEDD)
 )
 
+private val ArabicFont = FontFamily(
+    Font(R.font.noto_sans_arabic_regular, FontWeight.Normal),
+    Font(R.font.noto_sans_arabic_bold, FontWeight.Bold)
+)
+
 private val PremiumTypography = Typography(
     headlineLarge = TextStyle(
         fontSize = 32.sp,
@@ -110,7 +122,20 @@ private val PremiumTypography = Typography(
         lineHeight = 18.sp,
         fontWeight = FontWeight.SemiBold
     )
-)
+).let { t ->
+    t.copy(
+        displayLarge = t.displayLarge.copy(fontFamily = ArabicFont), displayMedium = t.displayMedium.copy(fontFamily = ArabicFont),
+        displaySmall = t.displaySmall.copy(fontFamily = ArabicFont), headlineLarge = t.headlineLarge.copy(fontFamily = ArabicFont),
+        headlineMedium = t.headlineMedium.copy(fontFamily = ArabicFont), headlineSmall = t.headlineSmall.copy(fontFamily = ArabicFont),
+        titleLarge = t.titleLarge.copy(fontFamily = ArabicFont), titleMedium = t.titleMedium.copy(fontFamily = ArabicFont),
+        titleSmall = t.titleSmall.copy(fontFamily = ArabicFont), bodyLarge = t.bodyLarge.copy(fontFamily = ArabicFont),
+        bodyMedium = t.bodyMedium.copy(fontFamily = ArabicFont), bodySmall = t.bodySmall.copy(fontFamily = ArabicFont),
+        labelLarge = t.labelLarge.copy(fontFamily = ArabicFont), labelMedium = t.labelMedium.copy(fontFamily = ArabicFont),
+        labelSmall = t.labelSmall.copy(fontFamily = ArabicFont)
+    )
+}
+
+
 
 private val PremiumShapes = Shapes(
     extraSmall = RoundedCornerShape(10.dp),
@@ -135,10 +160,12 @@ fun MusiqayTheme(settings: AppSettings, content: @Composable () -> Unit) {
         if (dark) DarkColors else LightColors
     }
 
-    MaterialTheme(
-        colorScheme = colors,
-        typography = PremiumTypography,
-        shapes = PremiumShapes,
-        content = content
-    )
+    CompositionLocalProvider(LocalReduceMotion provides settings.reduceMotion) {
+        MaterialTheme(
+            colorScheme = colors,
+            typography = PremiumTypography,
+            shapes = PremiumShapes,
+            content = content
+        )
+    }
 }

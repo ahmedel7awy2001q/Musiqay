@@ -1,0 +1,19 @@
+Musiqay radio sources and original station artwork
+
+Station names/logos belong to their respective broadcasters. Artwork identifies
+the selected station; Musiqay is an independent player. Files were downloaded
+from public broadcaster websites without raster editing.
+
+Quran: https://misrquran.gov.eg/img/1366%20normal%20logo.915db7c0.webp
+Nogoum: https://www.nogoumfm.net/wp-content/uploads/2019/12/logo-nogoum-1.png
+9090: https://www.9090.fm/images/logo.png
+Nile: https://www.nilefm.com/static/logo.png
+
+Community catalogue: Radio Browser, https://www.radio-browser.info/
+API instructions: https://docs.radio-browser.info/
+Snapshot countrycode: EG; entries marked lastcheckok=1 at retrieval on 2026-10-07.
+Healthy-directory status is not a guarantee of uninterrupted listening.
+
+Public reference app: https://play.google.com/store/apps/details?id=com.appmind.radios.egypt
+Only public descriptions/screenshots were reviewed. Its code and station
+database were not copied or accessed.

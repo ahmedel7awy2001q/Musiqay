@@ -22,19 +22,17 @@ fun premiumScreenBrush(): Brush {
         Brush.verticalGradient(
             listOf(
                 colors.background,
-                colors.primary.copy(alpha = .10f),
-                colors.surfaceVariant.copy(alpha = .72f),
-                colors.secondary.copy(alpha = .07f),
+                colors.primary.copy(alpha = .055f),
+                colors.surfaceVariant.copy(alpha = .48f),
                 colors.background
             )
         )
     } else {
         Brush.verticalGradient(
             listOf(
-                Color(0xFFFCFDFF),
-                colors.primaryContainer.copy(alpha = .42f),
-                colors.surface,
-                colors.secondaryContainer.copy(alpha = .26f),
+                Color(0xFFFBFCFF),
+                colors.primaryContainer.copy(alpha = .16f),
+                colors.surface.copy(alpha = .99f),
                 colors.background
             )
         )
@@ -47,15 +45,15 @@ fun premiumPanelBrush(): Brush {
     return if (isPremiumDark()) {
         Brush.linearGradient(
             listOf(
-                colors.surfaceVariant.copy(alpha = .96f),
-                colors.surface.copy(alpha = .94f)
+                colors.surfaceVariant.copy(alpha = .72f),
+                colors.surface.copy(alpha = .98f)
             )
         )
     } else {
         Brush.linearGradient(
             listOf(
-                colors.surface.copy(alpha = .99f),
-                colors.surfaceVariant.copy(alpha = .90f)
+                colors.surface.copy(alpha = .995f),
+                colors.surfaceVariant.copy(alpha = .58f)
             )
         )
     }
@@ -64,11 +62,11 @@ fun premiumPanelBrush(): Brush {
 @Composable
 fun premiumOutlineBrush(): Brush {
     val colors = MaterialTheme.colorScheme
-    val primaryAlpha = if (isPremiumDark()) .48f else .30f
+    val primaryAlpha = if (isPremiumDark()) .24f else .16f
     return Brush.linearGradient(
         listOf(
             colors.primary.copy(alpha = primaryAlpha),
-            colors.outlineVariant.copy(alpha = .92f),
+            colors.outlineVariant.copy(alpha = .58f),
             colors.secondary.copy(alpha = primaryAlpha * .72f)
         )
     )
@@ -90,30 +88,30 @@ fun premiumHeroBrush(): Brush =
 fun Modifier.premiumAmbientSurface(): Modifier = composed {
     val colors = MaterialTheme.colorScheme
     val dark = colors.background.luminance() < 0.45f
-    val glowAlpha = if (dark) .12f else .07f
-    val waveAlpha = if (dark) .075f else .045f
+    val glowAlpha = if (dark) .055f else .028f
+    val waveAlpha = if (dark) .026f else .014f
 
     drawBehind {
         val minSide = size.minDimension
 
         drawCircle(
             color = colors.primary.copy(alpha = glowAlpha),
-            radius = minSide * .62f,
-            center = Offset(size.width * .92f, size.height * .12f)
+            radius = minSide * .56f,
+            center = Offset(size.width * 1.02f, size.height * .08f)
         )
         drawCircle(
             color = colors.secondary.copy(alpha = glowAlpha * .78f),
-            radius = minSide * .52f,
-            center = Offset(size.width * .08f, size.height * .48f)
+            radius = minSide * .48f,
+            center = Offset(size.width * -.02f, size.height * .55f)
         )
         drawCircle(
             color = colors.tertiary.copy(alpha = glowAlpha * .62f),
-            radius = minSide * .44f,
-            center = Offset(size.width * .78f, size.height * .90f)
+            radius = minSide * .40f,
+            center = Offset(size.width * .90f, size.height * .96f)
         )
 
         val baseY = size.height * .78f
-        repeat(3) { index ->
+        repeat(1) { index ->
             val path = Path().apply {
                 moveTo(-size.width * .05f, baseY + index * 22f)
                 cubicTo(

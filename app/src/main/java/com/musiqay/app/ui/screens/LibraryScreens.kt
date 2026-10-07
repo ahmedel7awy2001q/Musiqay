@@ -1,6 +1,7 @@
 package com.musiqay.app.ui.screens
 
 import androidx.compose.ui.platform.LocalContext
+import androidx.activity.compose.BackHandler
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.result.IntentSenderRequest
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -15,6 +16,9 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.rememberScrollState
+import com.musiqay.app.util.detectedSurah
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -56,6 +60,26 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SnackbarResult
+import androidx.compose.material3.SnackbarDuration
+import kotlinx.coroutines.launch
+import androidx.compose.runtime.produceState
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.withContext
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.FilterChip
+import androidx.compose.material.icons.rounded.MoreVert
+import androidx.compose.material.icons.rounded.Edit
+import com.musiqay.app.ui.PlaylistSummary
+import com.musiqay.app.ui.AlbumArtwork
+import com.musiqay.app.util.formatDuration
+import com.musiqay.app.util.normalizeSearch
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -79,6 +103,14 @@ import com.musiqay.app.ui.theme.premiumPanelBrush
 import com.musiqay.app.ui.theme.premiumAmbientSurface
 import com.musiqay.app.ui.theme.premiumScreenBrush
 
+private fun groupTitle(type: String, key: String, songs: List<Song>): String = when (type) {
+    "album" -> songs.firstOrNull()?.album ?: "ألبوم غير معروف"
+    "folder" -> songs.firstOrNull()?.folder ?: key.substringAfterLast('/')
+    else -> key.ifBlank { "غير معروف" }
+}
+
+private data class SearchResults(val query: String = "", val loading: Boolean = false, val songs: List<Song> = emptyList())
+
 private enum class SongSort(val label: String) {
     NEWEST("الأحدث"),
     TITLE("الاسم"),
@@ -93,24 +125,25 @@ fun SongsScreen(
     favoriteIds: Set<Long>,
     playlists: List<PlaylistEntity>,
     vm: MusicViewModel,
-    onOpenPlayer: () -> Unit
+    onOpenPlayer: () -> Unit,
+    onBrowse: (String) -> Unit
 ) {
     var sort by rememberSaveable { mutableStateOf(SongSort.NEWEST) }
     var sortMenu by remember { mutableStateOf(false) }
-    val sorted = remember(songs, sort) {
-        when (sort) {
+    val sorted by produceState(songs, songs, sort) {
+        value = withContext(Dispatchers.Default) { when (sort) {
             SongSort.NEWEST -> songs.sortedByDescending { it.dateAddedSeconds }
             SongSort.TITLE -> songs.sortedBy { it.title.lowercase() }
             SongSort.ARTIST -> songs.sortedBy { it.artist.lowercase() }
             SongSort.DURATION -> songs.sortedByDescending { it.durationMs }
-        }
+        } }
     }
 
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             TopAppBar(
-                modifier = Modifier.statusBarsPadding(),
+                expandedHeight = 84.dp,
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.background.copy(alpha = .96f),
                     titleContentColor = MaterialTheme.colorScheme.onBackground,
@@ -118,9 +151,9 @@ fun SongsScreen(
                     actionIconContentColor = MaterialTheme.colorScheme.onBackground
                 ),
                 title = {
-                    Column {
-                        Text("الأغاني", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Black)
-                        Text("${songs.size} أغنية", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Column(Modifier.padding(vertical = 4.dp)) {
+                        Text("المكتبة", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Black)
+                        Text("${songs.size} ملف صوتي", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                 },
                 actions = {
@@ -152,18 +185,15 @@ fun SongsScreen(
             )
         }
     ) { padding ->
-        SongList(
-            songs = sorted,
-            allSongsForPlayback = sorted,
-            favoriteIds = favoriteIds,
-            playlists = playlists,
-            vm = vm,
-            onOpenPlayer = onOpenPlayer,
-            modifier = Modifier
-                .background(premiumScreenBrush())
-                .premiumAmbientSurface()
-                .padding(padding)
-        )
+        Column(Modifier.fillMaxSize().padding(padding)) {
+            Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()).padding(horizontal = 12.dp, vertical = 6.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                listOf("surah" to "التلاوات", "reader" to "القراء", "artist" to "الفنانون", "album" to "الألبومات", "folder" to "المجلدات").forEach { (type, label) ->
+                    FilterChip(selected = false, onClick = { onBrowse(type) }, label = { Text(label) })
+                }
+            }
+            SongList(songs = sorted, allSongsForPlayback = sorted, favoriteIds = favoriteIds,
+                playlists = playlists, vm = vm, onOpenPlayer = onOpenPlayer, modifier = Modifier.weight(1f))
+        }
     }
 }
 
@@ -176,14 +206,20 @@ fun SearchScreen(
     onOpenPlayer: () -> Unit
 ) {
     var query by rememberSaveable { mutableStateOf("") }
-    val results = remember(songs, query) {
-        if (query.isBlank()) emptyList()
-        else songs.filter {
-            it.title.contains(query, true) ||
-                it.artist.contains(query, true) ||
-                it.album.contains(query, true) ||
-                it.folder.contains(query, true)
+    val searchIndex by produceState<Map<Long, String>>(emptyMap(), songs) {
+        value = withContext(Dispatchers.Default) { songs.associate { song ->
+            song.id to normalizeSearch("${song.title} ${song.artist} ${song.album} ${song.folderKey}")
+        } }
+    }
+    val results by produceState<SearchResults>(SearchResults(), songs, searchIndex, query) {
+        value = SearchResults(query, true)
+        if (query.isNotBlank() && songs.isNotEmpty() && searchIndex.size != songs.size) return@produceState
+        if (query.isNotBlank()) delay(180)
+        val matched = withContext(Dispatchers.Default) {
+            val term = normalizeSearch(query)
+            if (term.isBlank()) emptyList() else songs.filter { searchIndex[it.id]?.contains(term) == true }
         }
+        value = SearchResults(query, false, matched)
     }
 
     Column(
@@ -205,7 +241,7 @@ fun SearchScreen(
             modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
             singleLine = true,
             leadingIcon = { Icon(Icons.Rounded.Search, null) },
-            placeholder = { Text("ابحث باسم الأغنية أو الفنان أو الألبوم") },
+            placeholder = { Text("ابحث باسم الملف أو القارئ أو الألبوم") },
             shape = RoundedCornerShape(18.dp),
             colors = OutlinedTextFieldDefaults.colors(
                 focusedContainerColor = MaterialTheme.colorScheme.surface.copy(alpha = .96f),
@@ -216,12 +252,29 @@ fun SearchScreen(
         )
         if (query.isBlank()) {
             Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                Text("اكتب شيئًا للبحث في مكتبتك", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Box(
+                        Modifier.size(60.dp).background(MaterialTheme.colorScheme.primaryContainer.copy(alpha = .68f), CircleShape),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(Icons.Rounded.Search, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(28.dp))
+                    }
+                    Spacer(Modifier.height(12.dp))
+                    Text("ابحث في مكتبتك", fontWeight = FontWeight.Bold)
+                    Text(
+                        "بالملف أو القارئ أو الألبوم أو المجلد",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
             }
+        } else if (results.loading || results.query != query) {
+            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
         } else {
             SongList(
-                songs = results,
-                allSongsForPlayback = results,
+                songs = results.songs,
+                allSongsForPlayback = results.songs,
+                emptyMessage = "لا توجد نتائج. جرّب اسم الملف أو القارئ أو المجلد.",
                 favoriteIds = favoriteIds,
                 playlists = playlists,
                 vm = vm,
@@ -246,7 +299,6 @@ fun FavoritesScreen(
         containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             TopAppBar(
-                modifier = Modifier.statusBarsPadding(),
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.background.copy(alpha = .96f),
                     titleContentColor = MaterialTheme.colorScheme.onBackground,
@@ -272,7 +324,7 @@ fun FavoritesScreen(
             playlists = playlists,
             vm = vm,
             onOpenPlayer = onOpenPlayer,
-            emptyMessage = "لم تضف أي أغنية إلى المفضلة بعد.",
+            emptyMessage = "لم تضف أي ملف صوتي إلى المفضلة بعد.",
             modifier = Modifier.padding(padding)
         )
     }
@@ -281,87 +333,60 @@ fun FavoritesScreen(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PlaylistsScreen(
-    playlists: List<PlaylistEntity>,
-    favoriteCount: Int,
-    onFavorites: () -> Unit,
-    onPlaylist: (Long) -> Unit,
-    onCreate: (String) -> Unit,
-    onDelete: (Long) -> Unit
+    playlists: List<PlaylistEntity>, favoriteCount: Int,
+    onFavorites: () -> Unit, onPlaylist: (Long) -> Unit,
+    onCreate: (String) -> Unit, onDelete: (Long) -> Unit,
+    onRename: (Long, String) -> Unit, summaries: Map<Long, PlaylistSummary>
 ) {
     var createDialog by remember { mutableStateOf(false) }
+    var editing by remember { mutableStateOf<PlaylistEntity?>(null) }
+    var deleting by remember { mutableStateOf<PlaylistEntity?>(null) }
+    var menuId by remember { mutableStateOf<Long?>(null) }
     var name by remember { mutableStateOf("") }
-
-    if (createDialog) {
-        AlertDialog(
-            onDismissRequest = { createDialog = false },
-            title = { Text("قائمة تشغيل جديدة") },
-            text = {
-                OutlinedTextField(
-                    value = name,
-                    onValueChange = { name = it },
-                    label = { Text("اسم القائمة") },
-                    singleLine = true
-                )
-            },
-            confirmButton = {
-                Button(
-                    onClick = {
-                        onCreate(name)
-                        name = ""
-                        createDialog = false
-                    },
-                    enabled = name.isNotBlank()
-                ) { Text("إنشاء") }
-            },
-            dismissButton = { TextButton(onClick = { createDialog = false }) { Text("إلغاء") } }
-        )
+    if (createDialog || editing != null) {
+        AlertDialog(onDismissRequest = { createDialog = false; editing = null },
+            title = { Text(if (editing == null) "قائمة تشغيل جديدة" else "إعادة تسمية القائمة") },
+            text = { OutlinedTextField(value = name, onValueChange = { name = it.take(100) }, label = { Text("اسم القائمة") }, singleLine = true) },
+            confirmButton = { Button(enabled = name.isNotBlank(), onClick = {
+                editing?.let { onRename(it.id, name) } ?: onCreate(name)
+                createDialog = false; editing = null; name = ""
+            }) { Text("حفظ") } },
+            dismissButton = { TextButton(onClick = { createDialog = false; editing = null }) { Text("إلغاء") } })
     }
-
-    Scaffold(
-        containerColor = MaterialTheme.colorScheme.background,
-        topBar = {
-            TopAppBar(
-                modifier = Modifier.statusBarsPadding(),
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.background.copy(alpha = .96f),
-                    titleContentColor = MaterialTheme.colorScheme.onBackground,
-                    navigationIconContentColor = MaterialTheme.colorScheme.onBackground,
-                    actionIconContentColor = MaterialTheme.colorScheme.onBackground
-                ),
-                title = { Text("قوائم التشغيل", fontWeight = FontWeight.Bold) },
-                actions = { IconButton(onClick = { createDialog = true }) { Icon(Icons.Rounded.Add, "إنشاء") } }
-            )
-        }
-    ) { padding ->
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(premiumScreenBrush())
-                .premiumAmbientSurface()
-                .padding(padding),
-            contentPadding = androidx.compose.foundation.layout.PaddingValues(14.dp),
-            verticalArrangement = Arrangement.spacedBy(10.dp)
-        ) {
-            item {
-                PlaylistCard(
-                    title = "المفضلة",
-                    subtitle = "$favoriteCount أغنية",
-                    icon = Icons.Rounded.Favorite,
-                    onClick = onFavorites
-                )
+    deleting?.let { playlist ->
+        AlertDialog(onDismissRequest = { deleting = null }, title = { Text("حذف قائمة التشغيل") },
+            text = { Text("حذف قائمة «${playlist.name}»؟ ملفات الأغاني ستبقى على الهاتف.") },
+            confirmButton = { TextButton(onClick = { onDelete(playlist.id); deleting = null }) {
+                Text("حذف القائمة", color = MaterialTheme.colorScheme.error)
+            } }, dismissButton = { TextButton(onClick = { deleting = null }) { Text("إلغاء") } })
+    }
+    Scaffold(topBar = { TopAppBar(title = { Text("قوائم التشغيل", fontWeight = FontWeight.Bold) },
+        actions = { IconButton(onClick = { name = ""; createDialog = true }) { Icon(Icons.Rounded.Add, "إنشاء قائمة") } }) }) { padding ->
+        LazyColumn(Modifier.fillMaxSize().background(premiumScreenBrush()).premiumAmbientSurface().padding(padding),
+            contentPadding = androidx.compose.foundation.layout.PaddingValues(14.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            item { PlaylistCard("المفضلة", "$favoriteCount ملف صوتي", Icons.Rounded.Favorite, onFavorites) }
+            if (playlists.isEmpty()) item {
+                Column(Modifier.fillMaxWidth().padding(12.dp)) {
+                    Text("ابدأ قائمتك الأولى", style = MaterialTheme.typography.titleMedium)
+                    Text("اجمع التلاوات أو المقاطع التي تريد سماعها معًا.", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    TextButton(onClick = { name = ""; createDialog = true }) { Text("إنشاء قائمة") }
+                }
             }
-            items(playlists, key = { it.id }) { playlist ->
-                PlaylistCard(
-                    title = playlist.name,
-                    subtitle = "قائمة تشغيل محلية",
-                    icon = Icons.AutoMirrored.Rounded.QueueMusic,
-                    onClick = { onPlaylist(playlist.id) },
-                    trailing = {
-                        IconButton(onClick = { onDelete(playlist.id) }) {
-                            Icon(Icons.Rounded.Delete, contentDescription = "حذف")
+            items(playlists, key = { it.id }, contentType = { "playlist" }) { playlist ->
+                val summary = summaries[playlist.id] ?: PlaylistSummary()
+                PlaylistCard(title = playlist.name, subtitle = "${summary.count} ملف صوتي • ${formatDuration(summary.durationMs)}",
+                    icon = Icons.AutoMirrored.Rounded.QueueMusic, onClick = { onPlaylist(playlist.id) },
+                    artwork = summary.artwork,
+                    trailing = { Box {
+                        IconButton(onClick = { menuId = playlist.id }) { Icon(Icons.Rounded.MoreVert, "خيارات ${playlist.name}") }
+                        DropdownMenu(expanded = menuId == playlist.id, onDismissRequest = { menuId = null }) {
+                            DropdownMenuItem(text = { Text("إعادة تسمية") }, leadingIcon = { Icon(Icons.Rounded.Edit, null) },
+                                onClick = { name = playlist.name; editing = playlist; menuId = null })
+                            DropdownMenuItem(text = { Text("حذف القائمة", color = MaterialTheme.colorScheme.error) },
+                                leadingIcon = { Icon(Icons.Rounded.Delete, null, tint = MaterialTheme.colorScheme.error) },
+                                onClick = { deleting = playlist; menuId = null })
                         }
-                    }
-                )
+                    } })
             }
         }
     }
@@ -373,27 +398,27 @@ private fun PlaylistCard(
     subtitle: String,
     icon: androidx.compose.ui.graphics.vector.ImageVector,
     onClick: () -> Unit,
-    trailing: (@Composable () -> Unit)? = null
+    trailing: (@Composable () -> Unit)? = null,
+    artwork: android.net.Uri? = null
 ) {
-    val shape = RoundedCornerShape(22.dp)
+    val shape = RoundedCornerShape(16.dp)
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .shadow(6.dp, shape)
-            .background(premiumPanelBrush(), shape)
-            .border(1.dp, premiumOutlineBrush(), shape)
+            .shadow(.5.dp, shape)
+            .background(MaterialTheme.colorScheme.surfaceContainerLow, shape)
             .clickable(onClick = onClick)
-            .padding(16.dp)
+            .padding(horizontal = 11.dp, vertical = 8.dp)
     ) {
         Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-            Box(
+            if (artwork != null) AlbumArtwork(artwork, Modifier.size(44.dp), 11) else Box(
                 Modifier
-                    .size(46.dp)
-                    .background(MaterialTheme.colorScheme.primaryContainer, CircleShape)
+                    .size(40.dp)
+                    .background(MaterialTheme.colorScheme.primaryContainer.copy(alpha = .70f), RoundedCornerShape(12.dp))
                     .border(
                         1.dp,
-                        MaterialTheme.colorScheme.primary.copy(alpha = .24f),
-                        CircleShape
+                        MaterialTheme.colorScheme.primary.copy(alpha = .14f),
+                        RoundedCornerShape(12.dp)
                     ),
                 contentAlignment = Alignment.Center
             ) {
@@ -401,11 +426,11 @@ private fun PlaylistCard(
                     icon,
                     null,
                     tint = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.size(25.dp)
+                    modifier = Modifier.size(21.dp)
                 )
             }
-            Column(Modifier.weight(1f).padding(horizontal = 14.dp)) {
-                Text(title, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
+            Column(Modifier.weight(1f).padding(horizontal = 11.dp)) {
+                Text(title, maxLines = 2, overflow = TextOverflow.Ellipsis, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
                 Text(
                     subtitle,
                     style = MaterialTheme.typography.bodySmall,
@@ -430,30 +455,35 @@ fun BrowseGroupsScreen(
 ) {
     var selected by rememberSaveable { mutableStateOf<String?>(null) }
     var query by rememberSaveable { mutableStateOf("") }
-    val appSettings by vm.settings.collectAsState()
+    val appSettings by vm.settings.collectAsStateWithLifecycle()
     val title = when (type) {
         "artist" -> "الفنانون"
+        "reader" -> "القراء"
+        "surah" -> "التلاوات حسب السورة"
         "album" -> "الألبومات"
         else -> "المجلدات"
     }
-    val grouped = remember(songs, type, appSettings.hiddenFolders) {
-        when (type) {
+    BackHandler(enabled = selected != null) { selected = null }
+    val grouped by produceState<Map<String, List<Song>>>(emptyMap(), songs, type, appSettings.hiddenFolders) {
+        value = withContext(Dispatchers.Default) { when (type) {
             "artist" -> songs.groupBy { it.artist }
-            "album" -> songs.groupBy { it.album }
+            "reader" -> songs.filter { detectedSurah(it.title) != null }.groupBy { com.musiqay.app.util.displayArtist(it.artist).ifBlank { "قارئ غير محدد" } }
+            "surah" -> songs.mapNotNull { song -> detectedSurah(song.title)?.let { it to song } }.groupBy({ it.first }, { it.second })
+            "album" -> songs.groupBy { if (it.albumId > 0) "album:${it.albumId}" else "${it.artist}\u001f${it.album}" }
             else -> songs
-                .filter { it.folder !in appSettings.hiddenFolders }
-                .groupBy { it.folder }
-        }.toSortedMap(String.CASE_INSENSITIVE_ORDER)
+                .filterNot { com.musiqay.app.util.isHiddenFolder(it.folderKey, it.folder, appSettings.hiddenFolders) }
+                .groupBy { it.folderKey }
+        } }
     }
     val visibleEntries = remember(grouped, query) {
-        grouped.entries.filter { query.isBlank() || it.key.contains(query, ignoreCase = true) }
+        grouped.entries.filter { query.isBlank() || normalizeSearch(groupTitle(type, it.key, it.value)).contains(normalizeSearch(query)) }
+            .sortedBy { normalizeSearch(groupTitle(type, it.key, it.value)) }
     }
 
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             TopAppBar(
-                modifier = Modifier.statusBarsPadding(),
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.background.copy(alpha = .96f),
                     titleContentColor = MaterialTheme.colorScheme.onBackground,
@@ -463,7 +493,7 @@ fun BrowseGroupsScreen(
                 title = {
                     Column {
                         Text(
-                            selected ?: title,
+                            selected?.let { groupTitle(type, it, grouped[it].orEmpty()) } ?: title,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis,
                             fontWeight = FontWeight.Black
@@ -517,16 +547,16 @@ fun BrowseGroupsScreen(
                     )
                 }
 
-                items(visibleEntries, key = { it.key }) { entry ->
-                    val shape = RoundedCornerShape(22.dp)
+                items(visibleEntries, key = { it.key }, contentType = { "libraryGroup" }) { entry ->
+                    val shape = RoundedCornerShape(16.dp)
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .shadow(5.dp, shape)
+                            .shadow(.5.dp, shape)
                             .background(premiumPanelBrush(), shape)
-                            .border(1.dp, premiumOutlineBrush(), shape)
+                            .border(.4.dp, premiumOutlineBrush(), shape)
                             .clickable { selected = entry.key }
-                            .padding(horizontal = 14.dp, vertical = 13.dp)
+                            .padding(horizontal = 11.dp, vertical = 8.dp)
                     ) {
                         Row(
                             Modifier.fillMaxWidth(),
@@ -534,39 +564,40 @@ fun BrowseGroupsScreen(
                         ) {
                             Box(
                                 Modifier
-                                    .size(48.dp)
+                                    .size(40.dp)
                                     .background(
-                                        MaterialTheme.colorScheme.primaryContainer.copy(alpha = .88f),
-                                        CircleShape
+                                        MaterialTheme.colorScheme.primaryContainer.copy(alpha = .68f),
+                                        RoundedCornerShape(13.dp)
                                     )
                                     .border(
                                         1.dp,
-                                        MaterialTheme.colorScheme.primary.copy(alpha = .22f),
-                                        CircleShape
+                                        MaterialTheme.colorScheme.primary.copy(alpha = .14f),
+                                        RoundedCornerShape(13.dp)
                                     ),
                                 contentAlignment = Alignment.Center
                             ) {
                                 Icon(
                                     when (type) {
-                                        "artist" -> Icons.Rounded.Person
+                                        "artist", "reader" -> Icons.Rounded.Person
+                                        "surah" -> Icons.Rounded.MenuBook
                                         "album" -> Icons.Rounded.Album
                                         else -> Icons.Rounded.Folder
                                     },
                                     null,
                                     tint = MaterialTheme.colorScheme.primary,
-                                    modifier = Modifier.size(26.dp)
+                                    modifier = Modifier.size(22.dp)
                                 )
                             }
-                            Column(Modifier.weight(1f).padding(horizontal = 14.dp)) {
+                            Column(Modifier.weight(1f).padding(horizontal = 11.dp)) {
                                 Text(
-                                    entry.key.ifBlank { "غير معروف" },
+                                    groupTitle(type, entry.key, entry.value),
                                     color = MaterialTheme.colorScheme.onSurface,
                                     fontWeight = FontWeight.Bold,
                                     maxLines = 1,
                                     overflow = TextOverflow.Ellipsis
                                 )
                                 Text(
-                                    "${entry.value.size} أغنية",
+                                    "${entry.value.size} ملف صوتي" + if (type == "folder") " • ${entry.key}" else "",
                                     style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
@@ -614,15 +645,18 @@ fun PlaylistDetailScreen(
     onBack: () -> Unit,
     onOpenPlayer: () -> Unit
 ) {
-    val ids by vm.playlistTrackIds(playlistId).collectAsState(initial = emptyList())
+    val snackbar = remember { SnackbarHostState() }
+    val scope = rememberCoroutineScope()
+    val trackFlow = remember(vm, playlistId) { vm.playlistTrackIds(playlistId) }
+    val ids by trackFlow.collectAsStateWithLifecycle(initialValue = emptyList())
     val byId = remember(allSongs) { allSongs.associateBy { it.id } }
     val songs = remember(ids, byId) { ids.mapNotNull(byId::get) }
 
     Scaffold(
+        snackbarHost = { SnackbarHost(snackbar) },
         containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             TopAppBar(
-                modifier = Modifier.statusBarsPadding(),
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.background.copy(alpha = .96f),
                     titleContentColor = MaterialTheme.colorScheme.onBackground,
@@ -632,7 +666,7 @@ fun PlaylistDetailScreen(
                 title = {
                     Column {
                         Text(title, maxLines = 1, overflow = TextOverflow.Ellipsis, fontWeight = FontWeight.Bold)
-                        Text("${songs.size} أغنية", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Text("${songs.size} ملف صوتي", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                 },
                 navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Rounded.ArrowBack, "رجوع") } },
@@ -655,10 +689,12 @@ fun PlaylistDetailScreen(
             vm = vm,
             onOpenPlayer = onOpenPlayer,
             emptyMessage = "هذه القائمة فارغة. أضف إليها أغاني من قائمة الأغاني.",
-            extraTrailing = { song ->
-                IconButton(onClick = { vm.removeFromPlaylist(playlistId, song.id) }) {
-                    Icon(Icons.Rounded.Delete, "إزالة من القائمة")
-                }
+            onRemoveFromPlaylist = { song ->
+                vm.removeFromPlaylist(playlistId, song.id) { removed -> scope.launch {
+                    snackbar.currentSnackbarData?.dismiss()
+                    if (snackbar.showSnackbar("أُزيلت الأغنية من القائمة", "تراجع", duration = SnackbarDuration.Short) == SnackbarResult.ActionPerformed)
+                        vm.restorePlaylistTrack(removed)
+                } }
             },
             modifier = Modifier.padding(padding)
         )
@@ -675,7 +711,7 @@ private fun SongList(
     onOpenPlayer: () -> Unit,
     modifier: Modifier = Modifier,
     emptyMessage: String = "لا توجد أغاني هنا.",
-    extraTrailing: (@Composable (Song) -> Unit)? = null
+    onRemoveFromPlaylist: ((Song) -> Unit)? = null
 ) {
     var pickerSong by remember { mutableStateOf<Song?>(null) }
     var createForSong by remember { mutableStateOf<Song?>(null) }
@@ -685,7 +721,7 @@ private fun SongList(
     var retryDeleteAfterGrant by remember { mutableStateOf(false) }
 
     val context = LocalContext.current
-    val playerState by vm.player.state.collectAsState()
+    val playerState by vm.player.summary.collectAsStateWithLifecycle()
 
     val deleteLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.StartIntentSenderForResult()
@@ -881,22 +917,19 @@ private fun SongList(
             .background(premiumScreenBrush())
                 .premiumAmbientSurface()
     ) {
-        items(songs, key = { it.id }) { song ->
+        items(songs, key = { it.id }, contentType = { "song" }) { song ->
             SongRow(
                 song = song,
                 isFavorite = song.id in favoriteIds,
                 isCurrent = playerState.mediaId == song.id,
                 isPlaying = playerState.mediaId == song.id && playerState.isPlaying,
-                onClick = {
-                    vm.play(song, allSongsForPlayback)
-                    onOpenPlayer()
-                },
+                onClick = { vm.play(song, allSongsForPlayback) },
                 onToggleFavorite = { vm.toggleFavorite(song.id) },
                 onPlayNext = { vm.player.playNext(song) },
                 onAddToQueue = { vm.player.addToQueue(song) },
                 onAddToPlaylist = { pickerSong = song },
                 onDeleteFromDevice = { songPendingDelete = song },
-                trailingContent = extraTrailing?.let { content -> { content(song) } }
+                onRemoveFromPlaylist = onRemoveFromPlaylist?.let { callback -> { callback(song) } }
             )
         }
     }

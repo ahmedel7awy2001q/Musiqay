@@ -1,11 +1,14 @@
 name: Android CI
 
 on:
-  push:
-    branches: [ "main" ]
-  pull_request:
-    branches: [ "main" ]
   workflow_dispatch:
+    inputs:
+      variant:
+        description: APK variant (release requires the existing signing key)
+        type: choice
+        required: true
+        default: debug
+        options: [debug, release]
 
 permissions:
   contents: read
@@ -41,35 +44,54 @@ jobs:
           gradle-version: "8.13"
 
       - name: Run unit tests
-        run: gradle --no-daemon :app:testDebugUnitTest
+        run: ./gradlew --no-daemon :app:testDebugUnitTest :app:lintDebug
 
       - name: Build debug APK
-        run: gradle --no-daemon :app:assembleDebug
+        if: inputs.variant != 'release'
+        run: ./gradlew --no-daemon :app:assembleDebug
+
+      - name: Build signed release APK
+        if: inputs.variant == 'release'
+        env:
+          MUSIQAY_KEYSTORE_BASE64: ${{ secrets.MUSIQAY_KEYSTORE_BASE64 }}
+          MUSIQAY_KEYSTORE_PASSWORD: ${{ secrets.MUSIQAY_KEYSTORE_PASSWORD }}
+          MUSIQAY_KEY_ALIAS: ${{ secrets.MUSIQAY_KEY_ALIAS }}
+          MUSIQAY_KEY_PASSWORD: ${{ secrets.MUSIQAY_KEY_PASSWORD }}
+        run: |
+          for key in MUSIQAY_KEYSTORE_BASE64 MUSIQAY_KEYSTORE_PASSWORD MUSIQAY_KEY_ALIAS MUSIQAY_KEY_PASSWORD; do
+            if [ -z "${!key}" ]; then echo "Missing release signing secret: $key"; exit 1; fi
+          done
+          export MUSIQAY_KEYSTORE_PATH="$RUNNER_TEMP/musiqay-release.keystore"
+          trap 'rm -f "$MUSIQAY_KEYSTORE_PATH"' EXIT
+          printf '%s' "$MUSIQAY_KEYSTORE_BASE64" | base64 --decode > "$MUSIQAY_KEYSTORE_PATH"
+          ./gradlew --no-daemon :app:assembleRelease
 
       - name: Generate SHA-256
+        env:
+          BUILD_VARIANT: ${{ inputs.variant || 'debug' }}
         run: |
-          cd app/build/outputs/apk/debug
-          sha256sum app-debug.apk > app-debug.sha256
+          cd "app/build/outputs/apk/${BUILD_VARIANT}"
+          sha256sum "app-${BUILD_VARIANT}.apk" > "app-${BUILD_VARIANT}.sha256"
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: Musiqay-debug
+          name: Musiqay-${{ inputs.variant || 'debug' }}
           path: |
-            app/build/outputs/apk/debug/app-debug.apk
-            app/build/outputs/apk/debug/app-debug.sha256
+            app/build/outputs/apk/${{ inputs.variant || 'debug' }}/app-${{ inputs.variant || 'debug' }}.apk
+            app/build/outputs/apk/${{ inputs.variant || 'debug' }}/app-${{ inputs.variant || 'debug' }}.sha256
           if-no-files-found: error
           retention-days: 30
 
       - name: Package source ZIP
-        run: git archive --format=zip --output=Musiqay-v1.3.0-source.zip HEAD
+        run: git archive --format=zip --output=Musiqay-source.zip HEAD
 
       - name: Upload source ZIP
         uses: actions/upload-artifact@v4
         with:
           name: Musiqay-source
-          path: Musiqay-v1.3.0-source.zip
+          path: Musiqay-source.zip
           if-no-files-found: error
           retention-days: 30
 
-# build-trigger: premium-v3 final
+# Publishing a development branch does not trigger a build.

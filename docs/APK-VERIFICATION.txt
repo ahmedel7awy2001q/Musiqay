@@ -1,0 +1,35 @@
+Signer #1 certificate DN: C=US, O=Android, CN=Android Debug
+Signer #1 certificate SHA-256 digest: dc4f45f0a372b854d4447197178b1dcca655485b2573c943de0b5a68a34f5221
+Signer #1 certificate SHA-1 digest: 148b1c00125ede382d37a139d707be76cdb0ed94
+Signer #1 certificate MD5 digest: 976434b72eb6c2d736b292373301b7ae
+
+package: name='com.musiqay.app.preview' versionCode='4' versionName='1.4.0-preview' platformBuildVersionName='16' platformBuildVersionCode='36' compileSdkVersion='36' compileSdkVersionCodename='16'
+sdkVersion:'26'
+targetSdkVersion:'36'
+uses-permission: name='android.permission.READ_MEDIA_AUDIO'
+uses-permission: name='android.permission.INTERNET'
+uses-permission: name='android.permission.ACCESS_NETWORK_STATE'
+uses-permission: name='android.permission.READ_EXTERNAL_STORAGE' maxSdkVersion='32'
+uses-permission: name='android.permission.POST_NOTIFICATIONS'
+uses-permission: name='android.permission.FOREGROUND_SERVICE'
+uses-permission: name='android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK'
+uses-permission: name='android.permission.WAKE_LOCK'
+uses-permission: name='com.musiqay.app.preview.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION'
+application-label:'موسيقاي • تجربة'
+
+{
+  "apk": "Musiqay-1.4-Radio-Preview.apk",
+  "bytes": 24078367,
+  "sha256": "a66ff26a18dbcc4ba2ee8875c075e41642d3505beb654c55a38ae72e432e63c1",
+  "applicationId": "com.musiqay.app.preview",
+  "versionName": "1.4.0-preview",
+  "versionCode": 4,
+  "certificateSha256": "dc4f45f0a372b854d4447197178b1dcca655485b2573c943de0b5a68a34f5221",
+  "unitTests": {
+    "tests": 23,
+    "failures": 0,
+    "errors": 0
+  },
+  "lintErrors": 0,
+  "lintWarnings": 10
+}

@@ -3,420 +3,208 @@ package com.musiqay.app.ui.screens
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.statusBarsPadding
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.Album
-import androidx.compose.material.icons.rounded.Favorite
-import androidx.compose.material.icons.rounded.Folder
-import androidx.compose.material.icons.rounded.GraphicEq
-import androidx.compose.material.icons.rounded.LibraryMusic
-import androidx.compose.material.icons.rounded.Person
-import androidx.compose.material.icons.rounded.PlayArrow
-import androidx.compose.material.icons.rounded.Settings
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
+import androidx.compose.material.icons.rounded.*
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.musiqay.app.data.Song
-import com.musiqay.app.ui.AlbumArtwork
-import com.musiqay.app.ui.SectionTitle
-import com.musiqay.app.ui.theme.premiumHeroBrush
-import com.musiqay.app.ui.theme.premiumOutlineBrush
-import com.musiqay.app.ui.theme.premiumPanelBrush
-import com.musiqay.app.ui.theme.premiumAmbientSurface
-import com.musiqay.app.ui.theme.premiumScreenBrush
+import com.musiqay.app.ui.*
+import com.musiqay.app.util.displayTitle
+import com.musiqay.app.util.displayArtist
+import com.musiqay.app.ui.theme.*
 
 @Composable
 fun HomeScreen(
+    vm: MusicViewModel,
     songs: List<Song>,
     favoriteCount: Int,
-    hiddenFolders: Set<String>,
     onSong: (Song) -> Unit,
     onSettings: () -> Unit,
     onFavorites: () -> Unit,
     onAllSongs: () -> Unit,
     onArtists: () -> Unit,
     onAlbums: () -> Unit,
-    onFolders: () -> Unit
+    onFolders: () -> Unit,
+    onRadio: () -> Unit,
+    onResume: () -> Unit,
+    onPlayAll: () -> Unit,
+    audioPermission: Boolean = true,
+    onGrantAudio: () -> Unit = {}
 ) {
-    val recent = songs.sortedByDescending { it.dateAddedSeconds }.take(10)
-    val artists = songs.map { it.artist }.filter { it.isNotBlank() }.distinct().size
-    val albums = songs.map { it.album }.filter { it.isNotBlank() }.distinct().size
-    val folders = songs.map { it.folder }.filter { it.isNotBlank() && it !in hiddenFolders }.distinct().size
-
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(premiumScreenBrush())
-            .premiumAmbientSurface()
+    val recent = remember(songs) { songs.sortedByDescending { it.dateAddedSeconds }.take(12) }
+    val counts = remember(songs) { Triple(songs.map { it.artist }.distinct().size,
+        songs.map { if (it.albumId > 0) "${it.albumId}" else "${it.artist}/${it.album}" }.distinct().size,
+        songs.map { it.folderKey }.distinct().size) }
+    val status by vm.libraryStatus.collectAsStateWithLifecycle()
+    val history by vm.listeningPositions.collectAsStateWithLifecycle()
+    val radioCatalog by vm.radioCatalog.collectAsStateWithLifecycle()
+    val radioFavorites by vm.radioFavorites.collectAsStateWithLifecycle()
+    val unfinished = remember(history, songs) {
+        val byId = songs.associateBy { it.id }
+        history.values.sortedByDescending { it.updatedAt }.mapNotNull { entry ->
+            byId[entry.mediaId]?.takeIf { vm.listening.resumeFor(it) > 0 }?.let { it to entry.positionMs }
+        }.take(3)
+    }
+    val favoriteRadios = remember(radioCatalog.stations, radioFavorites) { radioCatalog.stations.filter { it.id in radioFavorites }.take(4) }
+    LazyColumn(
+        modifier = Modifier.fillMaxSize().background(premiumScreenBrush()).premiumAmbientSurface().statusBarsPadding(),
+        contentPadding = PaddingValues(horizontal = 14.dp, vertical = 10.dp),
+        verticalArrangement = Arrangement.spacedBy(11.dp)
     ) {
-        Box(
-            modifier = Modifier
-                .align(Alignment.TopEnd)
-                .padding(top = 54.dp)
-                .size(280.dp)
-                .background(
-                    Brush.radialGradient(
-                        listOf(
-                            MaterialTheme.colorScheme.primary.copy(alpha = .16f),
-                            MaterialTheme.colorScheme.secondary.copy(alpha = .09f),
-                            Color.Transparent
-                        )
-                    ),
-                    CircleShape
-                )
-        )
-        Box(
-            modifier = Modifier
-                .align(Alignment.BottomStart)
-                .size(230.dp)
-                .background(
-                    Brush.radialGradient(
-                        listOf(
-                            MaterialTheme.colorScheme.tertiary.copy(alpha = .10f),
-                            Color.Transparent
-                        )
-                    ),
-                    CircleShape
-                )
-        )
+        item {
+            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                Column(Modifier.weight(1f)) {
+                    Text("موسيقاي", style = MaterialTheme.typography.headlineMedium)
+                    Text("استماعك... بطريقتك", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+                FilledTonalIconButton(onClick = onSettings, modifier = Modifier.size(48.dp)) {
+                    Icon(Icons.Rounded.Settings, "الإعدادات", modifier = Modifier.size(20.dp))
+                }
+            }
+        }
+        item { ResumeCard(vm, onResume, onPlayAll, audioPermission && songs.isNotEmpty()) }
+        if (!audioPermission) item {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text("الراديو متاح الآن. اسمح بقراءة ملفات الصوت لعرض ملفات الهاتف الصوتية.", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                OutlinedButton(onClick = onGrantAudio, modifier = Modifier.fillMaxWidth()) { Text("إظهار ملفات الهاتف الصوتية") }
+            }
+        }
+        if (status.loading) item {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                LinearProgressIndicator(Modifier.fillMaxWidth())
+                Text("جارٍ تحديث مكتبتك…", style = MaterialTheme.typography.bodySmall)
+            }
+        }
+        status.error?.takeIf { audioPermission }?.let { error -> item {
+            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                Text(error, Modifier.weight(1f), color = MaterialTheme.colorScheme.error)
+                TextButton(onClick = vm::refreshLibrary) { Text("إعادة المحاولة") }
+            }
+        } }
+        item {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                SectionTitle("مكتبتك", "${songs.size} ملف صوتي", onAllSongs)
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    LibraryShortcut("المفضلة", "$favoriteCount ملف صوتي", Icons.Rounded.Favorite, onFavorites, Modifier.weight(1f))
+                    LibraryShortcut("الفنانون", "${counts.first} فنان", Icons.Rounded.Person, onArtists, Modifier.weight(1f))
+                }
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    LibraryShortcut("الألبومات", "${counts.second} ألبوم", Icons.Rounded.Album, onAlbums, Modifier.weight(1f))
+                    LibraryShortcut("المجلدات", "${counts.third} مجلد", Icons.Rounded.Folder, onFolders, Modifier.weight(1f))
+                }
+            }
+        }
+        if (unfinished.isNotEmpty()) {
+            item { SectionTitle("استكمل تسجيلاتك") }
+            items(unfinished, key = { "resume:${it.first.id}" }) { (song, position) ->
+                Row(Modifier.fillMaxWidth().clickable { onSong(song) }.padding(8.dp), verticalAlignment = Alignment.CenterVertically) {
+                    AlbumArtwork(song.artworkUri, Modifier.size(44.dp), placeholderTitle = displayTitle(song.title))
+                    Column(Modifier.weight(1f).padding(horizontal = 10.dp)) {
+                        Text(displayTitle(song.title), maxLines = 1, overflow = TextOverflow.Ellipsis)
+                        Text("استكمال من ${com.musiqay.app.util.formatDuration(position)}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.primary)
+                    }
+                    Icon(Icons.Rounded.PlayArrow, "استكمال")
+                }
+            }
+        }
+        if (favoriteRadios.isNotEmpty()) {
+            item { SectionTitle("محطاتك المفضلة", "الراديو", onRadio) }
+            items(favoriteRadios, key = { "favorite-radio:${it.id}" }) { station ->
+                TextButton(onClick = { vm.playRadio(station); onRadio() }, modifier = Modifier.fillMaxWidth()) {
+                    Icon(Icons.Rounded.Radio, null); Spacer(Modifier.width(8.dp)); Text(station.name, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                }
+            }
+        }
+        if (recent.isNotEmpty()) {
+            item { SectionTitle("مضاف حديثًا", "عرض الكل", onAllSongs) }
+            item {
+                LazyRow(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                    items(recent, key = { it.id }, contentType = { "recentSong" }) { song ->
+                        Column(Modifier.width(112.dp).clickable { onSong(song) }) {
+                            AlbumArtwork(song.artworkUri, Modifier.size(112.dp), 18)
+                            Spacer(Modifier.height(6.dp))
+                            Text(displayTitle(song.title), maxLines = 1, overflow = TextOverflow.Ellipsis, fontWeight = FontWeight.Bold)
+                            Text(displayArtist(song.artist), maxLines = 1, overflow = TextOverflow.Ellipsis,
+                                style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        }
+                    }
+                }
+            }
+        } else if (!status.loading && status.error == null) item {
+            Text("لم نعثر على ملفات صوتية. أضف ملفات صوت إلى الهاتف أو راجع مرشحات المكتبة في الإعدادات.",
+                color = MaterialTheme.colorScheme.onSurfaceVariant)
+        }
+    }
+}
 
-        LazyColumn(
-            modifier = Modifier.statusBarsPadding(),
-            contentPadding = PaddingValues(bottom = 28.dp)
+@Composable
+private fun ResumeCard(vm: MusicViewModel, onOpen: () -> Unit, onPlayAll: () -> Unit, hasSongs: Boolean) {
+    val state by vm.player.summary.collectAsStateWithLifecycle()
+    val shape = RoundedCornerShape(16.dp)
+    Column(Modifier.fillMaxWidth().background(premiumPanelBrush(), shape)
+        .border(.45.dp, premiumOutlineBrush(), shape).padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        if (state.hasMedia) {
+            Text(if (state.isPlaying) "تستمع الآن" else "استكمل الاستماع", color = MaterialTheme.colorScheme.primary,
+                style = MaterialTheme.typography.labelLarge)
+            Row(Modifier.fillMaxWidth().clickable(onClick = onOpen), verticalAlignment = Alignment.CenterVertically) {
+                AlbumArtwork(state.artworkUri, Modifier.size(52.dp), 13, logo = state.isRadio,
+                    logoBackground = radioLogoBackground(state.radioStationId))
+                Column(Modifier.weight(1f).padding(horizontal = 12.dp)) {
+                    Text(if (state.isRadio) state.title else displayTitle(state.title), maxLines = 2, overflow = TextOverflow.Ellipsis, fontWeight = FontWeight.Bold)
+                    Text(displayArtist(state.artist).ifBlank { "ملف صوتي محلي" }, maxLines = 1, overflow = TextOverflow.Ellipsis, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+                FilledIconButton(onClick = vm.player::togglePlayPause, modifier = Modifier.size(48.dp)) {
+                    Icon(if (state.isRadio && state.wantsPlayback) Icons.Rounded.Stop else if (state.isPlaying) Icons.Rounded.Pause else Icons.Rounded.PlayArrow,
+                        if (state.isRadio && state.wantsPlayback) "إيقاف البث" else if (state.isPlaying) "إيقاف مؤقت" else "استكمال التشغيل")
+                }
+            }
+        } else {
+            Text("استماع لكل لحظة", style = MaterialTheme.typography.titleLarge)
+            Text("ملفاتك ومحطاتك في مكان واحد", color = MaterialTheme.colorScheme.onSurfaceVariant)
+        }
+        if (!state.hasMedia) FilledTonalButton(
+            onClick = onPlayAll,
+            enabled = hasSongs,
+            modifier = Modifier.fillMaxWidth().height(42.dp),
+            shape = RoundedCornerShape(13.dp)
         ) {
-            item {
-                val headerShape = RoundedCornerShape(26.dp)
-                Row(
-                    Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 6.dp)
-                        .shadow(6.dp, headerShape)
-                        .background(premiumPanelBrush(), headerShape)
-                        .border(1.dp, premiumOutlineBrush(), headerShape)
-                        .padding(horizontal = 15.dp, vertical = 10.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Column(Modifier.weight(1f)) {
-                        Text("موسيقاي", fontSize = 28.sp, fontWeight = FontWeight.Black)
-                        Text(
-                            "موسيقاك... بطريقتك",
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            style = MaterialTheme.typography.bodyMedium
-                        )
-                    }
-                    PremiumRoundIcon(Icons.Rounded.Settings, "الإعدادات", onSettings)
-                }
-            }
-
-            item {
-                val shape = RoundedCornerShape(30.dp)
-                Box(
-                    modifier = Modifier
-                        .padding(horizontal = 18.dp, vertical = 8.dp)
-                        .fillMaxWidth()
-                        .height(156.dp)
-                        .shadow(24.dp, shape)
-                        .background(premiumHeroBrush(), shape)
-                        .border(
-                            1.dp,
-                            Brush.linearGradient(
-                                listOf(
-                                    Color.White.copy(alpha = .72f),
-                                    Color.White.copy(alpha = .08f)
-                                )
-                            ),
-                            shape
-                        )
-                        .clickable(onClick = onAllSongs)
-                        .padding(18.dp)
-                ) {
-                    Box(
-                        Modifier
-                            .align(Alignment.TopEnd)
-                            .padding(top = 10.dp, end = 14.dp)
-                            .fillMaxWidth(.58f)
-                            .height(2.dp)
-                            .background(
-                                Brush.horizontalGradient(
-                                    listOf(
-                                        Color.Transparent,
-                                        Color.White.copy(alpha = .62f),
-                                        Color.Transparent
-                                    )
-                                ),
-                                CircleShape
-                            )
-                    )
-
-                    Box(
-                        Modifier
-                            .align(Alignment.TopStart)
-                            .size(72.dp)
-                            .background(Color.White.copy(alpha = .12f), CircleShape)
-                            .border(1.dp, Color.White.copy(alpha = .30f), CircleShape),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            Icons.Rounded.LibraryMusic,
-                            contentDescription = null,
-                            tint = Color.White,
-                            modifier = Modifier.size(34.dp)
-                        )
-                    }
-
-                    Column(
-                        Modifier.align(Alignment.CenterEnd),
-                        horizontalAlignment = Alignment.End
-                    ) {
-                        Text(
-                            "موسيقى لكل لحظة",
-                            fontSize = 24.sp,
-                            fontWeight = FontWeight.Black,
-                            color = Color.White
-                        )
-                        Spacer(Modifier.height(5.dp))
-                        Text(
-                            if (songs.isEmpty()) "ابدأ بإضافة الموسيقى إلى هاتفك" else "${songs.size} أغنية جاهزة للتشغيل",
-                            color = Color.White.copy(alpha = .93f),
-                            fontSize = 15.sp
-                        )
-                        Spacer(Modifier.height(8.dp))
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(
-                                Icons.Rounded.GraphicEq,
-                                null,
-                                tint = Color.White.copy(alpha = .86f),
-                                modifier = Modifier.size(18.dp)
-                            )
-                            Spacer(Modifier.width(7.dp))
-                            Text(
-                                "دع الموسيقى تتحدث",
-                                color = Color.White.copy(alpha = .80f),
-                                style = MaterialTheme.typography.bodySmall
-                            )
-                        }
-                    }
-
-                    Box(
-                        Modifier
-                            .align(Alignment.BottomStart)
-                            .size(42.dp)
-                            .background(Color.White.copy(alpha = .18f), CircleShape)
-                            .border(1.dp, Color.White.copy(alpha = .32f), CircleShape),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(Icons.Rounded.PlayArrow, null, tint = Color.White, modifier = Modifier.size(26.dp))
-                    }
-                }
-            }
-
-            item {
-                Text(
-                    "مكتبتك",
-                    modifier = Modifier.padding(horizontal = 18.dp, vertical = 8.dp),
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.Black
-                )
-                Column(Modifier.padding(horizontal = 16.dp)) {
-                    Row(Modifier.fillMaxWidth()) {
-                        LibraryCard(
-                            "المفضلة",
-                            "$favoriteCount أغنية",
-                            Icons.Rounded.Favorite,
-                            listOf(Color(0xFFC94878), Color(0xFF6C2B67)),
-                            onFavorites,
-                            Modifier.weight(1f)
-                        )
-                        Spacer(Modifier.width(10.dp))
-                        LibraryCard(
-                            "الفنانون",
-                            "$artists فنان",
-                            Icons.Rounded.Person,
-                            listOf(Color(0xFF4667E6), Color(0xFF243878)),
-                            onArtists,
-                            Modifier.weight(1f)
-                        )
-                    }
-                    Spacer(Modifier.height(8.dp))
-                    Row(Modifier.fillMaxWidth()) {
-                        LibraryCard(
-                            "الألبومات",
-                            "$albums ألبوم",
-                            Icons.Rounded.Album,
-                            listOf(Color(0xFF2698A7), Color(0xFF1F6077)),
-                            onAlbums,
-                            Modifier.weight(1f)
-                        )
-                        Spacer(Modifier.width(10.dp))
-                        LibraryCard(
-                            "المجلدات",
-                            "$folders مجلد",
-                            Icons.Rounded.Folder,
-                            listOf(Color(0xFF2C7ED3), Color(0xFF244C84)),
-                            onFolders,
-                            Modifier.weight(1f)
-                        )
-                    }
-                }
-            }
-
-            if (recent.isNotEmpty()) {
-                item {
-                    SectionTitle(
-                        title = "مضاف حديثًا",
-                        action = "عرض الكل",
-                        onAction = onAllSongs,
-                        modifier = Modifier.padding(start = 18.dp, end = 18.dp, top = 12.dp)
-                    )
-                }
-                item {
-                    LazyRow(
-                        contentPadding = PaddingValues(horizontal = 18.dp),
-                        horizontalArrangement = Arrangement.spacedBy(10.dp)
-                    ) {
-                        items(recent, key = { it.id }) { song ->
-                            val recentShape = RoundedCornerShape(20.dp)
-                            Column(
-                                modifier = Modifier
-                                    .width(100.dp)
-                                    .shadow(6.dp, recentShape)
-                                    .background(
-                                        MaterialTheme.colorScheme.surface.copy(alpha = .82f),
-                                        recentShape
-                                    )
-                                    .border(
-                                        1.dp,
-                                        MaterialTheme.colorScheme.outlineVariant.copy(alpha = .52f),
-                                        recentShape
-                                    )
-                                    .clickable { onSong(song) }
-                                    .padding(5.dp)
-                            ) {
-                                AlbumArtwork(song.artworkUri, Modifier.size(90.dp), 16)
-                                Spacer(Modifier.height(7.dp))
-                                Text(
-                                    song.title,
-                                    maxLines = 1,
-                                    overflow = TextOverflow.Ellipsis,
-                                    fontWeight = FontWeight.Bold
-                                )
-                                Text(
-                                    song.artist.ifBlank { "فنان غير معروف" },
-                                    maxLines = 1,
-                                    overflow = TextOverflow.Ellipsis,
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                            }
-                        }
-                    }
-                }
-            }
+            Icon(Icons.Rounded.PlayArrow, null, Modifier.size(20.dp)); Spacer(Modifier.width(7.dp)); Text("تشغيل الكل")
         }
     }
 }
 
 @Composable
-private fun PremiumRoundIcon(
-    icon: ImageVector,
-    description: String,
-    onClick: () -> Unit
-) {
-    Box(
-        Modifier
-            .size(44.dp)
-            .shadow(8.dp, CircleShape)
-            .background(premiumPanelBrush(), CircleShape)
-            .border(1.dp, premiumOutlineBrush(), CircleShape),
-        contentAlignment = Alignment.Center
-    ) {
-        IconButton(onClick = onClick) {
-            Icon(icon, description, tint = MaterialTheme.colorScheme.onSurface)
-        }
-    }
-}
-
-@Composable
-private fun LibraryCard(
-    title: String,
-    subtitle: String,
-    icon: ImageVector,
-    colors: List<Color>,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    val shape = RoundedCornerShape(24.dp)
-    Box(
-        modifier = modifier
-            .height(92.dp)
-            .shadow(12.dp, shape)
-            .background(Brush.linearGradient(colors), shape)
-            .border(1.dp, Color.White.copy(alpha = .14f), shape)
+private fun LibraryShortcut(title: String, count: String, icon: ImageVector, onClick: () -> Unit, modifier: Modifier) {
+    val shape = RoundedCornerShape(18.dp)
+    Row(
+        modifier
+            .background(premiumPanelBrush(), shape)
+            .border(.4.dp, premiumOutlineBrush(), shape)
             .clickable(onClick = onClick)
-            .padding(12.dp)
+            .padding(horizontal = 10.dp, vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically
     ) {
         Box(
-            Modifier
-                .align(Alignment.TopEnd)
-                .fillMaxWidth(.55f)
-                .height(1.dp)
-                .background(
-                    Brush.horizontalGradient(
-                        listOf(
-                            Color.Transparent,
-                            Color.White.copy(alpha = .42f),
-                            Color.Transparent
-                        )
-                    ),
-                    CircleShape
-                )
-        )
-        Box(
-            Modifier
-                .align(Alignment.TopStart)
-                .size(36.dp)
-                .background(Color.White.copy(alpha = .16f), CircleShape)
-                .border(1.dp, Color.White.copy(alpha = .16f), CircleShape),
+            Modifier.size(36.dp).background(MaterialTheme.colorScheme.primaryContainer.copy(alpha = .78f), RoundedCornerShape(11.dp)),
             contentAlignment = Alignment.Center
         ) {
-            Icon(icon, null, tint = Color.White, modifier = Modifier.size(20.dp))
+            Icon(icon, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(21.dp))
         }
-        Column(Modifier.align(Alignment.BottomEnd), horizontalAlignment = Alignment.End) {
-            Text(title, color = Color.White, fontWeight = FontWeight.Black, fontSize = 16.sp)
-            Text(
-                subtitle,
-                color = Color.White.copy(alpha = .80f),
-                style = MaterialTheme.typography.bodySmall
-            )
+        Column(Modifier.weight(1f).padding(start = 9.dp)) {
+            Text(title, fontWeight = FontWeight.Bold, maxLines = 1, style = MaterialTheme.typography.bodyLarge)
+            Text(count, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
     }
 }

@@ -1,874 +1,317 @@
 package com.musiqay.app.ui.screens
 
+import android.content.ClipData
 import android.content.Intent
 import android.media.audiofx.AudioEffect
-import android.provider.Settings
+import android.widget.Toast
+import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.aspectRatio
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.navigationBarsPadding
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
-import androidx.compose.material.icons.rounded.Close
-import androidx.compose.material.icons.rounded.ExpandMore
-import androidx.compose.material.icons.rounded.Favorite
-import androidx.compose.material.icons.rounded.FavoriteBorder
-import androidx.compose.material.icons.rounded.GraphicEq
-import androidx.compose.material.icons.rounded.KeyboardArrowDown
-import androidx.compose.material.icons.rounded.KeyboardArrowUp
-import androidx.compose.material.icons.rounded.MoreVert
-import androidx.compose.material.icons.rounded.MusicNote
-import androidx.compose.material.icons.rounded.Pause
-import androidx.compose.material.icons.rounded.PlayArrow
 import androidx.compose.material.icons.automirrored.rounded.PlaylistAdd
 import androidx.compose.material.icons.automirrored.rounded.QueueMusic
-import androidx.compose.material.icons.rounded.Repeat
-import androidx.compose.material.icons.rounded.RepeatOne
-import androidx.compose.material.icons.rounded.Share
-import androidx.compose.material.icons.rounded.Shuffle
-import androidx.compose.material.icons.rounded.SkipNext
-import androidx.compose.material.icons.rounded.SkipPrevious
-import androidx.compose.material.icons.rounded.Timer
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilledIconButton
-import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.IconButtonDefaults
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Slider
-import androidx.compose.material3.SliderDefaults
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.animation.core.RepeatMode
-import androidx.compose.animation.core.animateFloat
-import androidx.compose.animation.core.infiniteRepeatable
-import androidx.compose.animation.core.rememberInfiniteTransition
-import androidx.compose.animation.core.tween
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.material.icons.rounded.*
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.semantics.CustomAccessibilityAction
+import androidx.compose.ui.semantics.customActions
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
 import com.musiqay.app.data.PlaylistEntity
 import com.musiqay.app.data.Song
-import com.musiqay.app.ui.AlbumArtwork
-import com.musiqay.app.ui.MusicViewModel
-import com.musiqay.app.ui.PlaylistPickerDialog
-import com.musiqay.app.ui.theme.premiumOutlineBrush
-import com.musiqay.app.ui.theme.premiumPanelBrush
-import com.musiqay.app.ui.theme.premiumAmbientSurface
-import com.musiqay.app.ui.theme.premiumScreenBrush
+import com.musiqay.app.playback.NowPlayingState
+import com.musiqay.app.playback.PlaybackService
+import com.musiqay.app.ui.*
+import com.musiqay.app.ui.theme.*
 import com.musiqay.app.util.formatDuration
+import com.musiqay.app.util.displayTitle
+import com.musiqay.app.util.displayArtist
+import com.musiqay.app.util.displayAlbum
+import androidx.compose.foundation.clickable
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import kotlin.math.abs
+
+@androidx.annotation.OptIn(androidx.media3.common.util.UnstableApi::class)
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun NowPlayingScreen(vm: MusicViewModel, songs: List<Song>, favoriteIds: Set<Long>,
+    playlists: List<PlaylistEntity>, onBack: () -> Unit) {
+    val state by vm.player.summary.collectAsStateWithLifecycle()
+    val queue by vm.player.queue.collectAsStateWithLifecycle()
+    val sleepEnd by vm.player.sleepTimerEnd.collectAsStateWithLifecycle()
+    val sleepAtEnd by vm.player.sleepAtTrackEnd.collectAsStateWithLifecycle()
+    val currentSong = remember(state.mediaId, songs) { songs.firstOrNull { it.id == state.mediaId } }
+    var showQueue by rememberSaveableBoolean()
+    var showTimer by rememberSaveableBoolean()
+    var showPicker by rememberSaveableBoolean()
+    var showCreate by rememberSaveableBoolean()
+    var playlistName by remember { mutableStateOf("") }
+    val context = LocalContext.current
+
+    val openEffects: () -> Unit = {
+        val session = PlaybackService.audioSessionId
+        if (session > 0) runCatching {
+            context.startActivity(Intent(AudioEffect.ACTION_DISPLAY_AUDIO_EFFECT_CONTROL_PANEL)
+                .putExtra(AudioEffect.EXTRA_PACKAGE_NAME, context.packageName)
+                .putExtra(AudioEffect.EXTRA_AUDIO_SESSION, session)
+                .putExtra(AudioEffect.EXTRA_CONTENT_TYPE, AudioEffect.CONTENT_TYPE_MUSIC))
+        }.onFailure { Toast.makeText(context, "لوحة المؤثرات غير متاحة على هذا الهاتف", Toast.LENGTH_SHORT).show() }
+        else Toast.makeText(context, "ابدأ تشغيل أغنية لفتح المؤثرات", Toast.LENGTH_SHORT).show()
+    }
+    val shareSong: () -> Unit = {
+        currentSong?.let { song -> runCatching {
+            context.startActivity(Intent.createChooser(Intent(Intent.ACTION_SEND).apply {
+                type = "audio/*"
+                putExtra(Intent.EXTRA_STREAM, song.uri)
+                clipData = ClipData.newUri(context.contentResolver, song.title, song.uri)
+                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            }, "مشاركة الأغنية"))
+        }.onFailure { Toast.makeText(context, "تعذرت مشاركة الملف", Toast.LENGTH_SHORT).show() } }
+        Unit
+    }
+
+    if (showTimer) SleepTimerDialog(sleepEnd != null, vm.player::setSleepTimer,
+        onAtEnd = if (currentSong != null) vm.player::setSleepAtTrackEnd else null, atEndActive = sleepAtEnd) { showTimer = false }
+    if (showPicker && currentSong != null) PlaylistPickerDialog(playlists, onDismiss = { showPicker = false },
+        onPick = { vm.addToPlaylist(it, currentSong.id); showPicker = false },
+        onCreateRequested = { showPicker = false; showCreate = true; playlistName = "" })
+    if (showCreate && currentSong != null) AlertDialog(onDismissRequest = { showCreate = false }, title = { Text("قائمة تشغيل جديدة") },
+        text = { OutlinedTextField(playlistName, { playlistName = it.take(100) }, label = { Text("اسم القائمة") }, singleLine = true) },
+        confirmButton = { Button(enabled = playlistName.isNotBlank(), onClick = { vm.createPlaylist(playlistName, currentSong.id); showCreate = false }) { Text("إنشاء") } },
+        dismissButton = { TextButton(onClick = { showCreate = false }) { Text("إلغاء") } })
+    if (showQueue) QueueSheet(vm, queue, state.queueIndex, onDismiss = { showQueue = false })
+
+    BoxWithConstraints(Modifier.fillMaxSize().background(premiumScreenBrush()).premiumAmbientSurface()
+        .statusBarsPadding().navigationBarsPadding()) {
+        val landscape = maxWidth > maxHeight && maxWidth >= 600.dp
+        val artSize = if (landscape) minOf(maxHeight - 90.dp, maxWidth * .34f).coerceAtLeast(80.dp)
+            else minOf(maxWidth - 76.dp, maxHeight * .26f).coerceIn(96.dp, 218.dp)
+        Column(Modifier.fillMaxSize().padding(horizontal = 16.dp)) {
+            Row(Modifier.fillMaxWidth().heightIn(min = 56.dp), verticalAlignment = Alignment.CenterVertically) {
+                FilledTonalIconButton(onClick = onBack, modifier = Modifier.size(48.dp)) {
+                    Icon(Icons.AutoMirrored.Rounded.ArrowBack, "رجوع", modifier = Modifier.size(21.dp))
+                }
+                Text("قيد التشغيل", Modifier.weight(1f), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center)
+                FilledTonalIconButton(onClick = { showQueue = true }, modifier = Modifier.size(48.dp)) {
+                    Icon(Icons.AutoMirrored.Rounded.QueueMusic, "قائمة الانتظار", modifier = Modifier.size(21.dp))
+                }
+            }
+            if (landscape) {
+                Row(Modifier.weight(1f), verticalAlignment = Alignment.CenterVertically) {
+                    Box(Modifier.weight(.40f), contentAlignment = Alignment.Center) { AlbumArtwork(state.artworkUri, Modifier.size(artSize), 28, true) }
+                    Column(Modifier.weight(.60f).verticalScroll(rememberScrollState()).padding(start = 16.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally) {
+                        PlayerDetails(state, favoriteIds, vm)
+                        PlayerProgress(vm)
+                        PlayerControls(state, vm)
+                        ListeningTools(vm, currentSong)
+                        PlayerActions(sleepEnd, sleepAtEnd, currentSong != null, onTimer = { showTimer = true }, onPlaylist = { showPicker = true },
+                            onEffects = openEffects, onShare = shareSong)
+                    }
+                }
+            } else {
+                Column(Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(vertical = 8.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(11.dp)) {
+                    AlbumArtwork(state.artworkUri, Modifier.size(artSize).border(.4.dp, premiumOutlineBrush(), RoundedCornerShape(22.dp)), 22, true)
+                    PlayerDetails(state, favoriteIds, vm)
+                    PlayerProgress(vm)
+                    PlayerControls(state, vm)
+                        ListeningTools(vm, currentSong)
+                    PlayerActions(sleepEnd, sleepAtEnd, currentSong != null, onTimer = { showTimer = true }, onPlaylist = { showPicker = true },
+                        onEffects = openEffects, onShare = shareSong)
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun rememberSaveableBoolean() = androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf(false) }
+
+@Composable
+private fun PlayerDetails(state: NowPlayingState, favorites: Set<Long>, vm: MusicViewModel) {
+    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+        Column(Modifier.weight(1f), horizontalAlignment = Alignment.CenterHorizontally) {
+            Text(displayTitle(state.title), modifier = Modifier.clickable { android.widget.Toast.makeText(vm.getApplication(), state.title, android.widget.Toast.LENGTH_LONG).show() }, maxLines = 2, overflow = TextOverflow.Ellipsis, style = MaterialTheme.typography.titleLarge, textAlign = TextAlign.Center)
+            Text(displayArtist(state.artist).ifBlank { "ملف صوتي محلي" }, maxLines = 1, overflow = TextOverflow.Ellipsis, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            if (displayAlbum(state.album).isNotBlank()) Text(displayAlbum(state.album), maxLines = 1, overflow = TextOverflow.Ellipsis,
+                style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        }
+        IconButton(enabled = state.mediaId != null, onClick = { state.mediaId?.let(vm::toggleFavorite) }) {
+            Icon(if (state.mediaId in favorites) Icons.Rounded.Favorite else Icons.Rounded.FavoriteBorder,
+                if (state.mediaId in favorites) "إزالة من المفضلة" else "إضافة إلى المفضلة", tint = MaterialTheme.colorScheme.primary)
+        }
+    }
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun NowPlayingScreen(
-    vm: MusicViewModel,
-    songs: List<Song>,
-    favoriteIds: Set<Long>,
-    playlists: List<PlaylistEntity>,
-    onBack: () -> Unit
-) {
+private fun PlayerProgress(vm: MusicViewModel) {
     val state by vm.player.state.collectAsStateWithLifecycle()
-    val queue by vm.player.queue.collectAsStateWithLifecycle()
-    val sleepEnd by vm.player.sleepTimerEnd.collectAsStateWithLifecycle()
-    val currentSong = remember(state.mediaId, songs) { songs.firstOrNull { it.id == state.mediaId } }
-    var dragPosition by remember { mutableStateOf<Float?>(null) }
-    var showQueue by remember { mutableStateOf(false) }
-    var showTimer by remember { mutableStateOf(false) }
-    var customTimerMinutes by remember { mutableStateOf("") }
-    var showCustomTimerDialog by remember { mutableStateOf(false) }
-    var showPlaylistPicker by remember { mutableStateOf(false) }
-    var createPlaylist by remember { mutableStateOf(false) }
-    var newPlaylistName by remember { mutableStateOf("") }
-    val context = LocalContext.current
-
-    if (showTimer) {
-        AlertDialog(
-            onDismissRequest = { showTimer = false },
-            title = { Text("مؤقت الإيقاف") },
-            text = {
-                Column {
-                    listOf(15, 30, 45, 60, 90).forEach { minutes ->
-                        Row(
-                            Modifier.fillMaxWidth().clickable {
-                                vm.player.setSleepTimer(minutes)
-                                showTimer = false
-                            }.padding(vertical = 12.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Icon(Icons.Rounded.Timer, null, tint = MaterialTheme.colorScheme.primary)
-                            Text("إيقاف التشغيل بعد $minutes دقيقة", Modifier.padding(horizontal = 12.dp))
-                        }
-                    }
-                    Row(
-                    Modifier
-                        .fillMaxWidth()
-                        .clickable {
-                            showTimer = false
-                            showCustomTimerDialog = true
-                        }
-                        .padding(vertical = 12.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(
-                        imageVector = Icons.Rounded.Timer,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.primary
-                    )
-                    Text(
-                        "مدة مخصصة",
-                        Modifier.padding(horizontal = 12.dp)
-                    )
-                }
-                if (sleepEnd != null) {
-                        TextButton(onClick = {
-                            vm.player.setSleepTimer(null)
-                            showTimer = false
-                        }) { Text("إلغاء المؤقت الحالي") }
-                    }
-                }
-            },
-            confirmButton = {},
-            dismissButton = { TextButton(onClick = { showTimer = false }) { Text("إغلاق") } }
-        )
-    }
-
-    if (showCustomTimerDialog) {
-        AlertDialog(
-            onDismissRequest = {
-                showCustomTimerDialog = false
-                customTimerMinutes = ""
-            },
-            title = { Text("مدة مخصصة") },
-            text = {
-                OutlinedTextField(
-                    value = customTimerMinutes,
-                    onValueChange = { value ->
-                        customTimerMinutes = value
-                            .filter { it.isDigit() }
-                            .take(4)
-                    },
-                    label = { Text("عدد الدقائق") },
-                    placeholder = { Text("مثال: 25") },
-                    singleLine = true,
-                    keyboardOptions = KeyboardOptions(
-                        keyboardType = KeyboardType.Number
-                    )
-                )
-            },
-            confirmButton = {
-                Button(
-                    enabled = customTimerMinutes
-                        .toIntOrNull()
-                        ?.let { it in 1..1440 } == true,
-                    onClick = {
-                        val minutes = customTimerMinutes.toIntOrNull()
-
-                        if (minutes != null && minutes in 1..1440) {
-                            vm.player.setSleepTimer(minutes)
-                            showCustomTimerDialog = false
-                            customTimerMinutes = ""
-                        }
-                    }
-                ) {
-                    Text("تشغيل المؤقت")
-                }
-            },
-            dismissButton = {
-                TextButton(
-                    onClick = {
-                        showCustomTimerDialog = false
-                        customTimerMinutes = ""
-                    }
-                ) {
-                    Text("إلغاء")
-                }
+    var drag by remember(state.mediaId) { mutableStateOf<Float?>(null) }
+    val maximum = state.durationMs.coerceAtLeast(1L).toFloat()
+    val shown = (drag ?: state.positionMs.toFloat()).coerceIn(0f, maximum)
+    CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
+        Column(Modifier.fillMaxWidth()) {
+            Slider(value = shown, valueRange = 0f..maximum, enabled = state.mediaId != null && state.durationMs > 0,
+                onValueChange = { drag = it }, onValueChangeFinished = { drag?.let { vm.player.seekTo(it.toLong()) }; drag = null },
+                thumb = { Box(Modifier.size(12.dp).background(MaterialTheme.colorScheme.primary, CircleShape)) },
+                track = { SliderDefaults.Track(it, modifier = Modifier.height(4.dp)) })
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                Text(formatDuration(shown.toLong()), style = MaterialTheme.typography.bodySmall)
+                Text(formatDuration(state.durationMs), style = MaterialTheme.typography.bodySmall)
             }
-        )
+        }
     }
-    if (showPlaylistPicker && currentSong != null) {
-        PlaylistPickerDialog(
-            playlists = playlists,
-            onDismiss = { showPlaylistPicker = false },
-            onPick = {
-                vm.addToPlaylist(it, currentSong.id)
-                showPlaylistPicker = false
-            },
-            onCreateRequested = {
-                showPlaylistPicker = false
-                createPlaylist = true
+}
+
+@Composable
+private fun PlayerControls(state: NowPlayingState, vm: MusicViewModel) {
+    val reduced = LocalReduceMotion.current
+    val scale = if (state.isPlaying && !reduced) rememberInfiniteTransition(label = "playPulse").animateFloat(
+        initialValue = 1f, targetValue = 1.012f,
+        animationSpec = infiniteRepeatable(tween(1200), RepeatMode.Reverse), label = "playScale") else rememberUpdatedState(1f)
+    CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
+        Row(Modifier.fillMaxWidth().padding(vertical = 6.dp), horizontalArrangement = Arrangement.SpaceEvenly,
+            verticalAlignment = Alignment.CenterVertically) {
+            IconButton(onClick = vm.player::toggleShuffle, enabled = state.mediaId != null, modifier = Modifier.size(48.dp)) {
+                Icon(Icons.Rounded.Shuffle, if (state.shuffleEnabled) "إلغاء التشغيل العشوائي" else "تشغيل عشوائي",
+                    tint = if (state.shuffleEnabled) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant)
             }
-        )
+            IconButton(onClick = vm.player::previous, enabled = state.mediaId != null, modifier = Modifier.size(48.dp)) { Icon(Icons.Rounded.SkipPrevious, "السابق", modifier = Modifier.size(32.dp)) }
+            FilledIconButton(onClick = vm.player::togglePlayPause, enabled = state.mediaId != null,
+                modifier = Modifier.size(64.dp).graphicsLayer { scaleX = scale.value; scaleY = scale.value }) {
+                Icon(if (state.isPlaying) Icons.Rounded.Pause else Icons.Rounded.PlayArrow,
+                    if (state.isPlaying) "إيقاف مؤقت" else "تشغيل", modifier = Modifier.size(33.dp))
+            }
+            IconButton(onClick = vm.player::next, enabled = state.mediaId != null, modifier = Modifier.size(48.dp)) { Icon(Icons.Rounded.SkipNext, "التالي", modifier = Modifier.size(32.dp)) }
+            IconButton(onClick = vm.player::cycleRepeatMode, enabled = state.mediaId != null, modifier = Modifier.size(48.dp)) {
+                Icon(if (state.repeatMode == Player.REPEAT_MODE_ONE) Icons.Rounded.RepeatOne else Icons.Rounded.Repeat,
+                    when (state.repeatMode) { Player.REPEAT_MODE_ONE -> "تكرار أغنية واحدة"; Player.REPEAT_MODE_ALL -> "تكرار القائمة"; else -> "التكرار متوقف" },
+                    tint = if (state.repeatMode != Player.REPEAT_MODE_OFF) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+        }
     }
+}
 
-    if (createPlaylist && currentSong != null) {
-        AlertDialog(
-            onDismissRequest = { createPlaylist = false },
-            title = { Text("قائمة تشغيل جديدة") },
-            text = {
-                OutlinedTextField(
-                    value = newPlaylistName,
-                    onValueChange = { newPlaylistName = it },
-                    label = { Text("اسم القائمة") },
-                    singleLine = true
-                )
-            },
-            confirmButton = {
-                Button(
-                    enabled = newPlaylistName.isNotBlank(),
-                    onClick = {
-                        vm.createPlaylist(newPlaylistName, currentSong.id)
-                        newPlaylistName = ""
-                        createPlaylist = false
-                    }
-                ) { Text("إنشاء") }
-            },
-            dismissButton = { TextButton(onClick = { createPlaylist = false }) { Text("إلغاء") } }
-        )
+@Composable
+private fun PlayerActions(sleepEnd: Long?, sleepAtEnd: Boolean, canShare: Boolean, onTimer: () -> Unit,
+    onPlaylist: () -> Unit, onEffects: () -> Unit, onShare: () -> Unit) {
+    val remaining by produceState(0L, sleepEnd) {
+        while (sleepEnd != null) { value = ((sleepEnd - System.currentTimeMillis() + 59_999) / 60_000).coerceAtLeast(0); delay(15_000) }
     }
+    Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            FilledTonalButton(onClick = onTimer, modifier = Modifier.weight(1f), shape = RoundedCornerShape(12.dp), contentPadding = PaddingValues(horizontal = 8.dp, vertical = 8.dp)) {
+                Icon(Icons.Rounded.Timer, null, Modifier.size(20.dp)); Spacer(Modifier.width(6.dp))
+                Text(if (sleepAtEnd) "حتى نهاية المقطع" else if (sleepEnd == null) "مؤقت النوم" else "متبقي $remaining د", maxLines = 2)
+            }
+            OutlinedButton(onClick = onEffects, modifier = Modifier.weight(1f), shape = RoundedCornerShape(12.dp), contentPadding = PaddingValues(horizontal = 8.dp, vertical = 8.dp)) {
+                Icon(Icons.Rounded.GraphicEq, null, Modifier.size(20.dp)); Spacer(Modifier.width(6.dp)); Text("المؤثرات")
+            }
+        }
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            TextButton(onClick = onPlaylist, enabled = canShare, modifier = Modifier.weight(1f)) {
+                Icon(Icons.AutoMirrored.Rounded.PlaylistAdd, null, Modifier.size(20.dp)); Spacer(Modifier.width(6.dp)); Text("إضافة لقائمة")
+            }
+            TextButton(onClick = onShare, enabled = canShare, modifier = Modifier.weight(1f)) {
+                Icon(Icons.Rounded.Share, null, Modifier.size(20.dp)); Spacer(Modifier.width(6.dp)); Text("مشاركة الملف")
+            }
+        }
+    }
+}
 
-    if (showQueue) {
-        ModalBottomSheet(
-            onDismissRequest = { showQueue = false },
-            modifier = Modifier.navigationBarsPadding()
-        ) {
-            Column(Modifier.fillMaxWidth().padding(bottom = 18.dp)) {
-                Row(
-                    Modifier.fillMaxWidth().padding(horizontal = 18.dp, vertical = 8.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Column(Modifier.weight(1f)) {
-                        Text("قائمة الانتظار", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
-                        Text("${queue.size} أغنية", color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    }
-                    IconButton(onClick = { showQueue = false }) { Icon(Icons.Rounded.Close, "إغلاق") }
-                }
-                LazyColumn {
-                    itemsIndexed(queue, key = { index, item -> "${item.mediaId}-$index" }) { index, item ->
-                        val active = item.mediaId == state.mediaId?.toString()
-                        Row(
-                            Modifier.fillMaxWidth()
-                                .background(if (active) MaterialTheme.colorScheme.primary.copy(alpha = .10f) else androidx.compose.ui.graphics.Color.Transparent)
-                                .clickable {
-                                    vm.player.playMediaId(item.mediaId.toLongOrNull() ?: return@clickable)
+private fun queueKey(item: MediaItem, index: Int): String = item.mediaMetadata.extras?.getString("queue_entry_id") ?: "${item.mediaId}-$index"
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun QueueSheet(vm: MusicViewModel, queue: List<MediaItem>, currentIndex: Int, onDismiss: () -> Unit) {
+    val currentQueue by rememberUpdatedState(queue)
+    val snackbar = remember { SnackbarHostState() }
+    val scope = rememberCoroutineScope()
+    var confirmClear by remember { mutableStateOf(false) }
+    val stepPx = with(LocalDensity.current) { 76.dp.toPx() }
+    if (confirmClear) AlertDialog(onDismissRequest = { confirmClear = false }, title = { Text("تفريغ قائمة الانتظار") },
+        text = { Text("سيتم إيقاف التشغيل وإزالة الأغاني من الانتظار. ملفاتك وقوائم التشغيل ستبقى محفوظة.") },
+        confirmButton = { TextButton(onClick = { vm.player.clearQueue(); confirmClear = false }) { Text("تفريغ") } },
+        dismissButton = { TextButton(onClick = { confirmClear = false }) { Text("إلغاء") } })
+    ModalBottomSheet(onDismissRequest = onDismiss) {
+        Column(Modifier.fillMaxWidth().navigationBarsPadding().padding(bottom = 12.dp)) {
+            Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp), verticalAlignment = Alignment.CenterVertically) {
+                Text("قائمة الانتظار • ${queue.size}", Modifier.weight(1f), style = MaterialTheme.typography.titleLarge)
+                TextButton(enabled = queue.isNotEmpty(), onClick = { confirmClear = true }) { Text("تفريغ") }
+            }
+            Text("اضغط مطولًا على مقبض الترتيب واسحب الأغنية", Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            LazyColumn(Modifier.fillMaxWidth().weight(1f, fill = false)) {
+                itemsIndexed(queue, key = { index, item -> queueKey(item, index) }, contentType = { _, _ -> "queueItem" }) { index, item ->
+                    val key = queueKey(item, index)
+                    val active = currentIndex == index
+                    Row(Modifier.fillMaxWidth().heightIn(min = 76.dp)
+                        .background(if (active) MaterialTheme.colorScheme.primaryContainer.copy(alpha = .5f) else MaterialTheme.colorScheme.surface)
+                        .padding(horizontal = 10.dp, vertical = 6.dp), verticalAlignment = Alignment.CenterVertically) {
+                        AlbumArtwork(item.mediaMetadata.artworkUri, Modifier.size(48.dp), 12)
+                        TextButton(onClick = { vm.player.playQueueIndex(index) }, modifier = Modifier.weight(1f)) {
+                            Column(Modifier.fillMaxWidth()) {
+                                Text(item.mediaMetadata.title?.toString().orEmpty(), maxLines = 1, overflow = TextOverflow.Ellipsis,
+                                    fontWeight = if (active) FontWeight.Bold else FontWeight.Normal)
+                                Text(item.mediaMetadata.artist?.toString().orEmpty(), maxLines = 1, overflow = TextOverflow.Ellipsis,
+                                    style = MaterialTheme.typography.bodySmall)
+                            }
+                        }
+                        Icon(Icons.Rounded.DragHandle, "ترتيب الأغنية", modifier = Modifier.size(48.dp)
+                            .semantics { customActions = listOf(
+                                CustomAccessibilityAction("تحريك لأعلى") { if (index > 0) { vm.player.moveQueueItem(index, index - 1); true } else false },
+                                CustomAccessibilityAction("تحريك لأسفل") { if (index < queue.lastIndex) { vm.player.moveQueueItem(index, index + 1); true } else false }) }
+                            .pointerInput(key) {
+                                var accumulated = 0f
+                                detectDragGesturesAfterLongPress(onDragStart = { accumulated = 0f },
+                                    onDragEnd = { accumulated = 0f }, onDragCancel = { accumulated = 0f }) { change, amount ->
+                                    change.consume(); accumulated += amount.y
+                                    if (abs(accumulated) >= stepPx) {
+                                        val from = currentQueue.indexOfFirst { it.mediaMetadata.extras?.getString("queue_entry_id") == key }
+                                        val to = from + if (accumulated > 0) 1 else -1
+                                        if (from >= 0 && to in currentQueue.indices) vm.player.moveQueueItem(from, to)
+                                        accumulated = 0f
+                                    }
                                 }
-                                .padding(horizontal = 14.dp, vertical = 9.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            AlbumArtwork(item.mediaMetadata.artworkUri, Modifier.size(48.dp), 10)
-                            Column(Modifier.weight(1f).padding(horizontal = 10.dp)) {
-                                Text(
-                                    item.mediaMetadata.title?.toString().orEmpty().ifBlank { "بدون عنوان" },
-                                    maxLines = 1,
-                                    overflow = TextOverflow.Ellipsis,
-                                    fontWeight = if (active) FontWeight.Bold else FontWeight.Medium
-                                )
-                                Text(
-                                    item.mediaMetadata.artist?.toString().orEmpty(),
-                                    maxLines = 1,
-                                    overflow = TextOverflow.Ellipsis,
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                            }
-                            IconButton(enabled = index > 0, onClick = { vm.player.moveQueueItem(index, index - 1) }) {
-                                Icon(Icons.Rounded.KeyboardArrowUp, "لأعلى")
-                            }
-                            IconButton(enabled = index < queue.lastIndex, onClick = { vm.player.moveQueueItem(index, index + 1) }) {
-                                Icon(Icons.Rounded.KeyboardArrowDown, "لأسفل")
-                            }
-                            IconButton(onClick = { vm.player.removeQueueItem(index) }) { Icon(Icons.Rounded.Close, "إزالة") }
-                        }
-                        HorizontalDivider()
+                            })
+                        IconButton(onClick = {
+                            vm.player.removeQueueItem(index)?.let { removed -> scope.launch {
+                                snackbar.currentSnackbarData?.dismiss()
+                                if (snackbar.showSnackbar("أُزيلت الأغنية من الانتظار", "تراجع", duration = SnackbarDuration.Short) == SnackbarResult.ActionPerformed)
+                                    vm.player.restoreQueueItem(removed)
+                            } }
+                        }) { Icon(Icons.Rounded.Close, "إزالة من الانتظار") }
                     }
                 }
             }
-        }
-    }
-
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(premiumScreenBrush())
-            .premiumAmbientSurface()
-            .navigationBarsPadding()
-            .statusBarsPadding()
-    ) {
-        Box(
-            modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .padding(bottom = 90.dp)
-                .size(280.dp)
-                .clip(CircleShape)
-                .background(
-                    Brush.radialGradient(
-                        listOf(
-                            MaterialTheme.colorScheme.secondary.copy(alpha = .10f),
-                            MaterialTheme.colorScheme.tertiary.copy(alpha = .05f),
-                            Color.Transparent
-                        )
-                    )
-                )
-        )
-
-        Box(
-            modifier = Modifier
-                .align(Alignment.TopCenter)
-                .padding(top = 64.dp)
-                .size(310.dp)
-                .clip(CircleShape)
-                .background(
-                    Brush.radialGradient(
-                        listOf(
-                            MaterialTheme.colorScheme.primary.copy(alpha = .22f),
-                            MaterialTheme.colorScheme.secondary.copy(alpha = .10f),
-                            Color.Transparent
-                        )
-                    )
-                )
-        )
-
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(horizontal = 20.dp, vertical = 6.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Row(
-                Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                IconButton(onClick = onBack) {
-                    Icon(Icons.AutoMirrored.Rounded.ArrowBack, "رجوع")
-                }
-
-                Column(
-                    Modifier.weight(1f),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Text(
-                        "قيد التشغيل الآن",
-                        fontWeight = FontWeight.ExtraBold,
-                        fontSize = 21.sp
-                    )
-                    if (queue.isNotEmpty()) {
-                        Text(
-                            "${queue.size} في قائمة الانتظار",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                }
-
-                IconButton(onClick = { showQueue = true }) {
-                    Icon(Icons.Rounded.MoreVert, "المزيد")
-                }
-            }
-
-            Spacer(Modifier.height(14.dp))
-
-            val infoShape = RoundedCornerShape(30.dp)
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(154.dp)
-                    .shadow(22.dp, infoShape)
-                    .background(premiumPanelBrush(), infoShape)
-                    .border(1.dp, premiumOutlineBrush(), infoShape)
-                    .padding(horizontal = 22.dp, vertical = 16.dp)
-            ) {
-                Column(
-                    Modifier.align(Alignment.Center),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .size(44.dp)
-                            .background(
-                                Brush.radialGradient(
-                                    listOf(
-                                        MaterialTheme.colorScheme.primary.copy(alpha = .34f),
-                                        MaterialTheme.colorScheme.primary.copy(alpha = .08f)
-                                    )
-                                ),
-                                CircleShape
-                            )
-                            .border(
-                                1.dp,
-                                MaterialTheme.colorScheme.primary.copy(alpha = .45f),
-                                CircleShape
-                            ),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            Icons.Rounded.MusicNote,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.size(24.dp)
-                        )
-                    }
-
-                    Spacer(Modifier.height(9.dp))
-
-                    Text(
-                        state.title,
-                        maxLines = 2,
-                        overflow = TextOverflow.Ellipsis,
-                        fontSize = 24.sp,
-                        lineHeight = 28.sp,
-                        fontWeight = FontWeight.Black,
-                        textAlign = TextAlign.Center
-                    )
-
-                    Spacer(Modifier.height(7.dp))
-
-                    Text(
-                        state.artist.ifBlank { "فنان غير معروف" },
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        fontSize = 15.sp,
-                        textAlign = TextAlign.Center
-                    )
-
-                    if (state.album.isNotBlank()) {
-                        Spacer(Modifier.height(3.dp))
-                        Text(
-                            state.album,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = .78f),
-                            style = MaterialTheme.typography.bodySmall,
-                            textAlign = TextAlign.Center
-                        )
-                    }
-                }
-
-                if (state.mediaId != null) {
-                    IconButton(
-                        onClick = { vm.toggleFavorite(state.mediaId!!) },
-                        modifier = Modifier.align(Alignment.TopStart)
-                    ) {
-                        Icon(
-                            if (state.mediaId in favoriteIds) Icons.Rounded.Favorite else Icons.Rounded.FavoriteBorder,
-                            "المفضلة",
-                            tint = if (state.mediaId in favoriteIds)
-                                MaterialTheme.colorScheme.primary
-                            else
-                                MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                }
-            }
-
-            Spacer(Modifier.height(14.dp))
-
-            PremiumWaveform(isPlaying = state.isPlaying)
-
-            Spacer(Modifier.height(8.dp))
-
-            Column(
-                Modifier
-                    .fillMaxWidth()
-                    .background(premiumPanelBrush(), RoundedCornerShape(22.dp))
-                    .border(1.dp, premiumOutlineBrush(), RoundedCornerShape(22.dp))
-                    .padding(horizontal = 14.dp, vertical = 8.dp)
-            ) {
-                val max = state.durationMs.coerceAtLeast(1L).toFloat()
-                val shown = (dragPosition ?: state.positionMs.toFloat()).coerceIn(0f, max)
-
-                Slider(
-                    value = shown,
-                    onValueChange = { dragPosition = it },
-                    onValueChangeFinished = {
-                        dragPosition?.let { vm.player.seekTo(it.toLong()) }
-                        dragPosition = null
-                    },
-                    valueRange = 0f..max,
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = SliderDefaults.colors(
-                        thumbColor = MaterialTheme.colorScheme.primary,
-                        activeTrackColor = MaterialTheme.colorScheme.primary,
-                        inactiveTrackColor = MaterialTheme.colorScheme.surfaceVariant
-                    )
-                )
-
-                Row(
-                    Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Text(formatDuration(shown.toLong()), style = MaterialTheme.typography.bodySmall)
-                    Text(formatDuration(state.durationMs), style = MaterialTheme.typography.bodySmall)
-                }
-            }
-
-            Spacer(Modifier.height(16.dp))
-
-            androidx.compose.runtime.CompositionLocalProvider(
-                androidx.compose.ui.platform.LocalLayoutDirection provides androidx.compose.ui.unit.LayoutDirection.Ltr
-            ) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    PremiumControlButton(
-                        active = state.shuffleEnabled,
-                        size = 52,
-                        onClick = vm.player::toggleShuffle
-                    ) {
-                        Icon(Icons.Rounded.Shuffle, "عشوائي")
-                    }
-
-                    PremiumControlButton(size = 62, onClick = vm.player::previous) {
-                        Icon(
-                            Icons.Rounded.SkipPrevious,
-                            "السابق",
-                            modifier = Modifier.size(36.dp)
-                        )
-                    }
-
-                    val playPulse = rememberInfiniteTransition(label = "playPulse")
-                    val playScale by playPulse.animateFloat(
-                        initialValue = 1f,
-                        targetValue = if (state.isPlaying) 1.045f else 1f,
-                        animationSpec = infiniteRepeatable(
-                            animation = tween(950),
-                            repeatMode = RepeatMode.Reverse
-                        ),
-                        label = "playScale"
-                    )
-                    val glowAlpha by playPulse.animateFloat(
-                        initialValue = .24f,
-                        targetValue = if (state.isPlaying) .44f else .24f,
-                        animationSpec = infiniteRepeatable(
-                            animation = tween(1100),
-                            repeatMode = RepeatMode.Reverse
-                        ),
-                        label = "playGlow"
-                    )
-
-                    Box(
-                        modifier = Modifier
-                            .size(104.dp)
-                            .graphicsLayer {
-                                scaleX = playScale
-                                scaleY = playScale
-                            }
-                            .background(
-                                Brush.radialGradient(
-                                    listOf(
-                                        MaterialTheme.colorScheme.primary.copy(alpha = glowAlpha),
-                                        MaterialTheme.colorScheme.secondary.copy(alpha = glowAlpha * .48f),
-                                        Color.Transparent
-                                    )
-                                ),
-                                CircleShape
-                            ),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        FilledIconButton(
-                            onClick = vm.player::togglePlayPause,
-                            modifier = Modifier
-                                .size(88.dp)
-                                .shadow(24.dp, CircleShape)
-                                .border(
-                                    1.dp,
-                                    Color.White.copy(alpha = .22f),
-                                    CircleShape
-                                ),
-                            shape = CircleShape,
-                            colors = IconButtonDefaults.filledIconButtonColors(
-                                containerColor = MaterialTheme.colorScheme.primary,
-                                contentColor = MaterialTheme.colorScheme.onPrimary
-                            )
-                        ) {
-                            Icon(
-                                if (state.isPlaying) Icons.Rounded.Pause else Icons.Rounded.PlayArrow,
-                                contentDescription = if (state.isPlaying) "إيقاف مؤقت" else "تشغيل",
-                                modifier = Modifier.size(46.dp)
-                            )
-                        }
-                    }
-
-                    PremiumControlButton(size = 62, onClick = vm.player::next) {
-                        Icon(
-                            Icons.Rounded.SkipNext,
-                            "التالي",
-                            modifier = Modifier.size(36.dp)
-                        )
-                    }
-
-                    PremiumControlButton(
-                        active = state.repeatMode != Player.REPEAT_MODE_OFF,
-                        size = 52,
-                        onClick = vm.player::cycleRepeatMode
-                    ) {
-                        Icon(
-                            if (state.repeatMode == Player.REPEAT_MODE_ONE)
-                                Icons.Rounded.RepeatOne
-                            else
-                                Icons.Rounded.Repeat,
-                            "تكرار"
-                        )
-                    }
-                }
-            }
-
-            Spacer(Modifier.height(22.dp))
-
-            val currentSleepEnd = sleepEnd
-            val timerLabel = if (currentSleepEnd != null) {
-                val remainingMinutes =
-                    ((currentSleepEnd - System.currentTimeMillis()) / 60_000L).coerceAtLeast(0L)
-                if (remainingMinutes > 0L) "متبقي $remainingMinutes د" else "المؤقت مفعل"
-            } else {
-                "مؤقت النوم"
-            }
-
-            Row(
-                Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                GlassActionButton(Icons.Rounded.Share, "مشاركة") {
-                    val shareText = buildString {
-                        append(state.title)
-                        if (state.artist.isNotBlank()) append(" - ").append(state.artist)
-                    }
-                    val shareIntent = Intent(Intent.ACTION_SEND).apply {
-                        type = "text/plain"
-                        putExtra(Intent.EXTRA_TEXT, shareText)
-                    }
-                    runCatching {
-                        context.startActivity(Intent.createChooser(shareIntent, "مشاركة"))
-                    }
-                }
-
-                GlassActionButton(
-                    icon = Icons.Rounded.Timer,
-                    label = timerLabel,
-                    active = currentSleepEnd != null
-                ) {
-                    showTimer = true
-                }
-
-                GlassActionButton(Icons.Rounded.GraphicEq, "المؤثرات") {
-                    val effectIntent = Intent(AudioEffect.ACTION_DISPLAY_AUDIO_EFFECT_CONTROL_PANEL).apply {
-                        putExtra(AudioEffect.EXTRA_PACKAGE_NAME, context.packageName)
-                        putExtra(AudioEffect.EXTRA_AUDIO_SESSION, 0)
-                    }
-                    runCatching { context.startActivity(effectIntent) }.onFailure {
-                        runCatching { context.startActivity(Intent(Settings.ACTION_SOUND_SETTINGS)) }
-                    }
-                }
-
-                GlassActionButton(Icons.AutoMirrored.Rounded.PlaylistAdd, "القائمة") {
-                    showPlaylistPicker = currentSong != null
-                }
-            }
-
-            Spacer(Modifier.weight(1f))
-        }
-    }
-}
-
-@Composable
-private fun GlassActionButton(
-    icon: androidx.compose.ui.graphics.vector.ImageVector,
-    label: String,
-    active: Boolean = false,
-    onClick: () -> Unit
-) {
-    val shape = RoundedCornerShape(20.dp)
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = Modifier.width(76.dp)
-    ) {
-        Box(
-            modifier = Modifier
-                .size(width = 68.dp, height = 60.dp)
-                .shadow(6.dp, shape)
-                .background(
-                    if (active) {
-                        Brush.linearGradient(
-                            listOf(
-                                MaterialTheme.colorScheme.primaryContainer,
-                                MaterialTheme.colorScheme.secondaryContainer
-                            )
-                        )
-                    } else {
-                        premiumPanelBrush()
-                    },
-                    shape
-                )
-                .border(
-                    if (active) 1.5.dp else 1.dp,
-                    if (active) {
-                        Brush.linearGradient(
-                            listOf(
-                                MaterialTheme.colorScheme.primary.copy(alpha = .82f),
-                                MaterialTheme.colorScheme.secondary.copy(alpha = .62f)
-                            )
-                        )
-                    } else {
-                        premiumOutlineBrush()
-                    },
-                    shape
-                )
-                .clickable(onClick = onClick),
-            contentAlignment = Alignment.Center
-        ) {
-            Icon(
-                icon,
-                contentDescription = label,
-                tint = if (active) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
-                modifier = Modifier.size(27.dp)
-            )
-        }
-        Spacer(Modifier.height(7.dp))
-        Text(
-            label,
-            style = MaterialTheme.typography.labelSmall,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis
-        )
-    }
-}
-
-@Composable
-private fun PremiumControlButton(
-    size: Int,
-    active: Boolean = false,
-    onClick: () -> Unit,
-    content: @Composable () -> Unit
-) {
-    Box(
-        modifier = Modifier
-            .size(size.dp)
-            .background(
-                if (active)
-                    MaterialTheme.colorScheme.primaryContainer
-                else
-                    MaterialTheme.colorScheme.surfaceVariant,
-                CircleShape
-            )
-            .border(
-                1.dp,
-                if (active)
-                    MaterialTheme.colorScheme.primary.copy(alpha = .72f)
-                else
-                    MaterialTheme.colorScheme.primary.copy(alpha = .20f),
-                CircleShape
-            )
-            .clickable(onClick = onClick),
-        contentAlignment = Alignment.Center
-    ) {
-        content()
-    }
-}
-
-
-@Composable
-private fun PremiumWaveform(isPlaying: Boolean) {
-    val transition = rememberInfiniteTransition(label = "waveform")
-    val phaseA by transition.animateFloat(
-        initialValue = .72f,
-        targetValue = if (isPlaying) 1f else .72f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(520),
-            repeatMode = RepeatMode.Reverse
-        ),
-        label = "waveA"
-    )
-    val phaseB by transition.animateFloat(
-        initialValue = .82f,
-        targetValue = if (isPlaying) 1.16f else .82f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(690),
-            repeatMode = RepeatMode.Reverse
-        ),
-        label = "waveB"
-    )
-    val phaseC by transition.animateFloat(
-        initialValue = .68f,
-        targetValue = if (isPlaying) 1.08f else .68f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(840),
-            repeatMode = RepeatMode.Reverse
-        ),
-        label = "waveC"
-    )
-
-    val bars = listOf(10, 18, 26, 15, 32, 22, 38, 18, 29, 14, 34, 24, 40, 20, 31, 16, 27, 13)
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(46.dp),
-        horizontalArrangement = Arrangement.Center,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        bars.forEachIndexed { index, baseHeight ->
-            val factor = when (index % 3) {
-                0 -> phaseA
-                1 -> phaseB
-                else -> phaseC
-            }
-            Box(
-                Modifier
-                    .padding(horizontal = 2.dp)
-                    .width(3.dp)
-                    .height((baseHeight * factor).dp)
-                    .background(
-                        if (index % 3 == 0)
-                            MaterialTheme.colorScheme.secondary.copy(alpha = .88f)
-                        else
-                            MaterialTheme.colorScheme.primary.copy(alpha = .82f),
-                        CircleShape
-                    )
-            )
+            if (queue.isEmpty()) Text("قائمة الانتظار فارغة", Modifier.padding(24.dp))
+            SnackbarHost(snackbar)
         }
     }
 }

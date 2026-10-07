@@ -49,8 +49,41 @@ data class PlaylistTrackEntity(
 
 @Dao
 interface MusicDao {
+    @Query("SELECT * FROM favorites ORDER BY addedAt DESC")
+    suspend fun favoriteSnapshot(): List<FavoriteEntity>
+    @Query("SELECT * FROM playlists ORDER BY createdAt ASC")
+    suspend fun playlistSnapshot(): List<PlaylistEntity>
+    @Query("SELECT * FROM playlist_tracks ORDER BY playlistId, position")
+    suspend fun trackSnapshot(): List<PlaylistTrackEntity>
+
+    @Transaction
+    suspend fun mergeBackup(favorites: List<FavoriteEntity>, playlists: List<PlaylistEntity>, tracks: List<PlaylistTrackEntity>) {
+        favorites.forEach { if (!isFavorite(it.mediaId)) addFavorite(it) }
+        val existing = playlistSnapshot().associateBy { it.name }.toMutableMap()
+        val ids = mutableMapOf<Long, Long>()
+        playlists.forEach { imported ->
+            val current = existing[imported.name] ?: imported.copy(id = createPlaylist(imported.copy(id = 0))).also { existing[it.name] = it }
+            ids[imported.id] = current.id
+        }
+        tracks.sortedBy { it.position }.forEach { track ->
+            ids[track.playlistId]?.let { addTrackToPlaylist(it, track.mediaId) }
+        }
+    }
+
     @Query("SELECT mediaId FROM favorites ORDER BY addedAt DESC")
     fun observeFavoriteIds(): Flow<List<Long>>
+
+    @Transaction
+    suspend fun toggleFavorite(mediaId: Long) {
+        if (isFavorite(mediaId)) removeFavorite(mediaId) else addFavorite(FavoriteEntity(mediaId))
+    }
+
+    @Transaction
+    suspend fun createPlaylistWithSong(name: String, mediaId: Long?): Long {
+        val id = createPlaylist(PlaylistEntity(name = name))
+        if (mediaId != null) addTrackToPlaylist(id, mediaId)
+        return id
+    }
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun addFavorite(item: FavoriteEntity)
@@ -67,6 +100,12 @@ interface MusicDao {
     @Insert
     suspend fun createPlaylist(playlist: PlaylistEntity): Long
 
+    @Query("UPDATE playlists SET name = :name WHERE id = :playlistId")
+    suspend fun renamePlaylist(playlistId: Long, name: String)
+
+    @Query("SELECT * FROM playlist_tracks ORDER BY playlistId, position")
+    fun observeAllPlaylistTracks(): Flow<List<PlaylistTrackEntity>>
+
     @Query("DELETE FROM playlists WHERE id = :playlistId")
     suspend fun deletePlaylist(playlistId: Long)
 
@@ -82,6 +121,24 @@ interface MusicDao {
     @Transaction
     suspend fun addTrackToPlaylist(playlistId: Long, mediaId: Long) {
         insertPlaylistTrack(PlaylistTrackEntity(playlistId, mediaId, nextPosition(playlistId)))
+    }
+
+    @Query("SELECT * FROM playlist_tracks WHERE playlistId = :playlistId AND mediaId = :mediaId")
+    suspend fun getPlaylistTrack(playlistId: Long, mediaId: Long): PlaylistTrackEntity?
+
+    @Query("SELECT EXISTS(SELECT 1 FROM playlists WHERE id = :playlistId)")
+    suspend fun playlistExists(playlistId: Long): Boolean
+
+    @Transaction
+    suspend fun takePlaylistTrack(playlistId: Long, mediaId: Long): PlaylistTrackEntity? {
+        val track = getPlaylistTrack(playlistId, mediaId) ?: return null
+        removeTrackFromPlaylist(playlistId, mediaId)
+        return track
+    }
+
+    @Transaction
+    suspend fun restorePlaylistTrack(track: PlaylistTrackEntity) {
+        if (playlistExists(track.playlistId)) insertPlaylistTrack(track)
     }
 
     @Query("DELETE FROM playlist_tracks WHERE playlistId = :playlistId AND mediaId = :mediaId")
