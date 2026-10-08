@@ -61,7 +61,7 @@ fun HomeScreen(
     LazyColumn(
         modifier = Modifier.fillMaxSize().background(premiumScreenBrush()).premiumAmbientSurface().statusBarsPadding(),
         contentPadding = PaddingValues(horizontal = 14.dp, vertical = 10.dp),
-        verticalArrangement = Arrangement.spacedBy(11.dp)
+        verticalArrangement = Arrangement.spacedBy(9.dp)
     ) {
         item {
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
@@ -132,8 +132,8 @@ fun HomeScreen(
             item {
                 LazyRow(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                     items(recent, key = { it.id }, contentType = { "recentSong" }) { song ->
-                        Column(Modifier.width(112.dp).clickable { onSong(song) }) {
-                            AlbumArtwork(song.artworkUri, Modifier.size(112.dp), 18)
+                        Column(Modifier.width(104.dp).clickable { onSong(song) }) {
+                            AlbumArtwork(song.artworkUri, Modifier.size(104.dp), 17, placeholderTitle = displayTitle(song.title))
                             Spacer(Modifier.height(6.dp))
                             Text(displayTitle(song.title), maxLines = 1, overflow = TextOverflow.Ellipsis, fontWeight = FontWeight.Bold)
                             Text(displayArtist(song.artist), maxLines = 1, overflow = TextOverflow.Ellipsis,
@@ -154,18 +154,18 @@ private fun ResumeCard(vm: MusicViewModel, onOpen: () -> Unit, onPlayAll: () -> 
     val state by vm.player.summary.collectAsStateWithLifecycle()
     val shape = RoundedCornerShape(16.dp)
     Column(Modifier.fillMaxWidth().background(premiumPanelBrush(), shape)
-        .border(.45.dp, premiumOutlineBrush(), shape).padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        .border(.4.dp, premiumOutlineBrush(), shape).padding(10.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
         if (state.hasMedia) {
             Text(if (state.isPlaying) "تستمع الآن" else "استكمل الاستماع", color = MaterialTheme.colorScheme.primary,
                 style = MaterialTheme.typography.labelLarge)
             Row(Modifier.fillMaxWidth().clickable(onClick = onOpen), verticalAlignment = Alignment.CenterVertically) {
-                AlbumArtwork(state.artworkUri, Modifier.size(52.dp), 13, logo = state.isRadio,
+                AlbumArtwork(state.artworkUri, Modifier.size(48.dp), 12, logo = state.isRadio,
                     logoBackground = radioLogoBackground(state.radioStationId))
                 Column(Modifier.weight(1f).padding(horizontal = 12.dp)) {
                     Text(if (state.isRadio) state.title else displayTitle(state.title), maxLines = 2, overflow = TextOverflow.Ellipsis, fontWeight = FontWeight.Bold)
                     Text(displayArtist(state.artist).ifBlank { "ملف صوتي محلي" }, maxLines = 1, overflow = TextOverflow.Ellipsis, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
-                FilledIconButton(onClick = vm.player::togglePlayPause, modifier = Modifier.size(48.dp)) {
+                FilledIconButton(onClick = vm.player::togglePlayPause, modifier = Modifier.size(44.dp)) {
                     Icon(if (state.isRadio && state.wantsPlayback) Icons.Rounded.Stop else if (state.isPlaying) Icons.Rounded.Pause else Icons.Rounded.PlayArrow,
                         if (state.isRadio && state.wantsPlayback) "إيقاف البث" else if (state.isPlaying) "إيقاف مؤقت" else "استكمال التشغيل")
                 }
@@ -187,20 +187,20 @@ private fun ResumeCard(vm: MusicViewModel, onOpen: () -> Unit, onPlayAll: () -> 
 
 @Composable
 private fun LibraryShortcut(title: String, count: String, icon: ImageVector, onClick: () -> Unit, modifier: Modifier) {
-    val shape = RoundedCornerShape(18.dp)
+    val shape = RoundedCornerShape(16.dp)
     Row(
         modifier
             .background(premiumPanelBrush(), shape)
             .border(.4.dp, premiumOutlineBrush(), shape)
             .clickable(onClick = onClick)
-            .padding(horizontal = 10.dp, vertical = 8.dp),
+            .padding(horizontal = 9.dp, vertical = 7.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Box(
-            Modifier.size(36.dp).background(MaterialTheme.colorScheme.primaryContainer.copy(alpha = .78f), RoundedCornerShape(11.dp)),
+            Modifier.size(34.dp).background(MaterialTheme.colorScheme.primaryContainer.copy(alpha = .66f), RoundedCornerShape(10.dp)),
             contentAlignment = Alignment.Center
         ) {
-            Icon(icon, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(21.dp))
+            Icon(icon, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(20.dp))
         }
         Column(Modifier.weight(1f).padding(start = 9.dp)) {
             Text(title, fontWeight = FontWeight.Bold, maxLines = 1, style = MaterialTheme.typography.bodyLarge)
