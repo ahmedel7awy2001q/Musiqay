@@ -18,12 +18,19 @@ class QuranFilenameSearchTest {
     }
 
     @Test
-    fun matchesPaddedAndUnpaddedSurahNumbersOnlyAsTokens() {
+    fun matchesOnlyClearSurahNumberFilenames() {
         assertTrue(filenameMatchesSurahNumber("018.mp3", 18))
         assertTrue(filenameMatchesSurahNumber("18.mp3", 18))
-        assertTrue(filenameMatchesSurahNumber("0018 - recitation.mp3", 18))
+        assertTrue(filenameMatchesSurahNumber("mp3.018", 18))
+        assertTrue(filenameMatchesSurahNumber("MP3_018.mp3", 18))
+        assertTrue(filenameMatchesSurahNumber("٠١٨.mp3", 18))
+
         assertFalse(filenameMatchesSurahNumber("118.mp3", 18))
         assertFalse(filenameMatchesSurahNumber("180.mp3", 18))
+        assertFalse(filenameMatchesSurahNumber("52-18-1.mp3", 18))
+        assertFalse(filenameMatchesSurahNumber("mp3.18-1.mp3", 18))
+        assertFalse(filenameMatchesSurahNumber("Hashr.From.18.To.The.End.mp3", 18))
+        assertFalse(filenameMatchesSurahNumber("0328-18-2249-551-221-51961.mp3", 18))
     }
 
     @Test
