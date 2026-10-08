@@ -65,15 +65,21 @@ fun RadioScreen(
     var deleteManual by remember { mutableStateOf<RadioStation?>(null) }
     var timer by rememberSaveable { mutableStateOf(false) }
 
-    val safeCatalogStations = remember(catalog.stations) {
+    val safeCatalogStations = remember(catalog.stations, favorites, state.radioStationId, lastId) {
         catalog.stations
             .asSequence()
             .filter { it.id.isNotBlank() && it.name.isNotBlank() && it.streamUrl.isNotBlank() }
-            .distinctBy { station ->
+            .groupBy { station ->
                 runCatching { normalizeRadioSearch(station.name) + "|" + station.category }
                     .getOrDefault(station.id)
             }
-            .toList()
+            .values
+            .mapNotNull { group ->
+                group.firstOrNull { it.id == state.radioStationId }
+                    ?: group.firstOrNull { it.id in favorites }
+                    ?: group.firstOrNull { it.id == lastId }
+                    ?: group.firstOrNull()
+            }
     }
     val searchIndex = remember(safeCatalogStations) {
         safeCatalogStations.associate { station ->
