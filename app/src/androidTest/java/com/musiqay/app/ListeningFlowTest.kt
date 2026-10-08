@@ -5,7 +5,6 @@ import android.content.ContentValues
 import android.graphics.Bitmap
 import android.net.Uri
 import android.provider.MediaStore
-import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.lifecycle.ViewModelProvider
@@ -35,7 +34,7 @@ class ListeningFlowTest {
             runBlocking { context.settingsRepository.setTheme(com.musiqay.app.data.ThemeMode.LIGHT) }
             listOf("من روائع المنشاوي سورة يوسف تلاوة عالية الجودة", "محاضرة اختبار الاستكمال").forEachIndexed { index, title ->
                 val values = ContentValues().apply {
-                    put(MediaStore.Audio.Media.DISPLAY_NAME, "musiqay-test-$index.wav")
+                    put(MediaStore.Audio.Media.DISPLAY_NAME, "$title.wav")
                     put(MediaStore.Audio.Media.TITLE, title)
                     put(MediaStore.Audio.Media.MIME_TYPE, "audio/wav")
                     put(MediaStore.Audio.Media.RELATIVE_PATH, "Music/MusiqayTests/")
@@ -72,6 +71,7 @@ class ListeningFlowTest {
         capture("02-library")
         val first = vm.visibleSongs.value.first { it.uri == testFiles[0] }
         val second = vm.visibleSongs.value.first { it.uri == testFiles[1] }
+        assertEquals("يوسف", com.musiqay.app.util.detectedSurah(first.title))
         compose.runOnUiThread { vm.player.play(first, listOf(first, second)) }
         compose.waitUntil(15_000) { vm.player.state.value.isPlaying }
         compose.runOnUiThread { vm.player.seekTo(25_000); vm.player.setPlaybackSpeed(1.25f) }
@@ -109,7 +109,8 @@ class ListeningFlowTest {
         val folder = File(compose.activity.getExternalFilesDir(null), "screenshots").apply { mkdirs() }
         val file = File(folder, "$name.png")
         file.outputStream().use {
-            compose.onAllNodes(isRoot()).onLast().captureToImage().asAndroidBitmap().compress(Bitmap.CompressFormat.PNG, 100, it)
+            requireNotNull(InstrumentationRegistry.getInstrumentation().uiAutomation.takeScreenshot())
+                .compress(Bitmap.CompressFormat.PNG, 100, it)
         }
         // Gradle removes the test app after the suite. Keep visual evidence before cleanup.
         fun shell(command: String): String {

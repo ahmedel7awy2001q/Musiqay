@@ -3,3 +3,4 @@ Attempt 2: use the preinstalled SDK manager instead of obsolete tools package.
 Attempt 3: complete icon imports and keep the playback clock awake during audio.
 Attempt 4: preserve visual evidence before Gradle uninstalls the test app; app code unchanged.
 Attempt 5: execute screenshot copy commands individually and verify the copied bytes.
+Attempt 6: capture the full Android window including dialogs, with Arabic recording filenames.
