@@ -18,6 +18,9 @@ fun isPremiumDark(): Boolean =
 @Composable
 fun premiumScreenBrush(): Brush {
     val colors = MaterialTheme.colorScheme
+    if (colors.background == Color.Black) {
+        return Brush.verticalGradient(listOf(Color.Black, Color.Black))
+    }
     return if (isPremiumDark()) {
         Brush.verticalGradient(
             listOf(
@@ -87,6 +90,9 @@ fun premiumHeroBrush(): Brush =
 
 fun Modifier.premiumAmbientSurface(): Modifier = composed {
     val colors = MaterialTheme.colorScheme
+    if (colors.background == Color.Black) {
+        return@composed this
+    }
     val dark = colors.background.luminance() < 0.45f
     val glowAlpha = if (dark) .034f else .020f
     val waveAlpha = if (dark) .014f else .008f
