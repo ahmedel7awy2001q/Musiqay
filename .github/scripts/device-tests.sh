@@ -2,7 +2,7 @@
 set -euo pipefail
 collect() {
   mkdir -p out/screenshots
-  adb pull /data/local/tmp/musiqay-shots/ out/screenshots/ || true
+  adb pull /sdcard/Download/MusiqayTestShots/ out/screenshots/
   adb logcat -d -s AndroidRuntime:E > out/device-errors.txt || true
 }
 trap collect EXIT

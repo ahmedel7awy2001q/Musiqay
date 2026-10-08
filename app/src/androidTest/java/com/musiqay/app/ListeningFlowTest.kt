@@ -112,9 +112,14 @@ class ListeningFlowTest {
             compose.onAllNodes(isRoot()).onLast().captureToImage().asAndroidBitmap().compress(Bitmap.CompressFormat.PNG, 100, it)
         }
         // Gradle removes the test app after the suite. Keep visual evidence before cleanup.
-        val shell = InstrumentationRegistry.getInstrumentation().uiAutomation.executeShellCommand(
-            "mkdir -p /data/local/tmp/musiqay-shots && cp ${file.absolutePath} /data/local/tmp/musiqay-shots/$name.png")
-        val output = android.os.ParcelFileDescriptor.AutoCloseInputStream(shell).bufferedReader().use { it.readText() }
-        assertTrue(output, output.isBlank())
+        fun shell(command: String): String {
+            val fd = InstrumentationRegistry.getInstrumentation().uiAutomation.executeShellCommand(command)
+            return android.os.ParcelFileDescriptor.AutoCloseInputStream(fd).bufferedReader().use { it.readText() }.trim()
+        }
+        // UiAutomation executes one command directly; shell operators are not interpreted.
+        val destination = "/sdcard/Download/MusiqayTestShots"
+        shell("mkdir -p $destination")
+        shell("cp ${file.absolutePath} $destination/$name.png")
+        assertEquals(file.length().toString(), shell("stat -c %s $destination/$name.png"))
     }
 }
