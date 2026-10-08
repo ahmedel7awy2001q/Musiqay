@@ -50,6 +50,15 @@ private val DarkColors = darkColorScheme(
     outlineVariant = Color(0xFF2E3A5A)
 )
 
+private val AmoledColors = DarkColors.copy(
+    background = Color.Black,
+    surface = Color(0xFF020306),
+    surfaceVariant = Color(0xFF090D18),
+    primaryContainer = Color(0xFF17295F),
+    secondaryContainer = Color(0xFF35204B),
+    outlineVariant = Color(0xFF20283B)
+)
+
 private val LightColors = lightColorScheme(
     primary = Color(0xFF4B5FEA),
     onPrimary = Color.White,
@@ -150,14 +159,16 @@ fun MusiqayTheme(settings: AppSettings, content: @Composable () -> Unit) {
     val systemDark = isSystemInDarkTheme()
     val dark = when (settings.themeMode) {
         ThemeMode.SYSTEM -> systemDark
-        ThemeMode.DARK -> true
+        ThemeMode.DARK, ThemeMode.AMOLED -> true
         ThemeMode.LIGHT -> false
     }
     val context = LocalContext.current
-    val colors = if (settings.dynamicColors && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-        if (dark) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
-    } else {
-        if (dark) DarkColors else LightColors
+    val colors = when {
+        settings.themeMode == ThemeMode.AMOLED -> AmoledColors
+        settings.dynamicColors && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S ->
+            if (dark) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
+        dark -> DarkColors
+        else -> LightColors
     }
 
     CompositionLocalProvider(LocalReduceMotion provides settings.reduceMotion) {
