@@ -65,7 +65,7 @@ class MainActivity : ComponentActivity() {
             val systemDark = isSystemInDarkTheme()
             val darkTheme = when (settings.themeMode) {
                 ThemeMode.SYSTEM -> systemDark
-                ThemeMode.DARK -> true
+                ThemeMode.DARK, ThemeMode.AMOLED -> true
                 ThemeMode.LIGHT -> false
             }
 
