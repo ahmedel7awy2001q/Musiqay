@@ -81,6 +81,8 @@ import com.musiqay.app.ui.PlaylistSummary
 import com.musiqay.app.ui.AlbumArtwork
 import com.musiqay.app.util.formatDuration
 import com.musiqay.app.util.normalizeSearch
+import com.musiqay.app.util.surahNumberForQuery
+import com.musiqay.app.util.filenameMatchesSurahQuery
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -218,7 +220,13 @@ fun SearchScreen(
         if (query.isNotBlank()) delay(180)
         val matched = withContext(Dispatchers.Default) {
             val term = normalizeSearch(query)
-            if (term.isBlank()) emptyList() else songs.filter { searchIndex[it.id]?.contains(term) == true }
+            if (term.isBlank()) {
+                emptyList()
+            } else if (surahNumberForQuery(query) != null) {
+                songs.filter { filenameMatchesSurahQuery(it.title, query) }
+            } else {
+                songs.filter { searchIndex[it.id]?.contains(term) == true }
+            }
         }
         value = SearchResults(query, false, matched)
     }
@@ -242,7 +250,7 @@ fun SearchScreen(
             modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
             singleLine = true,
             leadingIcon = { Icon(Icons.Rounded.Search, null) },
-            placeholder = { Text("ابحث باسم الملف أو القارئ أو الألبوم") },
+            placeholder = { Text("ابحث باسم الملف أو السورة أو القارئ") },
             shape = RoundedCornerShape(18.dp),
             colors = OutlinedTextFieldDefaults.colors(
                 focusedContainerColor = MaterialTheme.colorScheme.surface.copy(alpha = .96f),
