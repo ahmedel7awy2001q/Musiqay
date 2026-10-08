@@ -160,13 +160,16 @@ fun SettingsScreen(vm: MusicViewModel, onBack: () -> Unit) {
                             Column(Modifier.weight(1f).padding(horizontal = 12.dp)) {
                                 Text("ألوان ديناميكية", fontWeight = FontWeight.Bold)
                                 Text(
-                                    "استخدام ألوان خلفية الهاتف عند توفرها",
+                                    if (settings.themeMode == ThemeMode.AMOLED)
+                                        "متوقفة في وضع AMOLED للحفاظ على الأسود الحقيقي"
+                                    else "استخدام ألوان خلفية الهاتف عند توفرها",
                                     style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                             }
                             Switch(
-                                checked = settings.dynamicColors,
+                                checked = settings.dynamicColors && settings.themeMode != ThemeMode.AMOLED,
+                                enabled = settings.themeMode != ThemeMode.AMOLED,
                                 onCheckedChange = vm::setDynamicColors
                             )
                         }
