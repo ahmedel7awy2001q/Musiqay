@@ -154,69 +154,51 @@ fun SongRow(
     modifier: Modifier = Modifier
 ) {
     var menu by remember { mutableStateOf(false) }
-    val rowShape = RoundedCornerShape(16.dp)
+    val rowShape = RoundedCornerShape(14.dp)
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 8.dp, vertical = 2.dp)
-            .shadow(if (isCurrent) 1.dp else 0.dp, rowShape)
+            .padding(horizontal = 6.dp, vertical = 1.dp)
             .background(
-                if (isCurrent) {
-                    Brush.linearGradient(
-                        listOf(
-                            MaterialTheme.colorScheme.primaryContainer.copy(alpha = .72f),
-                            MaterialTheme.colorScheme.surface.copy(alpha = .98f),
-                            MaterialTheme.colorScheme.primaryContainer.copy(alpha = .42f)
-                        )
-                    )
-                } else {
-                    Brush.linearGradient(
-                        listOf(
-                            MaterialTheme.colorScheme.surfaceVariant.copy(alpha = .42f),
-                            MaterialTheme.colorScheme.surface.copy(alpha = .96f)
-                        )
-                    )
-                },
+                if (isCurrent) MaterialTheme.colorScheme.primaryContainer.copy(alpha = .34f)
+                else Color.Transparent,
                 rowShape
             )
             .border(
-                if (isCurrent) .9.dp else .45.dp,
-                if (isCurrent)
-                    MaterialTheme.colorScheme.primary.copy(alpha = .60f)
-                else
-                    MaterialTheme.colorScheme.outlineVariant.copy(alpha = .32f),
+                if (isCurrent) .7.dp else 0.dp,
+                if (isCurrent) MaterialTheme.colorScheme.primary.copy(alpha = .46f) else Color.Transparent,
                 rowShape
             )
             .clickable(onClick = onClick)
-            .padding(horizontal = 9.dp, vertical = 6.dp),
+            .padding(horizontal = 8.dp, vertical = 5.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Box(contentAlignment = Alignment.BottomEnd) {
-            AlbumArtwork(song.artworkUri, Modifier.size(44.dp), 11, placeholderTitle = displayTitle(song.title))
+            AlbumArtwork(song.artworkUri, Modifier.size(42.dp), 10, placeholderTitle = displayTitle(song.title))
             if (isCurrent) {
                 Box(
                     Modifier
-                        .size(18.dp)
+                        .size(17.dp)
                         .background(MaterialTheme.colorScheme.primary, CircleShape)
                         .border(1.dp, MaterialTheme.colorScheme.surface, CircleShape),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
                         Icons.Rounded.GraphicEq,
-                        contentDescription = if (isPlaying) "قيد التشغيل" else "الأغنية الحالية",
+                        contentDescription = if (isPlaying) "قيد التشغيل" else "الملف الحالي",
                         tint = MaterialTheme.colorScheme.onPrimary,
-                        modifier = Modifier.size(11.dp)
+                        modifier = Modifier.size(10.dp)
                     )
                 }
             }
         }
-        Spacer(Modifier.width(10.dp))
+        Spacer(Modifier.width(9.dp))
         Column(Modifier.weight(1f)) {
             Text(
                 displayTitle(song.title),
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
-                fontWeight = if (isCurrent) FontWeight.Black else FontWeight.SemiBold,
+                fontWeight = if (isCurrent) FontWeight.Bold else FontWeight.SemiBold,
                 color = if (isCurrent) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
             )
             Text(
@@ -224,21 +206,21 @@ fun SongRow(
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
                 style = MaterialTheme.typography.bodySmall,
-                color = if (isCurrent)
-                    MaterialTheme.colorScheme.onSurface
-                else
-                    MaterialTheme.colorScheme.onSurfaceVariant
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
-        IconButton(onClick = onToggleFavorite) {
+        IconButton(onClick = onToggleFavorite, modifier = Modifier.size(40.dp)) {
             Icon(
                 if (isFavorite) Icons.Rounded.Favorite else Icons.Rounded.FavoriteBorder,
                 contentDescription = if (isFavorite) "إزالة من المفضلة" else "إضافة إلى المفضلة",
-                tint = if (isFavorite) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
+                tint = if (isFavorite) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.size(21.dp)
             )
         }
         Box {
-            IconButton(onClick = { menu = true }) { Icon(Icons.Rounded.MoreVert, contentDescription = "المزيد") }
+            IconButton(onClick = { menu = true }, modifier = Modifier.size(40.dp)) {
+                Icon(Icons.Rounded.MoreVert, contentDescription = "المزيد", modifier = Modifier.size(21.dp))
+            }
             DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
                 DropdownMenuItem(
                     text = { Text("تشغيل التالي") },
@@ -255,30 +237,15 @@ fun SongRow(
                     leadingIcon = { Icon(Icons.AutoMirrored.Rounded.PlaylistAdd, null) },
                     onClick = { menu = false; onAddToPlaylist() }
                 )
-
                 if (onRemoveFromPlaylist != null) DropdownMenuItem(
                     text = { Text("إزالة من هذه القائمة") },
                     leadingIcon = { Icon(Icons.Rounded.Remove, null) },
                     onClick = { menu = false; onRemoveFromPlaylist() }
                 )
                 DropdownMenuItem(
-                    text = {
-                        Text(
-                            "حذف من الجهاز",
-                            color = MaterialTheme.colorScheme.error
-                        )
-                    },
-                    leadingIcon = {
-                        Icon(
-                            Icons.Rounded.Delete,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.error
-                        )
-                    },
-                    onClick = {
-                        menu = false
-                        onDeleteFromDevice()
-                    }
+                    text = { Text("حذف من الجهاز", color = MaterialTheme.colorScheme.error) },
+                    leadingIcon = { Icon(Icons.Rounded.Delete, null, tint = MaterialTheme.colorScheme.error) },
+                    onClick = { menu = false; onDeleteFromDevice() }
                 )
             }
         }
@@ -300,19 +267,19 @@ fun MiniPlayer(
     modifier: Modifier = Modifier
 ) {
     if (!state.hasMedia) return
-    val shape = RoundedCornerShape(18.dp)
+    val shape = RoundedCornerShape(16.dp)
     val miniElevation by animateDpAsState(
-        targetValue = if (state.isPlaying) 2.dp else 1.dp,
+        targetValue = if (state.isPlaying) 1.5.dp else .5.dp,
         animationSpec = tween(if (LocalReduceMotion.current) 0 else 180),
         label = "miniElevation"
     )
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 8.dp, vertical = 3.dp)
+            .padding(horizontal = 8.dp, vertical = 2.dp)
             .shadow(miniElevation, shape)
             .background(premiumPanelBrush(), shape)
-            .border(.45.dp, premiumOutlineBrush(), shape)
+            .border(.4.dp, premiumOutlineBrush(), shape)
             .clickable(onClickLabel = "فتح المشغل", onClick = onOpen)
             .semantics { contentDescription = "فتح المشغل" }
     ) {
@@ -323,29 +290,46 @@ fun MiniPlayer(
                 progress = { progress },
                 modifier = Modifier.fillMaxWidth().height(2.dp),
                 color = MaterialTheme.colorScheme.primary,
-                trackColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = .55f)
+                trackColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = .42f)
             )
             Row(
-                Modifier.padding(horizontal = 8.dp, vertical = 6.dp),
+                Modifier.padding(horizontal = 8.dp, vertical = 5.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 AlbumArtwork(
                     state.artworkUri,
-                    Modifier.size(42.dp),
-                    11, logo = state.isRadio, logoBackground = radioLogoBackground(state.radioStationId)
+                    Modifier.size(38.dp),
+                    10,
+                    logo = state.isRadio,
+                    logoBackground = radioLogoBackground(state.radioStationId)
                 )
-
                 Spacer(Modifier.width(8.dp))
-
                 Column(Modifier.weight(1f)) {
-                    Text(
-                        text = if (state.isRadio) state.title else displayTitle(state.title),
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                        fontWeight = FontWeight.Bold,
-                        style = MaterialTheme.typography.bodyLarge
-                    )
-
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(
+                            text = if (state.isRadio) state.title else displayTitle(state.title),
+                            modifier = Modifier.weight(1f, fill = false),
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                            fontWeight = FontWeight.Bold,
+                            style = MaterialTheme.typography.bodyLarge
+                        )
+                        if (state.isRadio && state.wantsPlayback) {
+                            Spacer(Modifier.width(6.dp))
+                            Surface(
+                                shape = RoundedCornerShape(6.dp),
+                                color = MaterialTheme.colorScheme.primary.copy(alpha = .14f)
+                            ) {
+                                Text(
+                                    "LIVE",
+                                    modifier = Modifier.padding(horizontal = 5.dp, vertical = 1.dp),
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = MaterialTheme.colorScheme.primary,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
+                        }
+                    }
                     Text(
                         text = if (state.isRadio) state.artist else displayArtist(state.artist).ifBlank { "ملف صوتي محلي" },
                         maxLines = 1,
@@ -354,29 +338,26 @@ fun MiniPlayer(
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
-
                 FilledIconButton(
                     onClick = onToggle,
-                    modifier = Modifier.size(48.dp),
+                    modifier = Modifier.size(44.dp),
                     colors = IconButtonDefaults.filledIconButtonColors(
                         containerColor = MaterialTheme.colorScheme.primary,
                         contentColor = MaterialTheme.colorScheme.onPrimary
                     )
                 ) {
                     Icon(
-                        imageVector = if (state.isRadio && state.wantsPlayback) Icons.Rounded.Stop else if (state.isPlaying) Icons.Rounded.Pause else Icons.Rounded.PlayArrow,
-                        contentDescription = if (state.isRadio && state.wantsPlayback) "إيقاف البث" else if (state.isPlaying) "إيقاف مؤقت" else "تشغيل"
+                        imageVector = if (state.isRadio && state.wantsPlayback) Icons.Rounded.Stop
+                            else if (state.isPlaying) Icons.Rounded.Pause else Icons.Rounded.PlayArrow,
+                        contentDescription = if (state.isRadio && state.wantsPlayback) "إيقاف البث"
+                            else if (state.isPlaying) "إيقاف مؤقت" else "تشغيل",
+                        modifier = Modifier.size(22.dp)
                     )
                 }
-
-                if (!state.isRadio) IconButton(onClick = onNext) {
-                    Icon(
-                        Icons.Rounded.SkipNext,
-                        contentDescription = "التالي"
-                    )
+                if (!state.isRadio) IconButton(onClick = onNext, modifier = Modifier.size(40.dp)) {
+                    Icon(Icons.Rounded.SkipNext, contentDescription = "التالي", modifier = Modifier.size(22.dp))
                 }
             }
-
         }
     }
 }
