@@ -46,6 +46,7 @@ import androidx.compose.material.icons.automirrored.rounded.QueueMusic
 import androidx.compose.material.icons.rounded.Search
 import androidx.compose.material.icons.automirrored.rounded.Sort
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.AssistChip
 import androidx.compose.material3.Button
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -261,20 +262,32 @@ fun SearchScreen(
         )
         if (query.isBlank()) {
             Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Column(
+                    Modifier.fillMaxWidth().padding(horizontal = 18.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
                     Box(
-                        Modifier.size(60.dp).background(MaterialTheme.colorScheme.primaryContainer.copy(alpha = .68f), CircleShape),
+                        Modifier.size(58.dp).background(MaterialTheme.colorScheme.primaryContainer.copy(alpha = .58f), CircleShape),
                         contentAlignment = Alignment.Center
                     ) {
-                        Icon(Icons.Rounded.Search, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(28.dp))
+                        Icon(Icons.Rounded.Search, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(27.dp))
                     }
-                    Spacer(Modifier.height(12.dp))
+                    Spacer(Modifier.height(10.dp))
                     Text("ابحث في مكتبتك", fontWeight = FontWeight.Bold)
                     Text(
-                        "بالملف أو القارئ أو الألبوم أو المجلد",
+                        "باسم الملف أو السورة أو القارئ — والبحث يفهم رقم السورة أيضًا",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
+                    Spacer(Modifier.height(12.dp))
+                    Row(
+                        Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        listOf("سورة البقرة", "002", "سورة الكهف", "018").forEach { suggestion ->
+                            AssistChip(onClick = { query = suggestion }, label = { Text(suggestion) })
+                        }
+                    }
                 }
             }
         } else if (results.loading || results.query != query) {
@@ -283,7 +296,7 @@ fun SearchScreen(
             SongList(
                 songs = results.songs,
                 allSongsForPlayback = results.songs,
-                emptyMessage = "لا توجد نتائج. جرّب اسم الملف أو القارئ أو المجلد.",
+                emptyMessage = "لا توجد نتائج. جرّب اسم الملف أو القارئ أو اسم السورة أو رقمها.",
                 favoriteIds = favoriteIds,
                 playlists = playlists,
                 vm = vm,
