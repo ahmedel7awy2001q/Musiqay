@@ -31,4 +31,45 @@ fun detectedSurah(title: String): String? {
     return surahPatterns.firstOrNull { it.second.containsMatchIn(text) }?.first
 }
 
-fun displayTitle(title: String): String = detectedSurah(title)?.let { "سورة $it" } ?: title
+private fun normalizeArabicDigits(value: String): String = buildString(value.length) {
+    value.forEach { char ->
+        append(
+            when (char) {
+                in '٠'..'٩' -> ('0'.code + (char.code - '٠'.code)).toChar()
+                in '۰'..'۹' -> ('0'.code + (char.code - '۰'.code)).toChar()
+                else -> char
+            }
+        )
+    }
+}
+
+/** Resolve an exact surah-name query, with or without the word "سورة", to its Mushaf order. */
+fun surahNumberForQuery(query: String): Int? {
+    val normalized = normalizeSearch(query)
+        .replaceFirst(Regex("^سور[ةه]\\s+"), "")
+        .trim()
+    if (normalized.isBlank()) return null
+    val index = surahNames.indexOfFirst { normalizeSearch(it) == normalized }
+    return index.takeIf { it >= 0 }?.plus(1)
+}
+
+/** Match 18, 018, 0018, etc. as a complete numeric token, never 118 or 180. */
+fun filenameMatchesSurahNumber(fileName: String, surahNumber: Int): Boolean {
+    if (surahNumber !in 1..114) return false
+    val latinDigits = normalizeArabicDigits(fileName)
+    return Regex("(?<!\\d)0*${surahNumber}(?!\\d)").containsMatchIn(latinDigits)
+}
+
+/**
+ * A surah-name search matches only the file name itself or the surah's numeric Mushaf order.
+ * Artist/album/folder metadata cannot accidentally pull unrelated files into these results.
+ */
+fun filenameMatchesSurahQuery(fileName: String, query: String): Boolean {
+    val number = surahNumberForQuery(query) ?: return false
+    val name = surahNames[number - 1]
+    return normalizeSearch(fileName).contains(normalizeSearch(name)) ||
+        filenameMatchesSurahNumber(fileName, number)
+}
+
+/** UI titles remain exactly as stored on the phone; Quran inference is search/grouping only. */
+fun displayTitle(title: String): String = title
