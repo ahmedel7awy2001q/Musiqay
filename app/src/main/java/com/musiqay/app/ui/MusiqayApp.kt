@@ -110,7 +110,7 @@ fun MusiqayApp(vm: MusicViewModel, audioPermission: Boolean = true,
             if (currentRoute != "player" && currentRoute != "settings") {
                 Column(modifier = if (showBottom) Modifier else Modifier.navigationBarsPadding()) {
                     AnimatedVisibility(
-                        visible = playerState.hasMedia,
+                        visible = playerState.hasMedia && !(currentRoute == "radio" && playerState.isRadio),
                         enter = fadeIn(tween(if (settings.reduceMotion) 0 else 180)) + slideInVertically(
                             animationSpec = tween(if (settings.reduceMotion) 0 else 160),
                             initialOffsetY = { it / 3 }
@@ -128,13 +128,13 @@ fun MusiqayApp(vm: MusicViewModel, audioPermission: Boolean = true,
                         )
                     }
                     if (showBottom) NavigationBar(
-                        containerColor = MaterialTheme.colorScheme.surface.copy(alpha = .98f),
+                        containerColor = MaterialTheme.colorScheme.surface.copy(alpha = .96f),
                         tonalElevation = 0.dp
                     ) {
                         RootNavItems.forEach { item ->
                             val selected = currentRoute == item.route
                             val iconScale by animateFloatAsState(
-                                targetValue = if (selected) 1.05f else .97f,
+                                targetValue = if (selected) 1.03f else .98f,
                                 animationSpec = tween(if (settings.reduceMotion) 0 else 220),
                                 label = "navIconScale"
                             )
@@ -163,7 +163,7 @@ fun MusiqayApp(vm: MusicViewModel, audioPermission: Boolean = true,
                                 colors = NavigationBarItemDefaults.colors(
                                     selectedIconColor = MaterialTheme.colorScheme.primary,
                                     selectedTextColor = MaterialTheme.colorScheme.primary,
-                                    indicatorColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = .64f),
+                                    indicatorColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = .46f),
                                     unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
                                     unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
