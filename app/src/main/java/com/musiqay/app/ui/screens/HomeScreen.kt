@@ -130,14 +130,42 @@ fun HomeScreen(
         if (recent.isNotEmpty()) {
             item { SectionTitle("مضاف حديثًا", "عرض الكل", onAllSongs) }
             item {
-                LazyRow(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                LazyRow(
+                    horizontalArrangement = Arrangement.spacedBy(10.dp),
+                    contentPadding = PaddingValues(horizontal = 2.dp, vertical = 2.dp)
+                ) {
                     items(recent, key = { it.id }, contentType = { "recentSong" }) { song ->
-                        Column(Modifier.width(104.dp).clickable { onSong(song) }) {
-                            AlbumArtwork(song.artworkUri, Modifier.size(104.dp), 17, placeholderTitle = displayTitle(song.title))
+                        Column(
+                            Modifier
+                                .width(122.dp)
+                                .clickable { onSong(song) }
+                                .padding(bottom = 4.dp)
+                        ) {
+                            AlbumArtwork(
+                                song.artworkUri,
+                                Modifier.size(108.dp).align(Alignment.CenterHorizontally),
+                                16,
+                                placeholderTitle = displayTitle(song.title)
+                            )
                             Spacer(Modifier.height(6.dp))
-                            Text(displayTitle(song.title), maxLines = 1, overflow = TextOverflow.Ellipsis, fontWeight = FontWeight.Bold)
-                            Text(displayArtist(song.artist), maxLines = 1, overflow = TextOverflow.Ellipsis,
-                                style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            Text(
+                                displayTitle(song.title),
+                                minLines = 2,
+                                maxLines = 2,
+                                overflow = TextOverflow.Ellipsis,
+                                fontWeight = FontWeight.Bold,
+                                style = MaterialTheme.typography.bodyMedium
+                            )
+                            val artist = displayArtist(song.artist)
+                            if (artist.isNotBlank()) {
+                                Text(
+                                    artist,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis,
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
                         }
                     }
                 }
