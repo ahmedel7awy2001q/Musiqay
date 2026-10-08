@@ -69,7 +69,10 @@ fun RadioScreen(
         catalog.stations
             .asSequence()
             .filter { it.id.isNotBlank() && it.name.isNotBlank() && it.streamUrl.isNotBlank() }
-            .distinctBy { it.id }
+            .distinctBy { station ->
+                runCatching { normalizeRadioSearch(station.name) + "|" + station.category }
+                    .getOrDefault(station.id)
+            }
             .toList()
     }
     val searchIndex = remember(safeCatalogStations) {
@@ -131,6 +134,7 @@ fun RadioScreen(
             RadioHeader(
                 stationCount = safeCatalogStations.size,
                 loading = catalog.loading,
+                onAdd = { addStation = true },
                 onRefresh = { vm.refreshRadio(force = true) }
             )
         }
@@ -230,15 +234,18 @@ fun RadioScreen(
             }
         }
 
-        item {
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                TextButton(onClick = { addStation = true }) { Icon(Icons.Rounded.Add, null); Text("إضافة محطة") }
-                if (favoritesOnly && favorites.size > 1) TextButton(onClick = { orderFavorites = true }) { Text("ترتيب المفضلة") }
-                current?.let { station -> TextButton(onClick = {
-                    runCatching { context.startActivity(Intent.createChooser(Intent(Intent.ACTION_SEND).apply {
-                        type = "text/plain"; putExtra(Intent.EXTRA_TEXT, station.name + "\n" + station.streamUrl)
-                    }, "مشاركة المحطة")) }
-                }) { Icon(Icons.Rounded.Share, "مشاركة المحطة") } }
+        if ((favoritesOnly && favorites.size > 1) || current != null) {
+            item {
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
+                    if (favoritesOnly && favorites.size > 1) {
+                        TextButton(onClick = { orderFavorites = true }) { Text("ترتيب المفضلة") }
+                    }
+                    current?.let { station -> TextButton(onClick = {
+                        runCatching { context.startActivity(Intent.createChooser(Intent(Intent.ACTION_SEND).apply {
+                            type = "text/plain"; putExtra(Intent.EXTRA_TEXT, station.name + "\n" + station.streamUrl)
+                        }, "مشاركة المحطة")) }
+                    }) { Icon(Icons.Rounded.Share, "مشاركة المحطة"); Spacer(Modifier.width(5.dp)); Text("مشاركة") } }
+                }
             }
         }
         item {
@@ -332,7 +339,7 @@ fun RadioScreen(
 }
 
 @Composable
-private fun RadioHeader(stationCount: Int, loading: Boolean, onRefresh: () -> Unit) {
+private fun RadioHeader(stationCount: Int, loading: Boolean, onAdd: () -> Unit, onRefresh: () -> Unit) {
     Row(
         Modifier.fillMaxWidth().padding(horizontal = 2.dp, vertical = 2.dp),
         verticalAlignment = Alignment.CenterVertically
@@ -351,7 +358,10 @@ private fun RadioHeader(stationCount: Int, loading: Boolean, onRefresh: () -> Un
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
-        FilledTonalIconButton(onClick = onRefresh, enabled = !loading, modifier = Modifier.size(48.dp)) {
+        IconButton(onClick = onAdd, modifier = Modifier.size(44.dp)) {
+            Icon(Icons.Rounded.Add, "إضافة محطة", modifier = Modifier.size(21.dp))
+        }
+        FilledTonalIconButton(onClick = onRefresh, enabled = !loading, modifier = Modifier.size(44.dp)) {
             Icon(Icons.Rounded.Refresh, "تحديث المحطات", modifier = Modifier.size(20.dp))
         }
     }
@@ -381,7 +391,29 @@ private fun CurrentRadioCard(
         Row(verticalAlignment = Alignment.CenterVertically) {
             RadioArtwork(station, Modifier.size(52.dp))
             Column(Modifier.weight(1f).padding(horizontal = 10.dp)) {
-                Text(station.name, style = MaterialTheme.typography.titleMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        station.name,
+                        modifier = Modifier.weight(1f),
+                        style = MaterialTheme.typography.titleMedium,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                    if (state.wantsPlayback) {
+                        Surface(
+                            shape = RoundedCornerShape(6.dp),
+                            color = MaterialTheme.colorScheme.primary.copy(alpha = .14f)
+                        ) {
+                            Text(
+                                "LIVE",
+                                modifier = Modifier.padding(horizontal = 5.dp, vertical = 1.dp),
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.primary,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                    }
+                }
                 Text(
                     radioStatus(state),
                     color = if (state.isPlaying) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
