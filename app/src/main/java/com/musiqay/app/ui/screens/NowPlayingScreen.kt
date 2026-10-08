@@ -109,15 +109,15 @@ fun NowPlayingScreen(vm: MusicViewModel, songs: List<Song>, favoriteIds: Set<Lon
         .statusBarsPadding().navigationBarsPadding()) {
         val landscape = maxWidth > maxHeight && maxWidth >= 600.dp
         val artSize = if (landscape) minOf(maxHeight - 90.dp, maxWidth * .34f).coerceAtLeast(80.dp)
-            else minOf(maxWidth - 76.dp, maxHeight * .26f).coerceIn(96.dp, 218.dp)
+            else minOf(maxWidth - 82.dp, maxHeight * .245f).coerceIn(92.dp, 200.dp)
         Column(Modifier.fillMaxSize().padding(horizontal = 16.dp)) {
             Row(Modifier.fillMaxWidth().heightIn(min = 56.dp), verticalAlignment = Alignment.CenterVertically) {
-                FilledTonalIconButton(onClick = onBack, modifier = Modifier.size(48.dp)) {
-                    Icon(Icons.AutoMirrored.Rounded.ArrowBack, "رجوع", modifier = Modifier.size(21.dp))
+                FilledTonalIconButton(onClick = onBack, modifier = Modifier.size(44.dp)) {
+                    Icon(Icons.AutoMirrored.Rounded.ArrowBack, "رجوع", modifier = Modifier.size(20.dp))
                 }
                 Text("قيد التشغيل", Modifier.weight(1f), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center)
-                FilledTonalIconButton(onClick = { showQueue = true }, modifier = Modifier.size(48.dp)) {
-                    Icon(Icons.AutoMirrored.Rounded.QueueMusic, "قائمة الانتظار", modifier = Modifier.size(21.dp))
+                FilledTonalIconButton(onClick = { showQueue = true }, modifier = Modifier.size(44.dp)) {
+                    Icon(Icons.AutoMirrored.Rounded.QueueMusic, "قائمة الانتظار", modifier = Modifier.size(20.dp))
                 }
             }
             if (landscape) {
@@ -134,8 +134,8 @@ fun NowPlayingScreen(vm: MusicViewModel, songs: List<Song>, favoriteIds: Set<Lon
                     }
                 }
             } else {
-                Column(Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(vertical = 8.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(11.dp)) {
+                Column(Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(vertical = 6.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     AlbumArtwork(state.artworkUri, Modifier.size(artSize).border(.4.dp, premiumOutlineBrush(), RoundedCornerShape(22.dp)), 22, true)
                     PlayerDetails(state, favoriteIds, vm)
                     PlayerProgress(vm)
@@ -156,7 +156,7 @@ private fun rememberSaveableBoolean() = androidx.compose.runtime.saveable.rememb
 private fun PlayerDetails(state: NowPlayingState, favorites: Set<Long>, vm: MusicViewModel) {
     Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
         Column(Modifier.weight(1f), horizontalAlignment = Alignment.CenterHorizontally) {
-            Text(displayTitle(state.title), modifier = Modifier.clickable { android.widget.Toast.makeText(vm.getApplication(), state.title, android.widget.Toast.LENGTH_LONG).show() }, maxLines = 2, overflow = TextOverflow.Ellipsis, style = MaterialTheme.typography.titleLarge, textAlign = TextAlign.Center)
+            Text(displayTitle(state.title), modifier = Modifier.clickable { android.widget.Toast.makeText(vm.getApplication(), state.title, android.widget.Toast.LENGTH_LONG).show() }, maxLines = 2, overflow = TextOverflow.Ellipsis, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Black, textAlign = TextAlign.Center)
             Text(displayArtist(state.artist).ifBlank { "ملف صوتي محلي" }, maxLines = 1, overflow = TextOverflow.Ellipsis, color = MaterialTheme.colorScheme.onSurfaceVariant)
             if (displayAlbum(state.album).isNotBlank()) Text(displayAlbum(state.album), maxLines = 1, overflow = TextOverflow.Ellipsis,
                 style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -179,8 +179,8 @@ private fun PlayerProgress(vm: MusicViewModel) {
         Column(Modifier.fillMaxWidth()) {
             Slider(value = shown, valueRange = 0f..maximum, enabled = state.mediaId != null && state.durationMs > 0,
                 onValueChange = { drag = it }, onValueChangeFinished = { drag?.let { vm.player.seekTo(it.toLong()) }; drag = null },
-                thumb = { Box(Modifier.size(12.dp).background(MaterialTheme.colorScheme.primary, CircleShape)) },
-                track = { SliderDefaults.Track(it, modifier = Modifier.height(4.dp)) })
+                thumb = { Box(Modifier.size(14.dp).background(MaterialTheme.colorScheme.primary, CircleShape)) },
+                track = { SliderDefaults.Track(it, modifier = Modifier.height(5.dp)) })
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                 Text(formatDuration(shown.toLong()), style = MaterialTheme.typography.bodySmall)
                 Text(formatDuration(state.durationMs), style = MaterialTheme.typography.bodySmall)
@@ -198,18 +198,18 @@ private fun PlayerControls(state: NowPlayingState, vm: MusicViewModel) {
     CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
         Row(Modifier.fillMaxWidth().padding(vertical = 6.dp), horizontalArrangement = Arrangement.SpaceEvenly,
             verticalAlignment = Alignment.CenterVertically) {
-            IconButton(onClick = vm.player::toggleShuffle, enabled = state.mediaId != null, modifier = Modifier.size(48.dp)) {
+            IconButton(onClick = vm.player::toggleShuffle, enabled = state.mediaId != null, modifier = Modifier.size(44.dp)) {
                 Icon(Icons.Rounded.Shuffle, if (state.shuffleEnabled) "إلغاء التشغيل العشوائي" else "تشغيل عشوائي",
                     tint = if (state.shuffleEnabled) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant)
             }
-            IconButton(onClick = vm.player::previous, enabled = state.mediaId != null, modifier = Modifier.size(48.dp)) { Icon(Icons.Rounded.SkipPrevious, "السابق", modifier = Modifier.size(32.dp)) }
+            IconButton(onClick = vm.player::previous, enabled = state.mediaId != null, modifier = Modifier.size(44.dp)) { Icon(Icons.Rounded.SkipPrevious, "السابق", modifier = Modifier.size(30.dp)) }
             FilledIconButton(onClick = vm.player::togglePlayPause, enabled = state.mediaId != null,
-                modifier = Modifier.size(64.dp).graphicsLayer { scaleX = scale.value; scaleY = scale.value }) {
+                modifier = Modifier.size(60.dp).graphicsLayer { scaleX = scale.value; scaleY = scale.value }) {
                 Icon(if (state.isPlaying) Icons.Rounded.Pause else Icons.Rounded.PlayArrow,
                     if (state.isPlaying) "إيقاف مؤقت" else "تشغيل", modifier = Modifier.size(33.dp))
             }
-            IconButton(onClick = vm.player::next, enabled = state.mediaId != null, modifier = Modifier.size(48.dp)) { Icon(Icons.Rounded.SkipNext, "التالي", modifier = Modifier.size(32.dp)) }
-            IconButton(onClick = vm.player::cycleRepeatMode, enabled = state.mediaId != null, modifier = Modifier.size(48.dp)) {
+            IconButton(onClick = vm.player::next, enabled = state.mediaId != null, modifier = Modifier.size(44.dp)) { Icon(Icons.Rounded.SkipNext, "التالي", modifier = Modifier.size(30.dp)) }
+            IconButton(onClick = vm.player::cycleRepeatMode, enabled = state.mediaId != null, modifier = Modifier.size(44.dp)) {
                 Icon(if (state.repeatMode == Player.REPEAT_MODE_ONE) Icons.Rounded.RepeatOne else Icons.Rounded.Repeat,
                     when (state.repeatMode) { Player.REPEAT_MODE_ONE -> "تكرار أغنية واحدة"; Player.REPEAT_MODE_ALL -> "تكرار القائمة"; else -> "التكرار متوقف" },
                     tint = if (state.repeatMode != Player.REPEAT_MODE_OFF) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant)
