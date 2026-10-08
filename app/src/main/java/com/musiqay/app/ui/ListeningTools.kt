@@ -19,6 +19,10 @@ import java.util.Locale
 @Composable
 fun ListeningTools(vm: MusicViewModel, song: Song?) {
     val state by vm.player.summary.collectAsStateWithLifecycle()
+    val allMarks by vm.audioBookmarks.collectAsStateWithLifecycle()
+    val markCount = remember(allMarks, song?.id, song?.uri) {
+        if (song == null) 0 else allMarks.count { it.mediaId == song.id && it.uri == song.uri.toString() }
+    }
     var speedMenu by remember { mutableStateOf(false) }
     var marksOpen by remember { mutableStateOf(false) }
     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
@@ -36,7 +40,8 @@ fun ListeningTools(vm: MusicViewModel, song: Song?) {
             }
         }
         TextButton(onClick = { marksOpen = true }, enabled = song != null) {
-            Icon(Icons.Rounded.BookmarkBorder, null, Modifier.size(20.dp)); Text("علامات")
+            Icon(if (markCount > 0) Icons.Rounded.Bookmark else Icons.Rounded.BookmarkBorder, null, Modifier.size(20.dp))
+            Text(if (markCount > 0) "علامات $markCount" else "علامات")
         }
         TextButton(onClick = { vm.player.seekBy(30_000) }, enabled = song != null) {
             Icon(Icons.Rounded.Forward30, null, Modifier.size(20.dp)); Text("30 ث")
