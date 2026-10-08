@@ -1,7 +1,9 @@
 package com.musiqay.app
 
 import android.Manifest
+import android.content.Intent
 import android.graphics.Color
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -13,6 +15,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.compose.runtime.SideEffect
@@ -31,12 +34,33 @@ import com.musiqay.app.ui.MusiqayApp
 import com.musiqay.app.ui.theme.MusiqayTheme
 
 class MainActivity : ComponentActivity() {
+    private var incomingAudioUri by mutableStateOf<Uri?>(null)
+
+    private fun captureAudioIntent(value: Intent?) {
+        if (value?.action != Intent.ACTION_VIEW) return
+        val uri = value.data ?: return
+        if ((value.flags and Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION) != 0) {
+            runCatching {
+                contentResolver.takePersistableUriPermission(uri, Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            }
+        }
+        incomingAudioUri = uri
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        captureAudioIntent(intent)
         enableEdgeToEdge()
 
         setContent {
             val vm: MusicViewModel = viewModel()
+            val externalUri = incomingAudioUri
+            LaunchedEffect(externalUri) {
+                externalUri?.let {
+                    vm.openExternalAudio(it)
+                    incomingAudioUri = null
+                }
+            }
             val settings by vm.settings.collectAsStateWithLifecycle()
             val systemDark = isSystemInDarkTheme()
             val darkTheme = when (settings.themeMode) {
@@ -108,5 +132,11 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        captureAudioIntent(intent)
     }
 }
