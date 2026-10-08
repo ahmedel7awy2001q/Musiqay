@@ -48,7 +48,7 @@ private val MusicPlatforms = listOf(
         icon = Icons.Rounded.GraphicEq,
         homeUrl = "https://open.spotify.com/",
         searchUrl = { q -> "https://open.spotify.com/search/" + urlEncode(q) },
-        nativeSearchUri = { q -> Uri.parse("spotify:search:" + q) }
+        nativeSearchUri = { q -> Uri.parse("spotify:search:" + Uri.encode(q)) }
     ),
     MusicPlatform(
         name = "YouTube Music",
