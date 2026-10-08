@@ -37,6 +37,7 @@ fun HomeScreen(
     onArtists: () -> Unit,
     onAlbums: () -> Unit,
     onFolders: () -> Unit,
+    onPlatforms: () -> Unit,
     onRadio: () -> Unit,
     onResume: () -> Unit,
     onPlayAll: () -> Unit,
@@ -104,6 +105,13 @@ fun HomeScreen(
                     LibraryShortcut("الألبومات", "${counts.second} ألبوم", Icons.Rounded.Album, onAlbums, Modifier.weight(1f))
                     LibraryShortcut("المجلدات", "${counts.third} مجلد", Icons.Rounded.Folder, onFolders, Modifier.weight(1f))
                 }
+                LibraryShortcut(
+                    "المنصات",
+                    "Spotify • YouTube Music • Anghami",
+                    Icons.Rounded.Hub,
+                    onPlatforms,
+                    Modifier.fillMaxWidth()
+                )
             }
         }
         if (unfinished.isNotEmpty()) {
