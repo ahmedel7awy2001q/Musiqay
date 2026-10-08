@@ -1,6 +1,3 @@
-Musiqay 1.4.2: authorized preview build, tests, and update signing verification.
-Attempt 2: use the preinstalled SDK manager instead of obsolete tools package.
-Attempt 3: complete icon imports and keep the playback clock awake during audio.
-Attempt 4: preserve visual evidence before Gradle uninstalls the test app; app code unchanged.
-Attempt 5: execute screenshot copy commands individually and verify the copied bytes.
-Attempt 6: capture the full Android window including dialogs, with Arabic recording filenames.
+build=1.4.3
+requested_at=2026-10-08T13:01:00+03:00
+mode=release
