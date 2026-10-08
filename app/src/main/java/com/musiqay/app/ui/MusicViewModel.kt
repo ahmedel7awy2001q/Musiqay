@@ -2,6 +2,7 @@ package com.musiqay.app.ui
 
 import android.app.Application
 import android.database.ContentObserver
+import android.net.Uri
 import android.os.Handler
 import android.os.Looper
 import android.provider.MediaStore
@@ -148,6 +149,20 @@ class MusicViewModel(application: Application) : AndroidViewModel(application) {
         refreshJob?.cancel()
         refreshJob = viewModelScope.launch { delay(250); scanLibrary() }
     }
+
+    fun openExternalAudio(uri: Uri) {
+        viewModelScope.launch {
+            val library = visibleSongs.value
+            val existing = library.firstOrNull { it.uri == uri }
+            if (existing != null) {
+                player.play(existing, library)
+            } else {
+                val external = app.mediaStoreRepository.loadExternalSong(uri)
+                player.play(external, listOf(external))
+            }
+        }
+    }
+
     fun play(song: Song, source: List<Song> = visibleSongs.value) {
         if (source.any { it.id == song.id }) player.play(song, source)
     }
