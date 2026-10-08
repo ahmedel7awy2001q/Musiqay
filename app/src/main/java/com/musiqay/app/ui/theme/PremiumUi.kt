@@ -22,8 +22,8 @@ fun premiumScreenBrush(): Brush {
         Brush.verticalGradient(
             listOf(
                 colors.background,
-                colors.primary.copy(alpha = .055f),
-                colors.surfaceVariant.copy(alpha = .48f),
+                colors.primary.copy(alpha = .032f),
+                colors.surfaceVariant.copy(alpha = .34f),
                 colors.background
             )
         )
@@ -31,7 +31,7 @@ fun premiumScreenBrush(): Brush {
         Brush.verticalGradient(
             listOf(
                 Color(0xFFFBFCFF),
-                colors.primaryContainer.copy(alpha = .16f),
+                colors.primaryContainer.copy(alpha = .10f),
                 colors.surface.copy(alpha = .99f),
                 colors.background
             )
@@ -88,20 +88,20 @@ fun premiumHeroBrush(): Brush =
 fun Modifier.premiumAmbientSurface(): Modifier = composed {
     val colors = MaterialTheme.colorScheme
     val dark = colors.background.luminance() < 0.45f
-    val glowAlpha = if (dark) .055f else .028f
-    val waveAlpha = if (dark) .026f else .014f
+    val glowAlpha = if (dark) .034f else .020f
+    val waveAlpha = if (dark) .014f else .008f
 
     drawBehind {
         val minSide = size.minDimension
 
         drawCircle(
             color = colors.primary.copy(alpha = glowAlpha),
-            radius = minSide * .56f,
+            radius = minSide * .46f,
             center = Offset(size.width * 1.02f, size.height * .08f)
         )
         drawCircle(
             color = colors.secondary.copy(alpha = glowAlpha * .78f),
-            radius = minSide * .48f,
+            radius = minSide * .34f,
             center = Offset(size.width * -.02f, size.height * .55f)
         )
         drawCircle(
