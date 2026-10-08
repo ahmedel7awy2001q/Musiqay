@@ -19,7 +19,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
 @androidx.annotation.OptIn(androidx.media3.common.util.UnstableApi::class)
-class PlaybackService : MediaSessionService() {
+class PlaybackService : MediaLibraryService() {
     companion object {
         private var activePlayer: ExoPlayer? = null
         private var activeService: PlaybackService? = null
@@ -31,7 +31,8 @@ class PlaybackService : MediaSessionService() {
         fun setSleepAtTrackEnd() { activeService?.scheduleTrackEnd() }
         val audioSessionId: Int get() = activePlayer?.audioSessionId ?: C.AUDIO_SESSION_ID_UNSET
     }
-    private var mediaSession: MediaSession? = null
+    private var mediaSession: MediaLibraryService.MediaLibrarySession? = null
+    private var autoLibrary: AutoMediaLibrary? = null
     private var player: ExoPlayer? = null
     private val recoveryHandler = Handler(Looper.getMainLooper())
     private val sleepHandler = Handler(Looper.getMainLooper())
@@ -135,7 +136,7 @@ class PlaybackService : MediaSessionService() {
         setMediaNotificationProvider(DefaultMediaNotificationProvider.Builder(this).build().apply {
             setSmallIcon(R.drawable.ic_stat_musiqay)
         })
-        val http = DefaultHttpDataSource.Factory().setUserAgent("Musiqay/1.4.2 (Android)")
+        val http = DefaultHttpDataSource.Factory().setUserAgent("Musiqay/1.4.5 (Android)")
             .setConnectTimeoutMs(10_000).setReadTimeoutMs(12_000).setAllowCrossProtocolRedirects(true)
         val exoPlayer = ExoPlayer.Builder(this)
             .setWakeMode(C.WAKE_MODE_LOCAL)
@@ -152,9 +153,12 @@ class PlaybackService : MediaSessionService() {
         activeService = this; activePlayer = exoPlayer; player = exoPlayer
         historyHandler.postDelayed(historyTick, 10_000)
         exoPlayer.addListener(radioListener)
-        mediaSession = MediaSession.Builder(this, exoPlayer).setSessionActivity(activity).build()
+        autoLibrary = AutoMediaLibrary(this)
+        mediaSession = MediaLibraryService.MediaLibrarySession.Builder(this, exoPlayer, autoLibrary!!)
+            .setSessionActivity(activity)
+            .build()
     }
-    override fun onGetSession(controllerInfo: MediaSession.ControllerInfo): MediaSession? = mediaSession
+    override fun onGetSession(controllerInfo: MediaSession.ControllerInfo): MediaLibraryService.MediaLibrarySession? = mediaSession
     override fun onDestroy() {
         player?.let(::rememberPosition)
         recoveryHandler.removeCallbacksAndMessages(null)
@@ -162,6 +166,7 @@ class PlaybackService : MediaSessionService() {
         sleepHandler.removeCallbacksAndMessages(null)
         _sleepTimerEnd.value = null; _sleepAtTrackEnd.value = false
         activeService = null
+        autoLibrary?.release(); autoLibrary = null
         mediaSession?.release(); mediaSession = null; activePlayer = null
         player?.release(); player = null
         super.onDestroy()
