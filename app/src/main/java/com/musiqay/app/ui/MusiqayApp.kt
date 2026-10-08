@@ -57,6 +57,7 @@ import com.musiqay.app.ui.screens.SearchScreen
 import com.musiqay.app.ui.screens.SettingsScreen
 import com.musiqay.app.ui.screens.SongsScreen
 import com.musiqay.app.ui.screens.RadioScreen
+import com.musiqay.app.ui.screens.PlatformsScreen
 
 private data class NavItem(
     val route: String,
@@ -198,7 +199,8 @@ fun MusiqayApp(vm: MusicViewModel, audioPermission: Boolean = true,
                     onAllSongs = { navController.navigate("songs") },
                     onArtists = { navController.navigate("browse/artist") },
                     onAlbums = { navController.navigate("browse/album") },
-                    onFolders = { navController.navigate("browse/folder") }
+                    onFolders = { navController.navigate("browse/folder") },
+                    onPlatforms = { navController.navigate("platforms") { launchSingleTop = true } }
                 )
             }
             composable("songs") {
@@ -213,6 +215,9 @@ fun MusiqayApp(vm: MusicViewModel, audioPermission: Boolean = true,
             }
             composable("radio") {
                 RadioScreen(vm, onRequestNotifications, onMusic = { navController.navigate("player") }, audioPermission = audioPermission)
+            }
+            composable("platforms") {
+                PlatformsScreen(onBack = { navController.popBackStack() })
             }
             composable("playlists") {
                 PlaylistsScreen(
