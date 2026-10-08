@@ -108,31 +108,45 @@ fun SettingsScreen(vm: MusicViewModel, onBack: () -> Unit) {
                 }
                 SectionLabel("المظهر")
 
-                Row(
-                    Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(10.dp)
-                ) {
-                    ThemeChoice(
-                        title = "حسب الهاتف",
-                        icon = Icons.Rounded.PhoneAndroid,
-                        selected = settings.themeMode == ThemeMode.SYSTEM,
-                        onClick = { vm.setTheme(ThemeMode.SYSTEM) },
-                        modifier = Modifier.weight(1f)
-                    )
-                    ThemeChoice(
-                        title = "الوضع الداكن",
-                        icon = Icons.Rounded.DarkMode,
-                        selected = settings.themeMode == ThemeMode.DARK,
-                        onClick = { vm.setTheme(ThemeMode.DARK) },
-                        modifier = Modifier.weight(1f)
-                    )
-                    ThemeChoice(
-                        title = "الوضع الفاتح",
-                        icon = Icons.Rounded.LightMode,
-                        selected = settings.themeMode == ThemeMode.LIGHT,
-                        onClick = { vm.setTheme(ThemeMode.LIGHT) },
-                        modifier = Modifier.weight(1f)
-                    )
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Row(
+                        Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        ThemeChoice(
+                            title = "حسب الهاتف",
+                            icon = Icons.Rounded.PhoneAndroid,
+                            selected = settings.themeMode == ThemeMode.SYSTEM,
+                            onClick = { vm.setTheme(ThemeMode.SYSTEM) },
+                            modifier = Modifier.weight(1f)
+                        )
+                        ThemeChoice(
+                            title = "داكن",
+                            icon = Icons.Rounded.DarkMode,
+                            selected = settings.themeMode == ThemeMode.DARK,
+                            onClick = { vm.setTheme(ThemeMode.DARK) },
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
+                    Row(
+                        Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        ThemeChoice(
+                            title = "AMOLED",
+                            icon = Icons.Rounded.DarkMode,
+                            selected = settings.themeMode == ThemeMode.AMOLED,
+                            onClick = { vm.setTheme(ThemeMode.AMOLED) },
+                            modifier = Modifier.weight(1f)
+                        )
+                        ThemeChoice(
+                            title = "فاتح",
+                            icon = Icons.Rounded.LightMode,
+                            selected = settings.themeMode == ThemeMode.LIGHT,
+                            onClick = { vm.setTheme(ThemeMode.LIGHT) },
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
                 }
 
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
