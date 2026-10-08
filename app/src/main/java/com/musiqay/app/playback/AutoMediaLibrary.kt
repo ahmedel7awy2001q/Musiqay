@@ -19,6 +19,8 @@ import com.musiqay.app.data.RadioRepository
 import com.musiqay.app.data.RadioStation
 import com.musiqay.app.data.Song
 import com.musiqay.app.util.normalizeSearch
+import com.musiqay.app.util.filenameMatchesSurahQuery
+import com.musiqay.app.util.surahNumberForQuery
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -206,12 +208,17 @@ class AutoMediaLibrary(context: Context) : MediaLibraryService.MediaLibrarySessi
     private fun searchItems(query: String, data: Snapshot): List<MediaItem> {
         val term = normalizeSearch(query)
         if (term.isBlank()) return emptyList()
+        val surahQuery = surahNumberForQuery(query) != null
         val local = data.songs.asSequence()
             .filter {
-                normalizeSearch(it.title).contains(term) ||
-                    normalizeSearch(it.artist).contains(term) ||
-                    normalizeSearch(it.album).contains(term) ||
-                    normalizeSearch(it.folder).contains(term)
+                if (surahQuery) {
+                    filenameMatchesSurahQuery(it.title, query)
+                } else {
+                    normalizeSearch(it.title).contains(term) ||
+                        normalizeSearch(it.artist).contains(term) ||
+                        normalizeSearch(it.album).contains(term) ||
+                        normalizeSearch(it.folder).contains(term)
+                }
             }
             .take(80)
             .map(::songItem)
