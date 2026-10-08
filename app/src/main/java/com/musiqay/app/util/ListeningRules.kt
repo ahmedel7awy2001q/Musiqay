@@ -53,11 +53,33 @@ fun surahNumberForQuery(query: String): Int? {
     return index.takeIf { it >= 0 }?.plus(1)
 }
 
-/** Match 18, 018, 0018, etc. as a complete numeric token, never 118 or 180. */
+/**
+ * Match a surah number only when the *whole stored file name* clearly represents that number.
+ *
+ * Accepted examples for Al-Kahf (18):
+ * - 18.mp3
+ * - 018.mp3
+ * - mp3.018
+ * - MP3_018.mp3
+ *
+ * Deliberately rejected:
+ * - 52-18-1.mp3
+ * - Hashr.From.18.To.The.End.mp3
+ * - phone-like IDs containing 18
+ *
+ * This prevents a surah-name search from flooding results with unrelated files that merely
+ * contain the same digits somewhere in their name.
+ */
 fun filenameMatchesSurahNumber(fileName: String, surahNumber: Int): Boolean {
     if (surahNumber !in 1..114) return false
-    val latinDigits = normalizeArabicDigits(fileName)
-    return Regex("(?<!\\d)0*${surahNumber}(?!\\d)").containsMatchIn(latinDigits)
+    val latinDigits = normalizeArabicDigits(fileName).trim()
+    val withoutExtension = latinDigits.replace(
+        Regex("(?i)\\.(mp3|m4a|aac|flac|wav|ogg|opus|amr|wma)$"),
+        ""
+    ).trim()
+    val normalized = withoutExtension.lowercase(java.util.Locale.ROOT)
+    val number = surahNumber.toString()
+    return Regex("^(?:mp3[._ -]?)?0*${number}$").matches(normalized)
 }
 
 /**
