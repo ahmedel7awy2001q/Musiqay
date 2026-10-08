@@ -104,27 +104,31 @@ class AutoMediaLibrary(context: Context) : MediaLibraryService.MediaLibrarySessi
             )
             .build()
 
-    private fun songItem(song: Song): MediaItem =
-        song.toMediaItem().buildUpon()
+    private fun songItem(song: Song): MediaItem {
+        val base = song.toMediaItem()
+        return base.buildUpon()
             .setMediaMetadata(
-                song.toMediaItem().mediaMetadata.buildUpon()
+                base.mediaMetadata.buildUpon()
                     .setIsBrowsable(false)
                     .setIsPlayable(true)
                     .setMediaType(MediaMetadata.MEDIA_TYPE_MUSIC)
                     .build()
             )
             .build()
+    }
 
-    private fun radioItem(station: RadioStation): MediaItem =
-        station.toMediaItem().buildUpon()
+    private fun radioItem(station: RadioStation): MediaItem {
+        val base = station.toMediaItem()
+        return base.buildUpon()
             .setMediaMetadata(
-                station.toMediaItem().mediaMetadata.buildUpon()
+                base.mediaMetadata.buildUpon()
                     .setIsBrowsable(false)
                     .setIsPlayable(true)
                     .setMediaType(MediaMetadata.MEDIA_TYPE_RADIO_STATION)
                     .build()
             )
             .build()
+    }
 
     private fun rootChildren(data: Snapshot): List<MediaItem> = listOf(
         browseNode(RECENT, "مضاف حديثًا", "آخر الملفات على الهاتف"),
@@ -231,8 +235,11 @@ class AutoMediaLibrary(context: Context) : MediaLibraryService.MediaLibrarySessi
         session: MediaLibraryService.MediaLibrarySession,
         browser: MediaSession.ControllerInfo,
         params: MediaLibraryService.LibraryParams?
-    ): ListenableFuture<LibraryResult<MediaItem>> =
-        Futures.immediateFuture(LibraryResult.ofItem(browseNode(ROOT, "موسيقاي"), params))
+    ): ListenableFuture<LibraryResult<MediaItem>> {
+        // Refresh in the background whenever a new browser opens so favorites/playlists stay current.
+        refresh()
+        return Futures.immediateFuture(LibraryResult.ofItem(browseNode(ROOT, "موسيقاي"), params))
+    }
 
     override fun onGetChildren(
         session: MediaLibraryService.MediaLibrarySession,
@@ -288,8 +295,13 @@ class AutoMediaLibrary(context: Context) : MediaLibraryService.MediaLibrarySessi
         mediaItems: MutableList<MediaItem>
     ): ListenableFuture<MutableList<MediaItem>> {
         val resolved = mediaItems.mapNotNull { requested ->
-            requested.localConfiguration?.let { requested } ?: findItem(requested.mediaId, snapshot)
-        }.toMutableList()
+            requested.localConfiguration?.let { requested } ?: run {
+                val byId = requested.mediaId.takeIf { it.isNotBlank() }?.let { findItem(it, snapshot) }
+                byId ?: requested.requestMetadata.searchQuery
+                    ?.takeIf { it.isNotBlank() }
+                    ?.let { searchItems(it, snapshot).firstOrNull() }
+            }
+        }.filter { it.localConfiguration != null }.toMutableList()
         return Futures.immediateFuture(resolved)
     }
 }
