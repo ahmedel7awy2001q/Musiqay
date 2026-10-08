@@ -16,12 +16,14 @@ class ListeningRulesTest {
         assertEquals(120_000L, boundedSeek(115_000, 30_000, 120_000))
         assertEquals(35_000L, boundedSeek(5_000, 30_000, 120_000))
     }
-    @Test fun shortDisplayTitlesKeepRecognizedSurahsAndDoNotGuessOtherTitles() {
-        assertEquals("سورة يوسف", displayTitle("من الروائع للمنشاوي سورة يوسف تلاوة جودة عالية"))
+    @Test fun displayTitlesPreserveStoredFilenamesWhileSurahDetectionRemainsAvailable() {
+        val storedName = "من الروائع للمنشاوي سورة يوسف تلاوة جودة عالية.mp3"
+        assertEquals(storedName, displayTitle(storedName))
+        assertEquals("يوسف", detectedSurah(storedName))
         assertEquals("آل عمران", detectedSurah("سُورَة آل عمران"))
         assertEquals("ق", detectedSurah("سورة ق"))
         assertNull(detectedSurah("سورة قلب المدينة"))
-        assertEquals("محاضرة طويلة", displayTitle("محاضرة طويلة"))
+        assertEquals("محاضرة طويلة.mp3", displayTitle("محاضرة طويلة.mp3"))
     }
     @Test fun radioRecitersAreNotMisclassifiedAsMusic() {
         assertEquals("قرآن", radioCategory("إذاعة ماهر المعيقلي", ""))
