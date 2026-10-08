@@ -15,7 +15,7 @@ import org.json.JSONArray
 
 private val Context.dataStore by preferencesDataStore(name = "settings")
 
-enum class ThemeMode { SYSTEM, DARK, LIGHT }
+enum class ThemeMode { SYSTEM, DARK, AMOLED, LIGHT }
 enum class StartPage(val route: String, val label: String) { HOME("home", "الرئيسية"), LIBRARY("songs", "المكتبة"), RADIO("radio", "الراديو") }
 
 data class AppSettings(
