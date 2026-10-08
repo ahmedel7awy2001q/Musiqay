@@ -255,7 +255,7 @@ class AutoMediaLibrary(context: Context) : MediaLibraryService.MediaLibrarySessi
         return if (item != null) {
             Futures.immediateFuture(LibraryResult.ofItem(item, null))
         } else {
-            Futures.immediateFuture(LibraryResult.ofError(LibraryResult.RESULT_ERROR_BAD_VALUE))
+            Futures.immediateFuture(LibraryResult.ofError(androidx.media3.session.SessionError.ERROR_BAD_VALUE))
         }
     }
 
