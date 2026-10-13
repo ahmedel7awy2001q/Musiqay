@@ -90,6 +90,12 @@ fun RadioScreen(
             }.getOrDefault("")
         }
     }
+    val categories = remember(safeCatalogStations) {
+        val preferred = listOf("أذكار ورقية", "قرآن", "موسيقى ومنوعات", "أخبار ورياضة")
+        val available = safeCatalogStations.map { it.category }.filter { it.isNotBlank() }.distinct()
+        listOf("الكل") + preferred.filter { it in available } + available.filter { it !in preferred }.sorted()
+    }
+
     val stations = remember(query, favoritesOnly, favorites, category, safeCatalogStations, searchIndex, favoriteOrder) {
         val term = runCatching { normalizeRadioSearch(query) }.getOrDefault("")
         safeCatalogStations
@@ -100,7 +106,10 @@ fun RadioScreen(
                     searchIndex[station.id].orEmpty().contains(term)
             }
             .sortedWith(compareByDescending<RadioStation> { it.id in favorites }
-                .thenBy { favoriteOrder.indexOf(it.id).takeIf { index -> index >= 0 } ?: Int.MAX_VALUE }.thenBy { it.name })
+                .thenBy { favoriteOrder.indexOf(it.id).takeIf { index -> index >= 0 } ?: Int.MAX_VALUE }
+                .thenByDescending { it.featured }
+                .thenByDescending { it.priority }
+                .thenBy { it.name })
             .toList()
     }
 
@@ -140,6 +149,7 @@ fun RadioScreen(
             RadioHeader(
                 stationCount = safeCatalogStations.size,
                 loading = catalog.loading,
+                remoteRevision = catalog.remoteRevision,
                 onAdd = { addStation = true },
                 onRefresh = { vm.refreshRadio(force = true) }
             )
@@ -223,7 +233,9 @@ fun RadioScreen(
             )
         }
 
-        val adhkarStations = safeCatalogStations.filter { it.category == "أذكار ورقية" }
+        val adhkarStations = safeCatalogStations
+            .filter { it.category == "أذكار ورقية" }
+            .sortedWith(compareByDescending<RadioStation> { it.featured }.thenByDescending { it.priority })
 
         if (category == "الكل" && query.isBlank() && !favoritesOnly && adhkarStations.isNotEmpty()) {
             item {
@@ -269,7 +281,7 @@ fun RadioScreen(
         }
         item {
             LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                items(listOf("الكل", "أذكار ورقية", "قرآن", "موسيقى ومنوعات", "أخبار ورياضة"), key = { it }) { label ->
+                items(categories, key = { it }) { label ->
                     FilterChip(
                         selected = category == label,
                         onClick = { category = label },
@@ -399,7 +411,13 @@ private fun AdhkarRuqyahFeatureCard(
 }
 
 @Composable
-private fun RadioHeader(stationCount: Int, loading: Boolean, onAdd: () -> Unit, onRefresh: () -> Unit) {
+private fun RadioHeader(
+    stationCount: Int,
+    loading: Boolean,
+    remoteRevision: Int,
+    onAdd: () -> Unit,
+    onRefresh: () -> Unit
+) {
     Row(
         Modifier.fillMaxWidth().padding(horizontal = 2.dp, vertical = 2.dp),
         verticalAlignment = Alignment.CenterVertically
@@ -413,7 +431,7 @@ private fun RadioHeader(stationCount: Int, loading: Boolean, onAdd: () -> Unit, 
         Column(Modifier.weight(1f).padding(horizontal = 11.dp)) {
             Text("الراديو", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Black)
             Text(
-                "$stationCount محطة • مصر • القرآن • الأذكار والرقية",
+                "$stationCount محطة • تحديث تلقائي" + if (remoteRevision > 0) " • دليل $remoteRevision" else "",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -575,7 +593,13 @@ private fun RadioStationRow(
                 overflow = TextOverflow.Ellipsis
             )
             Text(
-                if (active) radioStatus(state) else station.description,
+                if (active) radioStatus(state) else buildString {
+                    append(station.description)
+                    station.sourceLabel?.takeIf { it.isNotBlank() }?.let {
+                        if (isNotEmpty()) append(" • ")
+                        append(it)
+                    }
+                },
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 maxLines = 1,
