@@ -25,10 +25,12 @@ private val surahPatterns = surahNames.sortedByDescending { it.length }.map {
     it to Regex("(?:^|\\s)سور[ةه]\\s+${Regex.escape(normalizeSearch(it))}(?=$|[^\\p{L}\\p{N}])")
 }
 
-/** Only recognize an explicit, known surah name; duration alone never implies Quran. */
+/** Recognize an explicit surah name or a filename that clearly consists of a Mushaf number. */
 fun detectedSurah(title: String): String? {
     val text = normalizeSearch(title)
-    return surahPatterns.firstOrNull { it.second.containsMatchIn(text) }?.first
+    surahPatterns.firstOrNull { it.second.containsMatchIn(text) }?.first?.let { return it }
+    val number = surahNumberFromFilename(title) ?: return null
+    return surahNames[number - 1]
 }
 
 private fun normalizeArabicDigits(value: String): String = buildString(value.length) {
@@ -45,10 +47,15 @@ private fun normalizeArabicDigits(value: String): String = buildString(value.len
 
 /** Resolve an exact surah-name query, with or without the word "سورة", to its Mushaf order. */
 fun surahNumberForQuery(query: String): Int? {
-    val normalized = normalizeSearch(query)
+    val normalized = normalizeArabicDigits(normalizeSearch(query))
         .replaceFirst(Regex("^سور[ةه]\\s+"), "")
         .trim()
     if (normalized.isBlank()) return null
+
+    if (normalized.matches(Regex("\\d{1,3}"))) {
+        return normalized.toIntOrNull()?.takeIf { it in 1..114 }
+    }
+
     val index = surahNames.indexOfFirst { normalizeSearch(it) == normalized }
     return index.takeIf { it >= 0 }?.plus(1)
 }
@@ -70,16 +77,19 @@ fun surahNumberForQuery(query: String): Int? {
  * This prevents a surah-name search from flooding results with unrelated files that merely
  * contain the same digits somewhere in their name.
  */
-fun filenameMatchesSurahNumber(fileName: String, surahNumber: Int): Boolean {
-    if (surahNumber !in 1..114) return false
+fun surahNumberFromFilename(fileName: String): Int? {
     val latinDigits = normalizeArabicDigits(fileName).trim()
     val withoutExtension = latinDigits.replace(
         Regex("(?i)\\.(mp3|m4a|aac|flac|wav|ogg|opus|amr|wma)$"),
         ""
-    ).trim()
-    val normalized = withoutExtension.lowercase(java.util.Locale.ROOT)
-    val number = surahNumber.toString()
-    return Regex("^(?:mp3[._ -]?)?0*${number}$").matches(normalized)
+    ).trim().lowercase(java.util.Locale.ROOT)
+    val match = Regex("^(?:mp3[._ -]?)?0*(\\d{1,3})$").matchEntire(withoutExtension) ?: return null
+    return match.groupValues[1].toIntOrNull()?.takeIf { it in 1..114 }
+}
+
+fun filenameMatchesSurahNumber(fileName: String, surahNumber: Int): Boolean {
+    if (surahNumber !in 1..114) return false
+    return surahNumberFromFilename(fileName) == surahNumber
 }
 
 /**
