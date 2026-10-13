@@ -17,7 +17,14 @@ import java.net.HttpURLConnection
 import java.net.InetAddress
 import java.net.URL
 
-data class RadioCatalog(val stations: List<RadioStation> = EgyptianRadio.stations,
+private val blockedRadioTerms = listOf("مشاري", "العفاسي", "mishary", "mishari", "alafasy", "afasy")
+
+private fun allowedRadioStation(station: RadioStation): Boolean {
+    val haystack = (station.name + " " + station.description + " " + station.tags).lowercase()
+    return blockedRadioTerms.none { it in haystack }
+}
+
+data class RadioCatalog(val stations: List<RadioStation> = EgyptianRadio.stations.filter(::allowedRadioStation),
     val loading: Boolean = false, val error: String? = null)
 
 class RadioRepository(private val context: Context) {
@@ -143,7 +150,7 @@ class RadioRepository(private val context: Context) {
             } catch (_: Exception) {
                 cacheLoaded = true
                 _catalog.value = _catalog.value.copy(
-                    stations = _catalog.value.stations.ifEmpty { EgyptianRadio.stations },
+                    stations = _catalog.value.stations.ifEmpty { EgyptianRadio.stations.filter(::allowedRadioStation) },
                     loading = false,
                     error = "تعذر تحميل دليل المحطات. المحطات الأساسية ما زالت متاحة"
                 )
@@ -162,18 +169,20 @@ class RadioRepository(private val context: Context) {
                 val url = preferredRadioStream(row.optString("url"), row.optString("url_resolved")) ?: continue
                 val tags = row.optString("tags").take(500)
                 val category = radioCategory(name, tags)
-                add(RadioStation(id, name, category, name.take(4), url,
+                val station = RadioStation(id, name, category, name.take(4), url,
                     safeRadioUrl(row.optString("homepage")).orEmpty(),
                     mimeType = if (row.optInt("hls") == 1 || url.substringBefore('?').endsWith(".m3u8")) "application/x-mpegURL" else null,
-                    artworkUrl = safeRadioUrl(row.optString("favicon")), category = category, tags = tags, directoryId = id))
+                    artworkUrl = safeRadioUrl(row.optString("favicon")), category = category, tags = tags, directoryId = id)
+                if (allowedRadioStation(station)) add(station)
             }
         }
     }
     private fun mergeStations(incoming: List<RadioStation>, includeRetained: Boolean = true): List<RadioStation> {
-        val result = EgyptianRadio.stations.toMutableList()
+        val result = EgyptianRadio.stations.filter(::allowedRadioStation).toMutableList()
         val seenUrls = result.mapTo(HashSet()) { canonicalRadioUrl(it.streamUrl) }
         val seenIds = result.mapTo(HashSet()) { it.id }
         for (station in incoming) {
+            if (!allowedRadioStation(station)) continue
             if (curatedRadioId(station.name, station.streamUrl) != null || station.id in seenIds) continue
             if (seenUrls.add(canonicalRadioUrl(station.streamUrl))) { result.add(station); seenIds.add(station.id) }
         }
