@@ -119,9 +119,23 @@ class PlaybackService : MediaLibraryService() {
         }
         override fun onPlayerError(error: PlaybackException) {
             val current = player ?: return
-            val key = current.currentMediaItem?.mediaId
+            val item = current.currentMediaItem ?: return
+            val key = item.mediaId
             if (!isRadioMediaId(key) || !current.playWhenReady) return
             recoveryHandler.removeCallbacksAndMessages(null)
+
+            val fallback = item.mediaMetadata.extras?.getString("fallback_stream_url")
+            val activeUri = item.localConfiguration?.uri?.toString()
+            if (retryAttempt == 0 && !fallback.isNullOrBlank() && fallback != activeUri) {
+                retryAttempt++
+                val position = current.currentMediaItemIndex
+                val replacement = item.buildUpon().setUri(fallback).build()
+                current.setMediaItem(replacement)
+                current.prepare()
+                current.play()
+                return
+            }
+
             val delayMs = radioRetryDelayMs(retryAttempt++)
             if (delayMs == null) { current.pause(); return }
             recoveryHandler.postDelayed({
