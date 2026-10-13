@@ -25,6 +25,22 @@ data class RadioStation(
 /** Curated public streams. Broadcaster links take priority over directory duplicates. */
 object EgyptianRadio {
     val stations = listOf(
+        RadioStation("ruqyah", "الرقية الشرعية", "رقية شرعية وتحصين على مدار الساعة", "رقية",
+            "https://qurango.net/radio/roqiah", "https://qurango.net/",
+            artworkUrl = "https://www.nourelquran.com/files/pic/reader_20260618204619_2035.jpg",
+            category = "أذكار ورقية"),
+        RadioStation("athkar-sabah", "أذكار الصباح", "أذكار الصباح بث متواصل", "صباح",
+            "https://qurango.net/radio/athkar_sabah", "https://qurango.net/",
+            artworkUrl = "https://www.e-quran.com/files/image/radio.jpg",
+            category = "أذكار ورقية"),
+        RadioStation("athkar-masa", "أذكار المساء", "أذكار المساء بث متواصل", "مساء",
+            "https://qurango.net/radio/athkar_masa", "https://qurango.net/",
+            artworkUrl = "https://www.e-quran.com/files/image/radio.jpg",
+            category = "أذكار ورقية"),
+        RadioStation("sakeenah", "آيات السكينة", "آيات مختارة للسكينة والطمأنينة", "سكينة",
+            "https://qurango.net/radio/sakeenah", "https://qurango.net/",
+            artworkUrl = "https://www.e-quran.com/files/image/radio.jpg",
+            category = "أذكار ورقية"),
         RadioStation("quran", "القرآن الكريم من القاهرة", "تلاوات وبرامج دينية", "قرآن",
             "https://service.webvideocore.net/CL1olYogIrDWvwqiIKK7eCxOS4PStqG9DuEjAr2ZjZQtvS3d4y9r0cvRhvS17SGN/a_7a4vuubc6mo8.m3u8",
             "https://misrquran.gov.eg/", "application/x-mpegURL",
