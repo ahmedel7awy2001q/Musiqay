@@ -31,7 +31,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.MenuBook
+import androidx.compose.material.icons.automirrored.rounded.MenuBook
 import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material.icons.rounded.Album
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
@@ -601,7 +601,7 @@ fun BrowseGroupsScreen(
                                 Icon(
                                     when (type) {
                                         "artist", "reader" -> Icons.Rounded.Person
-                                        "surah" -> Icons.Rounded.MenuBook
+                                        "surah" -> Icons.AutoMirrored.Rounded.MenuBook
                                         "album" -> Icons.Rounded.Album
                                         else -> Icons.Rounded.Folder
                                     },
