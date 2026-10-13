@@ -15,13 +15,18 @@ data class RadioStation(
     val artworkUrl: String? = null, val category: String = "موسيقى ومنوعات",
     val tags: String = "", val directoryId: String? = null,
     val featured: Boolean = false, val priority: Int = 0,
-    val sourceLabel: String? = null
+    val sourceLabel: String? = null,
+    val fallbackStreamUrl: String? = null
 ) {
     fun toMediaItem(): MediaItem = MediaItem.Builder()
         .setMediaId("radio:$id").setUri(streamUrl).setMimeType(mimeType)
         .setMediaMetadata(MediaMetadata.Builder().setTitle(name).setArtist("بث مباشر • $category")
             .setArtworkUri(artworkUrl?.let(Uri::parse))
-            .setExtras(Bundle().apply { putString("radio_station_id", id); putBoolean("spoken_audio", category == "قرآن") }).build()).build()
+            .setExtras(Bundle().apply {
+                putString("radio_station_id", id)
+                putBoolean("spoken_audio", category == "قرآن" || category == "أذكار ورقية")
+                fallbackStreamUrl?.let { putString("fallback_stream_url", it) }
+            }).build()).build()
 }
 
 /** Curated public streams. Broadcaster links take priority over directory duplicates. */
