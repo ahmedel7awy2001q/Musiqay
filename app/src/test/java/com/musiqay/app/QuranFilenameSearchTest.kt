@@ -15,6 +15,9 @@ class QuranFilenameSearchTest {
         assertEquals(2, surahNumberForQuery("سورة البقرة"))
         assertEquals(18, surahNumberForQuery("الكهف"))
         assertEquals(114, surahNumberForQuery("سورة الناس"))
+        assertEquals(18, surahNumberForQuery("018"))
+        assertEquals(18, surahNumberForQuery("١٨"))
+        assertEquals(null, surahNumberForQuery("118"))
     }
 
     @Test
@@ -39,6 +42,9 @@ class QuranFilenameSearchTest {
         assertTrue(filenameMatchesSurahQuery("018.mp3", "سورة الكهف"))
         assertTrue(filenameMatchesSurahQuery("18.mp3", "الكهف"))
         assertFalse(filenameMatchesSurahQuery("019.mp3", "سورة الكهف"))
+        assertTrue(filenameMatchesSurahQuery("mp3.018", "018"))
+        assertFalse(filenameMatchesSurahQuery("52-18-1.mp3", "018"))
+        assertFalse(filenameMatchesSurahQuery("Hashr.From.18.To.The.End.mp3", "018"))
     }
 
     @Test
