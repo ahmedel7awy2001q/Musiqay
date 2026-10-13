@@ -323,7 +323,8 @@ class RadioRepository(private val context: Context) {
                     tags = row.optString("tags").take(500),
                     featured = row.optBoolean("featured", false),
                     priority = row.optInt("priority", 0).coerceIn(-1000, 1000),
-                    sourceLabel = row.optString("sourceLabel").trim().take(60).ifBlank { "Musiqay Remote" }
+                    sourceLabel = row.optString("sourceLabel").trim().take(60).ifBlank { "Musiqay Remote" },
+                    fallbackStreamUrl = safeRadioUrl(row.optString("fallbackStreamUrl"))
                 )
                 if (id !in disabled && allowedRadioStation(station, blocked)) add(station)
             }
