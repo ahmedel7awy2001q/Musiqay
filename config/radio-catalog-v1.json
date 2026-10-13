@@ -1,0 +1,64 @@
+{
+  "schema": 1,
+  "revision": 1,
+  "refreshHours": 6,
+  "blockedTerms": [
+    "مشاري",
+    "العفاسي",
+    "mishary",
+    "mishari",
+    "alafasy",
+    "afasy"
+  ],
+  "disabledIds": [],
+  "stations": [
+    {
+      "id": "ruqyah",
+      "name": "الرقية الشرعية",
+      "description": "رقية شرعية وتحصين على مدار الساعة",
+      "badge": "رقية",
+      "streamUrl": "https://qurango.net/radio/roqiah",
+      "website": "https://qurango.net/",
+      "artworkUrl": "https://www.nourelquran.com/files/pic/reader_20260618204619_2035.jpg",
+      "category": "أذكار ورقية",
+      "featured": true,
+      "priority": 100
+    },
+    {
+      "id": "athkar-sabah",
+      "name": "أذكار الصباح",
+      "description": "أذكار الصباح بث متواصل",
+      "badge": "صباح",
+      "streamUrl": "https://qurango.net/radio/athkar_sabah",
+      "website": "https://qurango.net/",
+      "artworkUrl": "https://www.e-quran.com/files/image/radio.jpg",
+      "category": "أذكار ورقية",
+      "featured": true,
+      "priority": 90
+    },
+    {
+      "id": "athkar-masa",
+      "name": "أذكار المساء",
+      "description": "أذكار المساء بث متواصل",
+      "badge": "مساء",
+      "streamUrl": "https://qurango.net/radio/athkar_masa",
+      "website": "https://qurango.net/",
+      "artworkUrl": "https://www.e-quran.com/files/image/radio.jpg",
+      "category": "أذكار ورقية",
+      "featured": true,
+      "priority": 85
+    },
+    {
+      "id": "sakeenah",
+      "name": "آيات السكينة",
+      "description": "آيات مختارة للسكينة والطمأنينة",
+      "badge": "سكينة",
+      "streamUrl": "https://qurango.net/radio/sakeenah",
+      "website": "https://qurango.net/",
+      "artworkUrl": "https://www.e-quran.com/files/image/radio.jpg",
+      "category": "أذكار ورقية",
+      "featured": true,
+      "priority": 80
+    }
+  ]
+}
