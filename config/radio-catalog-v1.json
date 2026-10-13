@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "revision": 1,
+  "revision": 2,
   "refreshHours": 6,
   "blockedTerms": [
     "مشاري",
@@ -22,7 +22,8 @@
       "artworkUrl": "https://www.nourelquran.com/files/pic/reader_20260618204619_2035.jpg",
       "category": "أذكار ورقية",
       "featured": true,
-      "priority": 100
+      "priority": 100,
+      "sourceLabel": "Quran Stations"
     },
     {
       "id": "athkar-sabah",
@@ -34,7 +35,8 @@
       "artworkUrl": "https://www.e-quran.com/files/image/radio.jpg",
       "category": "أذكار ورقية",
       "featured": true,
-      "priority": 90
+      "priority": 90,
+      "sourceLabel": "Quran Stations"
     },
     {
       "id": "athkar-masa",
@@ -46,7 +48,8 @@
       "artworkUrl": "https://www.e-quran.com/files/image/radio.jpg",
       "category": "أذكار ورقية",
       "featured": true,
-      "priority": 85
+      "priority": 85,
+      "sourceLabel": "Quran Stations"
     },
     {
       "id": "sakeenah",
@@ -58,7 +61,8 @@
       "artworkUrl": "https://www.e-quran.com/files/image/radio.jpg",
       "category": "أذكار ورقية",
       "featured": true,
-      "priority": 80
+      "priority": 80,
+      "sourceLabel": "Quran Stations"
     }
   ]
 }
