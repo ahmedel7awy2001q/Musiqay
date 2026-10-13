@@ -17,22 +17,44 @@ import java.net.HttpURLConnection
 import java.net.InetAddress
 import java.net.URL
 
-private val blockedRadioTerms = listOf("مشاري", "العفاسي", "mishary", "mishari", "alafasy", "afasy")
+private val defaultBlockedRadioTerms = setOf("مشاري", "العفاسي", "mishary", "mishari", "alafasy", "afasy")
+private const val REMOTE_RADIO_CATALOG =
+    "https://raw.githubusercontent.com/ahmedel7awy2001q/Musiqay/main/config/radio-catalog-v1.json"
 
-private fun allowedRadioStation(station: RadioStation): Boolean {
+private data class RemoteRadioConfig(
+    val revision: Int = 0,
+    val refreshHours: Int = 6,
+    val blockedTerms: Set<String> = defaultBlockedRadioTerms,
+    val disabledIds: Set<String> = emptySet(),
+    val stations: List<RadioStation> = emptyList()
+)
+
+private fun allowedRadioStation(station: RadioStation, blockedTerms: Set<String> = defaultBlockedRadioTerms): Boolean {
     val haystack = (station.name + " " + station.description + " " + station.tags).lowercase()
-    return blockedRadioTerms.none { it in haystack }
+    return blockedTerms.none { it.lowercase() in haystack }
 }
 
-data class RadioCatalog(val stations: List<RadioStation> = EgyptianRadio.stations.filter(::allowedRadioStation),
-    val loading: Boolean = false, val error: String? = null)
+data class RadioCatalog(
+    val stations: List<RadioStation> = EgyptianRadio.stations.filter(::allowedRadioStation),
+    val loading: Boolean = false,
+    val error: String? = null,
+    val updatedAt: Long? = null,
+    val remoteRevision: Int = 0
+)
 
 class RadioRepository(private val context: Context) {
     private val preferences = context.getSharedPreferences("radio_catalog", Context.MODE_PRIVATE)
     private val mutex = Mutex()
     private var cacheLoaded = false
     private var lastAttemptAt = 0L
-    private val _catalog = MutableStateFlow(RadioCatalog())
+    private var remoteConfig: RemoteRadioConfig = readRemoteCache()
+    private val _catalog = MutableStateFlow(
+        RadioCatalog(
+            stations = curatedStations(),
+            updatedAt = preferences.getLong("remote_updated_at", 0L).takeIf { it > 0L },
+            remoteRevision = remoteConfig.revision
+        )
+    )
     val catalog = _catalog.asStateFlow()
     private val _customStations = MutableStateFlow(readManual())
     val customStations = _customStations.asStateFlow()
@@ -41,6 +63,7 @@ class RadioRepository(private val context: Context) {
         val cleanName = cleanRadioStationName(name)
         val url = safeRadioUrl(stream) ?: return null
         if (cleanName.isBlank() || _customStations.value.size >= 100) return null
+        if (!allowedRadioStation(RadioStation("manual-check", cleanName, "", "", url, ""), remoteConfig.blockedTerms)) return null
         (_customStations.value + _catalog.value.stations).firstOrNull {
             canonicalRadioUrl(it.streamUrl) == canonicalRadioUrl(url)
         }?.let { return it }
@@ -109,6 +132,18 @@ class RadioRepository(private val context: Context) {
                 }
 
                 val now = System.currentTimeMillis()
+
+                // Curated stations, images, categories and blocks can change remotely without an APK update.
+                refreshRemoteCatalog(force, now)
+                val cachedDirectory = preferences.getString("stations", null)?.let {
+                    runCatching { parseStations(it) }.getOrNull()
+                }.orEmpty()
+                _catalog.value = _catalog.value.copy(
+                    stations = mergeStations(cachedDirectory).distinctBy { it.id },
+                    updatedAt = preferences.getLong("remote_updated_at", 0L).takeIf { it > 0L },
+                    remoteRevision = remoteConfig.revision
+                )
+
                 if (!force && (now - preferences.getLong("updated_at", 0) in 0..86_400_000 ||
                     now - lastAttemptAt in 0..60_000)) return@withLock
 
@@ -141,7 +176,11 @@ class RadioRepository(private val context: Context) {
                 val retained = _catalog.value.stations.filter {
                     (it.id in favorites || it.id == lastId) && fetched.none { fresh -> fresh.id == it.id }
                 }
-                _catalog.value = RadioCatalog((fetched + retained).distinctBy { it.id })
+                _catalog.value = RadioCatalog(
+                    stations = (fetched + retained).distinctBy { it.id },
+                    updatedAt = preferences.getLong("remote_updated_at", 0L).takeIf { it > 0L },
+                    remoteRevision = remoteConfig.revision
+                )
                 preferences.edit().putString("stations", text).putLong("updated_at", now).apply()
                 saveRetainedStations(retained)
             } catch (cancelled: CancellationException) {
@@ -150,7 +189,7 @@ class RadioRepository(private val context: Context) {
             } catch (_: Exception) {
                 cacheLoaded = true
                 _catalog.value = _catalog.value.copy(
-                    stations = _catalog.value.stations.ifEmpty { EgyptianRadio.stations.filter(::allowedRadioStation) },
+                    stations = _catalog.value.stations.ifEmpty { curatedStations() },
                     loading = false,
                     error = "تعذر تحميل دليل المحطات. المحطات الأساسية ما زالت متاحة"
                 )
@@ -173,16 +212,16 @@ class RadioRepository(private val context: Context) {
                     safeRadioUrl(row.optString("homepage")).orEmpty(),
                     mimeType = if (row.optInt("hls") == 1 || url.substringBefore('?').endsWith(".m3u8")) "application/x-mpegURL" else null,
                     artworkUrl = safeRadioUrl(row.optString("favicon")), category = category, tags = tags, directoryId = id)
-                if (allowedRadioStation(station)) add(station)
+                if (isAllowed(station)) add(station)
             }
         }
     }
     private fun mergeStations(incoming: List<RadioStation>, includeRetained: Boolean = true): List<RadioStation> {
-        val result = EgyptianRadio.stations.filter(::allowedRadioStation).toMutableList()
+        val result = curatedStations().toMutableList()
         val seenUrls = result.mapTo(HashSet()) { canonicalRadioUrl(it.streamUrl) }
         val seenIds = result.mapTo(HashSet()) { it.id }
         for (station in incoming) {
-            if (!allowedRadioStation(station)) continue
+            if (!isAllowed(station)) continue
             if (curatedRadioId(station.name, station.streamUrl) != null || station.id in seenIds) continue
             if (seenUrls.add(canonicalRadioUrl(station.streamUrl))) { result.add(station); seenIds.add(station.id) }
         }
@@ -198,11 +237,101 @@ class RadioRepository(private val context: Context) {
                 }
             }
         }.getOrDefault(emptyList())
-        for (station in retained) if (allowedRadioStation(station) && station.id !in seenIds && seenUrls.add(canonicalRadioUrl(station.streamUrl))) {
+        for (station in retained) if (isAllowed(station) && station.id !in seenIds && seenUrls.add(canonicalRadioUrl(station.streamUrl))) {
             result.add(station); seenIds.add(station.id)
         }
         return result
     }
+    private fun isAllowed(station: RadioStation): Boolean =
+        station.id !in remoteConfig.disabledIds && allowedRadioStation(station, remoteConfig.blockedTerms)
+
+    private fun curatedStations(): List<RadioStation> {
+        val remoteById = remoteConfig.stations.associateBy { it.id }
+        val local = EgyptianRadio.stations
+            .filterNot { it.id in remoteConfig.disabledIds }
+            .map { remoteById[it.id] ?: it }
+        val extras = remoteConfig.stations.filter { remote ->
+            local.none { it.id == remote.id }
+        }
+        return (local + extras)
+            .filter(::isAllowed)
+            .distinctBy { it.id }
+            .sortedWith(compareByDescending<RadioStation> { it.priority }.thenBy { it.name })
+    }
+
+    private fun readRemoteCache(): RemoteRadioConfig {
+        val cached = preferences.getString("remote_catalog", null) ?: return RemoteRadioConfig()
+        return runCatching { parseRemoteCatalog(cached) }.getOrDefault(RemoteRadioConfig())
+    }
+
+    private fun refreshRemoteCatalog(force: Boolean, now: Long) {
+        val last = preferences.getLong("remote_updated_at", 0L)
+        val refreshMs = remoteConfig.refreshHours.coerceIn(1, 24) * 60L * 60L * 1000L
+        if (!force && last > 0L && now - last in 0 until refreshMs) return
+        runCatching {
+            val text = request(REMOTE_RADIO_CATALOG, maxBytes = 512 * 1024)
+            val parsed = parseRemoteCatalog(text)
+            require(parsed.revision >= remoteConfig.revision || last == 0L) { "Older remote catalog" }
+            remoteConfig = parsed
+            preferences.edit()
+                .putString("remote_catalog", text)
+                .putLong("remote_updated_at", now)
+                .apply()
+        }
+    }
+
+    private fun parseRemoteCatalog(text: String): RemoteRadioConfig {
+        val root = JSONObject(text)
+        require(root.optInt("schema", 0) == 1) { "Unsupported radio catalog" }
+        val revision = root.optInt("revision", 0).coerceAtLeast(0)
+        val refreshHours = root.optInt("refreshHours", 6).coerceIn(1, 24)
+
+        val blocked = buildSet {
+            addAll(defaultBlockedRadioTerms)
+            val array = root.optJSONArray("blockedTerms")
+            if (array != null) for (i in 0 until array.length().coerceAtMost(100)) {
+                array.optString(i).trim().lowercase().takeIf { it.length in 2..80 }?.let(::add)
+            }
+        }
+
+        val disabled = buildSet {
+            val array = root.optJSONArray("disabledIds")
+            if (array != null) for (i in 0 until array.length().coerceAtMost(500)) {
+                array.optString(i).takeIf { it.matches(Regex("[a-zA-Z0-9._-]{1,80}")) }?.let(::add)
+            }
+        }
+
+        val entries = root.optJSONArray("stations") ?: JSONArray()
+        val stations = buildList {
+            for (i in 0 until entries.length().coerceAtMost(500)) {
+                val row = entries.optJSONObject(i) ?: continue
+                val id = row.optString("id").takeIf { it.matches(Regex("[a-zA-Z0-9._-]{1,80}")) } ?: continue
+                val name = cleanRadioStationName(row.optString("name")).takeIf { it.isNotBlank() } ?: continue
+                val stream = safeRadioUrl(row.optString("streamUrl")) ?: continue
+                val category = row.optString("category").trim().take(50).ifBlank { radioCategory(name, row.optString("tags")) }
+                val station = RadioStation(
+                    id = id,
+                    name = name,
+                    description = row.optString("description").trim().take(160),
+                    badge = row.optString("badge").trim().take(20).ifBlank { name.take(4) },
+                    streamUrl = stream,
+                    website = safeRadioUrl(row.optString("website")).orEmpty(),
+                    mimeType = row.optString("mimeType").takeIf { it.isNotBlank() }
+                        ?: if (stream.substringBefore('?').endsWith(".m3u8", true)) "application/x-mpegURL" else "audio/mpeg",
+                    artworkUrl = safeRadioUrl(row.optString("artworkUrl")),
+                    category = category,
+                    tags = row.optString("tags").take(500),
+                    featured = row.optBoolean("featured", false),
+                    priority = row.optInt("priority", 0).coerceIn(-1000, 1000),
+                    sourceLabel = row.optString("sourceLabel").trim().take(60).ifBlank { "Musiqay Remote" }
+                )
+                if (id !in disabled && allowedRadioStation(station, blocked)) add(station)
+            }
+        }
+
+        return RemoteRadioConfig(revision, refreshHours, blocked, disabled, stations)
+    }
+
     private fun saveRetainedStations(stations: List<RadioStation>) {
         val entries = JSONArray()
         stations.forEach { station -> entries.put(JSONObject().apply {
@@ -212,7 +341,7 @@ class RadioRepository(private val context: Context) {
         }) }
         preferences.edit().putString("retained", entries.toString()).apply()
     }
-    private fun request(url: String): String {
+    private fun request(url: String, maxBytes: Int = 2 * 1024 * 1024): String {
         val connection = URL(url).openConnection() as HttpURLConnection
         connection.connectTimeout = 8_000; connection.readTimeout = 10_000
         connection.setRequestProperty("User-Agent", "Musiqay/1.4 (Android)")
@@ -225,7 +354,7 @@ class RadioRepository(private val context: Context) {
                 while (true) {
                     val count = input.read(buffer)
                     if (count < 0) break
-                    require(output.size() + count <= 2 * 1024 * 1024) { "Radio directory too large" }
+                    require(output.size() + count <= maxBytes) { "Radio response too large" }
                     output.write(buffer, 0, count)
                 }
             }
