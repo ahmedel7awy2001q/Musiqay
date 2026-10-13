@@ -13,7 +13,9 @@ data class RadioStation(
     val id: String, val name: String, val description: String, val badge: String,
     val streamUrl: String, val website: String, val mimeType: String? = "audio/mpeg",
     val artworkUrl: String? = null, val category: String = "موسيقى ومنوعات",
-    val tags: String = "", val directoryId: String? = null
+    val tags: String = "", val directoryId: String? = null,
+    val featured: Boolean = false, val priority: Int = 0,
+    val sourceLabel: String? = null
 ) {
     fun toMediaItem(): MediaItem = MediaItem.Builder()
         .setMediaId("radio:$id").setUri(streamUrl).setMimeType(mimeType)
@@ -28,19 +30,19 @@ object EgyptianRadio {
         RadioStation("ruqyah", "الرقية الشرعية", "رقية شرعية وتحصين على مدار الساعة", "رقية",
             "https://qurango.net/radio/roqiah", "https://qurango.net/",
             artworkUrl = "https://www.nourelquran.com/files/pic/reader_20260618204619_2035.jpg",
-            category = "أذكار ورقية"),
+            category = "أذكار ورقية", featured = true, priority = 100, sourceLabel = "Quran Stations"),
         RadioStation("athkar-sabah", "أذكار الصباح", "أذكار الصباح بث متواصل", "صباح",
             "https://qurango.net/radio/athkar_sabah", "https://qurango.net/",
             artworkUrl = "https://www.e-quran.com/files/image/radio.jpg",
-            category = "أذكار ورقية"),
+            category = "أذكار ورقية", featured = true, priority = 90, sourceLabel = "Quran Stations"),
         RadioStation("athkar-masa", "أذكار المساء", "أذكار المساء بث متواصل", "مساء",
             "https://qurango.net/radio/athkar_masa", "https://qurango.net/",
             artworkUrl = "https://www.e-quran.com/files/image/radio.jpg",
-            category = "أذكار ورقية"),
+            category = "أذكار ورقية", featured = true, priority = 85, sourceLabel = "Quran Stations"),
         RadioStation("sakeenah", "آيات السكينة", "آيات مختارة للسكينة والطمأنينة", "سكينة",
             "https://qurango.net/radio/sakeenah", "https://qurango.net/",
             artworkUrl = "https://www.e-quran.com/files/image/radio.jpg",
-            category = "أذكار ورقية"),
+            category = "أذكار ورقية", featured = true, priority = 80, sourceLabel = "Quran Stations"),
         RadioStation("quran", "القرآن الكريم من القاهرة", "تلاوات وبرامج دينية", "قرآن",
             "https://service.webvideocore.net/CL1olYogIrDWvwqiIKK7eCxOS4PStqG9DuEjAr2ZjZQtvS3d4y9r0cvRhvS17SGN/a_7a4vuubc6mo8.m3u8",
             "https://misrquran.gov.eg/", "application/x-mpegURL",
