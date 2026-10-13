@@ -150,7 +150,7 @@ class PlaybackService : MediaLibraryService() {
         setMediaNotificationProvider(DefaultMediaNotificationProvider.Builder(this).build().apply {
             setSmallIcon(R.drawable.ic_stat_musiqay)
         })
-        val http = DefaultHttpDataSource.Factory().setUserAgent("Musiqay/1.4.5 (Android)")
+        val http = DefaultHttpDataSource.Factory().setUserAgent("Musiqay/1.4.6 (Android)")
             .setConnectTimeoutMs(10_000).setReadTimeoutMs(12_000).setAllowCrossProtocolRedirects(true)
         val exoPlayer = ExoPlayer.Builder(this)
             .setWakeMode(C.WAKE_MODE_LOCAL)
