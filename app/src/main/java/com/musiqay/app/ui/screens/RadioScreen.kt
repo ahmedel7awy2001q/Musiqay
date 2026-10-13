@@ -223,6 +223,19 @@ fun RadioScreen(
             )
         }
 
+        val adhkarStations = safeCatalogStations.filter { it.category == "أذكار ورقية" }
+
+        if (category == "الكل" && query.isBlank() && !favoritesOnly && adhkarStations.isNotEmpty()) {
+            item {
+                AdhkarRuqyahFeatureCard(
+                    station = adhkarStations.first(),
+                    count = adhkarStations.size,
+                    onOpen = { category = "أذكار ورقية" },
+                    onPlay = { play(adhkarStations.first()) }
+                )
+            }
+        }
+
         item {
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 FilterChip(
@@ -256,7 +269,7 @@ fun RadioScreen(
         }
         item {
             LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                items(listOf("الكل", "قرآن", "موسيقى ومنوعات", "أخبار ورياضة"), key = { it }) { label ->
+                items(listOf("الكل", "أذكار ورقية", "قرآن", "موسيقى ومنوعات", "أخبار ورياضة"), key = { it }) { label ->
                     FilterChip(
                         selected = category == label,
                         onClick = { category = label },
@@ -336,10 +349,51 @@ fun RadioScreen(
 
         item {
             Text(
-                "دليل المحطات: Radio Browser • البث يحتاج إنترنت",
+                "المصادر: Radio Browser • Quran Stations / Qurango • البث يحتاج إنترنت",
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
+        }
+    }
+}
+
+@Composable
+private fun AdhkarRuqyahFeatureCard(
+    station: RadioStation,
+    count: Int,
+    onOpen: () -> Unit,
+    onPlay: () -> Unit
+) {
+    val shape = RoundedCornerShape(18.dp)
+    Row(
+        Modifier
+            .fillMaxWidth()
+            .background(MaterialTheme.colorScheme.secondaryContainer.copy(alpha = .54f), shape)
+            .border(.6.dp, MaterialTheme.colorScheme.secondary.copy(alpha = .28f), shape)
+            .clickable(onClick = onOpen)
+            .padding(10.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        RadioArtwork(station, Modifier.size(58.dp))
+        Column(Modifier.weight(1f).padding(horizontal = 10.dp)) {
+            Text(
+                "أذكار ورقية",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Black
+            )
+            Text(
+                "$count محطات مختارة • رقية • صباح • مساء • سكينة",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis
+            )
+        }
+        FilledTonalIconButton(onClick = onPlay, modifier = Modifier.size(46.dp)) {
+            Icon(Icons.Rounded.PlayArrow, "تشغيل الرقية الشرعية")
+        }
+        IconButton(onClick = onOpen, modifier = Modifier.size(42.dp)) {
+            Icon(Icons.Rounded.ChevronLeft, "فتح القسم")
         }
     }
 }
@@ -359,7 +413,7 @@ private fun RadioHeader(stationCount: Int, loading: Boolean, onAdd: () -> Unit, 
         Column(Modifier.weight(1f).padding(horizontal = 11.dp)) {
             Text("الراديو", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Black)
             Text(
-                "$stationCount محطة • مصر والتلاوات",
+                "$stationCount محطة • مصر • القرآن • الأذكار والرقية",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
