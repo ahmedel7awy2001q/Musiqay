@@ -92,6 +92,8 @@ class RadioRepository(private val context: Context) {
             val url = safeRadioUrl(row.optString("url")) ?: continue
             val name = cleanRadioStationName(row.optString("name")).takeIf { it.isNotBlank() } ?: continue
             if (id in ids || canonicalRadioUrl(url) in urls || current.size >= 100) continue
+            val candidate = RadioStation(id, name, "", "", url, "")
+            if (!allowedRadioStation(candidate, remoteConfig.blockedTerms)) continue
             val category = radioCategory(name, "")
             current.add(RadioStation(id, name, category, name.take(1), url, "", mimeType =
                 if (url.substringBefore('?').endsWith(".m3u8", true)) "application/x-mpegURL" else null, category = category))
@@ -109,6 +111,8 @@ class RadioRepository(private val context: Context) {
                 val id = row.optString("id").takeIf { it.matches(Regex("manual-[a-zA-Z0-9-]{1,70}")) } ?: continue
                 val url = safeRadioUrl(row.optString("url")) ?: continue
                 val name = cleanRadioStationName(row.optString("name")).takeIf { it.isNotBlank() } ?: continue
+                val candidate = RadioStation(id, name, "", "", url, "")
+                if (!allowedRadioStation(candidate, remoteConfig.blockedTerms)) continue
                 val category = radioCategory(name, "")
                 add(RadioStation(id, name, category, name.take(1), url, "", mimeType =
                     if (url.substringBefore('?').endsWith(".m3u8", true)) "application/x-mpegURL" else null, category = category))
