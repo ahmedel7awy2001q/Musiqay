@@ -198,7 +198,7 @@ class RadioRepository(private val context: Context) {
                 }
             }
         }.getOrDefault(emptyList())
-        for (station in retained) if (station.id !in seenIds && seenUrls.add(canonicalRadioUrl(station.streamUrl))) {
+        for (station in retained) if (allowedRadioStation(station) && station.id !in seenIds && seenUrls.add(canonicalRadioUrl(station.streamUrl))) {
             result.add(station); seenIds.add(station.id)
         }
         return result
