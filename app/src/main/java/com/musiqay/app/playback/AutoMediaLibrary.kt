@@ -75,6 +75,7 @@ class AutoMediaLibrary(context: Context) : MediaLibraryService.MediaLibrarySessi
                 .getOrDefault(emptySet())
             val playlists = runCatching { dao.playlistSnapshot() }.getOrDefault(emptyList())
             val tracks = runCatching { dao.trackSnapshot() }.getOrDefault(emptyList())
+            runCatching { radioRepository.refresh(force = false, favorites = emptySet(), lastId = null) }
             val stations = (radioRepository.catalog.value.stations + radioRepository.customStations.value)
                 .filter { it.id.isNotBlank() && it.name.isNotBlank() && it.streamUrl.isNotBlank() }
                 .distinctBy { it.id }
