@@ -12,6 +12,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
+import androidx.compose.material.icons.automirrored.rounded.OpenInNew
 import androidx.compose.material.icons.rounded.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -261,7 +262,7 @@ fun PlatformsScreen(onBack: () -> Unit) {
                         modifier = Modifier.size(42.dp)
                     ) {
                         Icon(
-                            if (query.isBlank()) Icons.Rounded.OpenInNew else Icons.Rounded.Search,
+                            if (query.isBlank()) Icons.AutoMirrored.Rounded.OpenInNew else Icons.Rounded.Search,
                             if (query.isBlank()) "فتح" else "بحث"
                         )
                     }
