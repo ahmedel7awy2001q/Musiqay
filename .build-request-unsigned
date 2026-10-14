@@ -1,0 +1,3 @@
+version=1.4.8
+mode=unsigned-release-for-permanent-signing
+feature=bluetooth-car-hub
