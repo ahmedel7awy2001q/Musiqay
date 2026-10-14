@@ -1,5 +1,7 @@
 package com.musiqay.app.ui.screens
 
+import com.musiqay.app.R
+
 import android.content.ClipData
 import android.content.Intent
 import android.media.audiofx.AudioEffect
@@ -274,7 +276,10 @@ private fun QueueSheet(vm: MusicViewModel, queue: List<MediaItem>, currentIndex:
                     Row(Modifier.fillMaxWidth().heightIn(min = 76.dp)
                         .background(if (active) MaterialTheme.colorScheme.primaryContainer.copy(alpha = .5f) else MaterialTheme.colorScheme.surface)
                         .padding(horizontal = 10.dp, vertical = 6.dp), verticalAlignment = Alignment.CenterVertically) {
-                        AlbumArtwork(item.mediaMetadata.artworkUri, Modifier.size(48.dp), 12)
+                        val queueTitle = item.mediaMetadata.title?.toString().orEmpty()
+                        val queueArtwork: Any? = if (detectedSurah(queueTitle) != null)
+                            R.drawable.artwork_quran else item.mediaMetadata.artworkUri
+                        AlbumArtwork(queueArtwork, Modifier.size(48.dp), 12)
                         TextButton(onClick = { vm.player.playQueueIndex(index) }, modifier = Modifier.weight(1f)) {
                             Column(Modifier.fillMaxWidth()) {
                                 Text(item.mediaMetadata.title?.toString().orEmpty(), maxLines = 1, overflow = TextOverflow.Ellipsis,
