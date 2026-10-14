@@ -1,5 +1,7 @@
 package com.musiqay.app.ui
 
+import com.musiqay.app.R
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -73,6 +75,13 @@ import com.musiqay.app.ui.theme.premiumPanelBrush
 import com.musiqay.app.util.formatDuration
 import com.musiqay.app.util.displayTitle
 import com.musiqay.app.util.displayArtist
+import com.musiqay.app.util.detectedSurah
+
+fun preferredSongArtwork(song: Song): Any? =
+    if (detectedSurah(song.title) != null) R.drawable.artwork_quran else song.artworkUri
+
+fun preferredPlaybackArtwork(state: NowPlayingState): Any? =
+    if (!state.isRadio && detectedSurah(state.title) != null) R.drawable.artwork_quran else state.artworkUri
 
 @Composable
 fun AlbumArtwork(
@@ -174,7 +183,7 @@ fun SongRow(
         verticalAlignment = Alignment.CenterVertically
     ) {
         Box(contentAlignment = Alignment.BottomEnd) {
-            AlbumArtwork(song.artworkUri, Modifier.size(42.dp), 10, placeholderTitle = displayTitle(song.title))
+            AlbumArtwork(preferredSongArtwork(song), Modifier.size(42.dp), 10, placeholderTitle = displayTitle(song.title))
             if (isCurrent) {
                 Box(
                     Modifier
@@ -297,7 +306,7 @@ fun MiniPlayer(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 AlbumArtwork(
-                    state.artworkUri,
+                    preferredPlaybackArtwork(state),
                     Modifier.size(38.dp),
                     10,
                     logo = state.isRadio,
