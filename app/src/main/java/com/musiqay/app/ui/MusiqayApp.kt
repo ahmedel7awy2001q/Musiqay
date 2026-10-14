@@ -103,6 +103,31 @@ fun MusiqayApp(vm: MusicViewModel, audioPermission: Boolean = true,
 
     val showBottom = currentRoute in RootRoutes
 
+    fun navigateRoot(route: String) {
+        if (currentRoute == route) return
+        if (route == "home") {
+            // Home is the deterministic escape hatch from any duplicated/restored root route.
+            val popped = navController.popBackStack("home", inclusive = false)
+            if (!popped) {
+                navController.navigate("home") {
+                    popUpTo(navController.graph.findStartDestination().id) {
+                        saveState = false
+                    }
+                    launchSingleTop = true
+                    restoreState = false
+                }
+            }
+        } else {
+            navController.navigate(route) {
+                popUpTo(navController.graph.findStartDestination().id) {
+                    saveState = true
+                }
+                launchSingleTop = true
+                restoreState = true
+            }
+        }
+    }
+
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
@@ -123,7 +148,10 @@ fun MusiqayApp(vm: MusicViewModel, audioPermission: Boolean = true,
                     ) {
                         PlaybackMiniPlayer(
                             vm = vm,
-                            onOpen = { navController.navigate(if (playerState.isRadio) "radio" else "player") { launchSingleTop = true } },
+                            onOpen = {
+                                if (playerState.isRadio) navigateRoot("radio")
+                                else navController.navigate("player") { launchSingleTop = true }
+                            },
                             onToggle = vm.player::togglePlayPause,
                             onNext = vm.player::next
                         )
@@ -141,15 +169,7 @@ fun MusiqayApp(vm: MusicViewModel, audioPermission: Boolean = true,
                             )
                             NavigationBarItem(
                                 selected = selected,
-                                onClick = {
-                                    navController.navigate(item.route) {
-                                        popUpTo(navController.graph.findStartDestination().id) {
-                                            saveState = true
-                                        }
-                                        launchSingleTop = true
-                                        restoreState = true
-                                    }
-                                },
+                                onClick = { navigateRoot(item.route) },
                                 icon = {
                                     Icon(
                                         if (selected) item.selectedIcon else item.unselectedIcon,
@@ -183,8 +203,11 @@ fun MusiqayApp(vm: MusicViewModel, audioPermission: Boolean = true,
             composable("home") {
                 HomeScreen(
                     vm = vm,
-                    onRadio = { navController.navigate("radio") { launchSingleTop = true } },
-                    onResume = { navController.navigate(if (playerState.isRadio) "radio" else "player") { launchSingleTop = true } },
+                    onRadio = { navigateRoot("radio") },
+                    onResume = {
+                        if (playerState.isRadio) navigateRoot("radio")
+                        else navController.navigate("player") { launchSingleTop = true }
+                    },
                     onPlayAll = { vm.playAll(); navController.navigate("player") },
                     audioPermission = audioPermission,
                     onGrantAudio = onGrantAudio,
