@@ -620,6 +620,8 @@ fun BrowseGroupsScreen(
                                 )
                                 Text(
                                     "${entry.value.size} ملف صوتي" + if (type == "folder") " • ${entry.key}" else "",
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis,
                                     style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
