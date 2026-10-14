@@ -3,7 +3,7 @@ name: Build Musiqay 1.4.8 verification
 on:
   push:
     branches: ["build/v1.4.8-carhub"]
-    paths: [".build-request"]
+    paths: [".build-request", ".build-request-unsigned"]
   workflow_dispatch:
 
 permissions:
