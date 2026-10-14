@@ -1,4 +1,5 @@
-build=1.4.3
-requested_at=2026-10-08T13:06:00+03:00
-mode=release
-retry=2
+version=1.4.8
+source=d48cd7c147ad0eb0364bf50c080fe517de5beea7
+requested_at=2026-10-15T00:22:00+03:00
+mode=verified-signed-release
+feature=bluetooth-car-hub
