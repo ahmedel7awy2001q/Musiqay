@@ -38,6 +38,7 @@ fun HomeScreen(
     onAlbums: () -> Unit,
     onFolders: () -> Unit,
     onPlatforms: () -> Unit,
+    onBluetooth: () -> Unit,
     onRadio: () -> Unit,
     onResume: () -> Unit,
     onPlayAll: () -> Unit,
@@ -105,6 +106,13 @@ fun HomeScreen(
                     LibraryShortcut("الألبومات", "${counts.second} ألبوم", Icons.Rounded.Album, onAlbums, Modifier.weight(1f))
                     LibraryShortcut("المجلدات", "${counts.third} مجلد", Icons.Rounded.Folder, onFolders, Modifier.weight(1f))
                 }
+                LibraryShortcut(
+                    "بلوتوث الهاتف",
+                    "تشغيل صوت الهاتف عبر شاشة السيارة",
+                    Icons.Rounded.BluetoothAudio,
+                    onBluetooth,
+                    Modifier.fillMaxWidth()
+                )
                 LibraryShortcut(
                     "المنصات",
                     "Spotify • YouTube Music • Anghami",
