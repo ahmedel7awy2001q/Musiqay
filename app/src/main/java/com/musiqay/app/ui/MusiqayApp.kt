@@ -38,6 +38,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.unit.dp
@@ -59,6 +60,8 @@ import com.musiqay.app.ui.screens.SongsScreen
 import com.musiqay.app.ui.screens.RadioScreen
 import com.musiqay.app.ui.screens.PlatformsScreen
 import com.musiqay.app.ui.screens.BluetoothPhoneScreen
+import com.musiqay.app.ui.screens.savedCarBluetoothApp
+import com.musiqay.app.ui.screens.launchCarBluetoothApp
 
 private data class NavItem(
     val route: String,
@@ -80,6 +83,7 @@ private val RootRoutes = RootNavItems.mapTo(HashSet()) { it.route }
 fun MusiqayApp(vm: MusicViewModel, audioPermission: Boolean = true,
     onGrantAudio: () -> Unit = {}, onRequestNotifications: () -> Unit = {}) {
     val navController = rememberNavController()
+    val context = LocalContext.current
     val backStack by navController.currentBackStackEntryAsState()
     val currentRoute = backStack?.destination?.route
     val playerState by vm.player.summary.collectAsStateWithLifecycle()
@@ -227,7 +231,11 @@ fun MusiqayApp(vm: MusicViewModel, audioPermission: Boolean = true,
                     onAlbums = { navController.navigate("browse/album") },
                     onFolders = { navController.navigate("browse/folder") },
                     onPlatforms = { navController.navigate("platforms") { launchSingleTop = true } },
-                    onBluetooth = { navController.navigate("bluetooth") { launchSingleTop = true } }
+                    onBluetooth = {
+                        val savedBluetooth = savedCarBluetoothApp(context)
+                        val launched = savedBluetooth?.let { launchCarBluetoothApp(context, it) } == true
+                        if (!launched) navController.navigate("bluetooth") { launchSingleTop = true }
+                    }
                 )
             }
             composable("songs") {
