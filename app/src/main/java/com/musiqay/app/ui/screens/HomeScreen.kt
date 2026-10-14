@@ -61,7 +61,7 @@ fun HomeScreen(
     val favoriteRadios = remember(radioCatalog.stations, radioFavorites) { radioCatalog.stations.filter { it.id in radioFavorites }.take(4) }
     LazyColumn(
         modifier = Modifier.fillMaxSize().background(premiumScreenBrush()).premiumAmbientSurface().statusBarsPadding(),
-        contentPadding = PaddingValues(horizontal = 14.dp, vertical = 10.dp),
+        contentPadding = PaddingValues(start = 14.dp, top = 10.dp, end = 14.dp, bottom = 18.dp),
         verticalArrangement = Arrangement.spacedBy(9.dp)
     ) {
         item {
@@ -197,7 +197,7 @@ private fun ResumeCard(vm: MusicViewModel, onOpen: () -> Unit, onPlayAll: () -> 
             Text(if (state.isPlaying) "تستمع الآن" else "استكمل الاستماع", color = MaterialTheme.colorScheme.primary,
                 style = MaterialTheme.typography.labelLarge)
             Row(Modifier.fillMaxWidth().clickable(onClick = onOpen), verticalAlignment = Alignment.CenterVertically) {
-                AlbumArtwork(state.artworkUri, Modifier.size(48.dp), 12, logo = state.isRadio,
+                AlbumArtwork(preferredPlaybackArtwork(state), Modifier.size(48.dp), 12, logo = state.isRadio,
                     logoBackground = radioLogoBackground(state.radioStationId))
                 Column(Modifier.weight(1f).padding(horizontal = 12.dp)) {
                     Text(if (state.isRadio) state.title else displayTitle(state.title), maxLines = 2, overflow = TextOverflow.Ellipsis, fontWeight = FontWeight.Bold)
