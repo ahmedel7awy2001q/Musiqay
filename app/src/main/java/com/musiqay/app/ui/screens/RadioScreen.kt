@@ -1,5 +1,7 @@
 package com.musiqay.app.ui.screens
 
+import com.musiqay.app.R
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -636,12 +638,16 @@ private fun radioStatus(state: NowPlayingState): String = when {
 
 @Composable
 private fun RadioArtwork(station: RadioStation, modifier: Modifier) {
-    if (station.artworkUrl != null) {
+    val preferredArtwork: Any? = when (station.category) {
+        "أذكار ورقية" -> R.drawable.artwork_adhkar_ruqyah
+        else -> station.artworkUrl
+    }
+    if (preferredArtwork != null) {
         AlbumArtwork(
-            station.artworkUrl,
+            preferredArtwork,
             modifier,
             13,
-            logo = true,
+            logo = station.category != "أذكار ورقية",
             logoBackground = radioLogoBackground(station.id)
         )
     } else {
