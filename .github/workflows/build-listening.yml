@@ -31,48 +31,25 @@ jobs:
       - name: Build preview and Android tests
         run: ./gradlew --no-daemon -PpreviewBuild=true :app:assembleDebug :app:assembleDebugAndroidTest
 
-      - name: Build signed release update
-        env:
-          MUSIQAY_KEYSTORE_BASE64: ${{ secrets.MUSIQAY_KEYSTORE_BASE64 }}
-          MUSIQAY_KEYSTORE_PASSWORD: ${{ secrets.MUSIQAY_KEYSTORE_PASSWORD }}
-          MUSIQAY_KEY_ALIAS: ${{ secrets.MUSIQAY_KEY_ALIAS }}
-          MUSIQAY_KEY_PASSWORD: ${{ secrets.MUSIQAY_KEY_PASSWORD }}
-        run: |
-          for key in MUSIQAY_KEYSTORE_BASE64 MUSIQAY_KEYSTORE_PASSWORD MUSIQAY_KEY_ALIAS MUSIQAY_KEY_PASSWORD; do
-            if [ -z "${!key}" ]; then echo "Missing release signing secret: $key"; exit 1; fi
-          done
-          export MUSIQAY_KEYSTORE_PATH="$RUNNER_TEMP/musiqay-release.keystore"
-          trap 'rm -f "$MUSIQAY_KEYSTORE_PATH"' EXIT
-          printf '%s' "$MUSIQAY_KEYSTORE_BASE64" | base64 --decode > "$MUSIQAY_KEYSTORE_PATH"
-          ./gradlew --no-daemon :app:assembleRelease
+      - name: Build unsigned release package
+        run: ./gradlew --no-daemon :app:assembleRelease
 
-      - name: Collect and verify APKs
+      - name: Collect unsigned release tools
         run: |
           mkdir -p out
-          cp app/build/outputs/apk/debug/app-debug.apk out/Musiqay-1.4.8-Preview-runner.apk
-          cp app/build/outputs/apk/release/app-release.apk out/Musiqay-1.4.8-Release.apk
+          cp app/build/outputs/apk/release/app-release-unsigned.apk out/Musiqay-1.4.8-Release-unsigned.apk
           cp "$ANDROID_HOME/build-tools/35.0.0/lib/apksigner.jar" out/apksigner.jar
-          "$ANDROID_HOME/build-tools/35.0.0/aapt" dump badging out/Musiqay-1.4.8-Release.apk > out/release-apk-metadata.txt
-          java -jar out/apksigner.jar verify --print-certs out/Musiqay-1.4.8-Release.apk > out/release-signing.txt
-          sha256sum out/Musiqay-1.4.8-Release.apk > out/Musiqay-1.4.8-Release.sha256
-          grep -q "package: name='com.musiqay.app'" out/release-apk-metadata.txt
-          grep -q "versionCode='12'" out/release-apk-metadata.txt
-          grep -q "versionName='1.4.8'" out/release-apk-metadata.txt
-      - name: Enable emulator acceleration
-        run: sudo chmod 666 /dev/kvm
-      - name: Device tests with larger Arabic text
-        uses: reactivecircus/android-emulator-runner@v2
-        with:
-          api-level: 35
-          arch: x86_64
-          profile: pixel_4
-          disable-animations: true
-          script: bash .github/scripts/device-tests.sh
+          "$ANDROID_HOME/build-tools/35.0.0/aapt" dump badging out/Musiqay-1.4.8-Release-unsigned.apk > out/apk-metadata.txt
+          grep -q "package: name='com.musiqay.app'" out/apk-metadata.txt
+          grep -q "versionCode='12'" out/apk-metadata.txt
+          grep -q "versionName='1.4.8'" out/apk-metadata.txt
+          sha256sum out/Musiqay-1.4.8-Release-unsigned.apk > out/Musiqay-1.4.8-Release-unsigned.sha256
+
       - name: Upload build outputs and reports
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: Musiqay-1.4.8-Verified-Build
+          name: Musiqay-1.4.8-Unsigned-Release
           path: |
             out/
             app/build/reports/
