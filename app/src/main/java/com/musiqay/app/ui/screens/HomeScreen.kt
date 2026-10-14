@@ -106,9 +106,15 @@ fun HomeScreen(
                     LibraryShortcut("الألبومات", "${counts.second} ألبوم", Icons.Rounded.Album, onAlbums, Modifier.weight(1f))
                     LibraryShortcut("المجلدات", "${counts.third} مجلد", Icons.Rounded.Folder, onFolders, Modifier.weight(1f))
                 }
+
+            }
+        }
+        item {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                SectionTitle("مصادر الصوت")
                 LibraryShortcut(
                     "بلوتوث الهاتف",
-                    "تشغيل صوت الهاتف عبر شاشة السيارة",
+                    "صوت الهاتف عبر شاشة السيارة",
                     Icons.Rounded.BluetoothAudio,
                     onBluetooth,
                     Modifier.fillMaxWidth()
