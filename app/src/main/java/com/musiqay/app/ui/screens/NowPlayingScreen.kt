@@ -52,6 +52,7 @@ import com.musiqay.app.util.formatDuration
 import com.musiqay.app.util.displayTitle
 import com.musiqay.app.util.displayArtist
 import com.musiqay.app.util.displayAlbum
+import com.musiqay.app.util.detectedSurah
 import androidx.compose.foundation.clickable
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
