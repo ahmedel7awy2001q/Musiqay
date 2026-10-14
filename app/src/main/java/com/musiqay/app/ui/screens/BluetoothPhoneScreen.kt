@@ -1,5 +1,7 @@
 package com.musiqay.app.ui.screens
 
+import android.annotation.SuppressLint
+
 import android.Manifest
 import android.bluetooth.BluetoothA2dp
 import android.bluetooth.BluetoothAdapter
@@ -50,6 +52,7 @@ private data class BluetoothAudioApp(
     val activityName: String
 )
 
+@SuppressLint("MissingPermission")
 @Composable
 fun BluetoothPhoneScreen(onBack: () -> Unit) {
     val context = LocalContext.current
@@ -127,7 +130,14 @@ fun BluetoothPhoneScreen(onBack: () -> Unit) {
                 addAction(BluetoothAdapter.ACTION_STATE_CHANGED)
                 addAction(BluetoothA2dp.ACTION_CONNECTION_STATE_CHANGED)
             }
-            runCatching { context.registerReceiver(receiver, filter) }
+            runCatching {
+                ContextCompat.registerReceiver(
+                    context,
+                    receiver,
+                    filter,
+                    ContextCompat.RECEIVER_EXPORTED
+                )
+            }
 
             onDispose {
                 runCatching { context.unregisterReceiver(receiver) }
@@ -189,7 +199,7 @@ fun BluetoothPhoneScreen(onBack: () -> Unit) {
                                 !permissionGranted -> "يلزم السماح بالوصول إلى Bluetooth"
                                 !bluetoothEnabled -> "Bluetooth متوقف"
                                 connectedDevices.isNotEmpty() -> "Bluetooth Audio متصل"
-                                else -> "Bluetooth يعمل — لا يوجد مصدر صوت متصل"
+                                else -> "Bluetooth يعمل — حالة صوت الهاتف غير متاحة للتطبيق"
                             },
                             fontWeight = FontWeight.Bold
                         )
@@ -289,7 +299,7 @@ fun BluetoothPhoneScreen(onBack: () -> Unit) {
 
         item {
             Text(
-                "ملاحظة: Musiqay لا يعيد بث صوت الهاتف بنفسه؛ الصوت يظل عبر مستقبل Bluetooth الأصلي في الشاشة، وهذا هو المسار الأكثر ثباتًا وجودة.",
+                "ملاحظة: بعض شاشات السيارة لا تكشف اتصال A2DP Sink للتطبيقات العادية. إذا كان الهاتف يعمل بالفعل في مشغل Bluetooth الأصلي، فالصوت سيظل يعمل حتى لو لم تظهر حالة الاتصال هنا. Musiqay يستخدم مشغل الشاشة الأصلي بدل إعادة بث الصوت.",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -302,7 +312,7 @@ private fun findBluetoothAudioApps(context: Context): List<BluetoothAudioApp> {
     val launcherIntent = Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_LAUNCHER)
     val matches = runCatching {
         if (Build.VERSION.SDK_INT >= 33) {
-            pm.queryIntentActivities(launcherIntent, PackageManager.ResolveInfoFlags.of(0))
+            pm.queryIntentActivities(launcherIntent, PackageManager.ResolveInfoFlags.of(0L))
         } else {
             @Suppress("DEPRECATION")
             pm.queryIntentActivities(launcherIntent, 0)
@@ -316,6 +326,7 @@ private fun findBluetoothAudioApps(context: Context): List<BluetoothAudioApp> {
         if ("a2dp" in text) value += 100
         if ("bluetooth" in text || "بلوتوث" in text) value += 70
         if ("btmusic" in text || "bt_music" in text) value += 70
+        if (label.trim().equals("bt", ignoreCase = true) || label.lowercase().startsWith("bt ")) value += 80
         if ("music" in text || "audio" in text) value += 15
         return value
     }
