@@ -118,7 +118,7 @@ fun HomeScreen(
             item { SectionTitle("استكمل تسجيلاتك") }
             items(unfinished, key = { "resume:${it.first.id}" }) { (song, position) ->
                 Row(Modifier.fillMaxWidth().clickable { onSong(song) }.padding(8.dp), verticalAlignment = Alignment.CenterVertically) {
-                    AlbumArtwork(song.artworkUri, Modifier.size(44.dp), placeholderTitle = displayTitle(song.title))
+                    AlbumArtwork(preferredSongArtwork(song), Modifier.size(44.dp), placeholderTitle = displayTitle(song.title))
                     Column(Modifier.weight(1f).padding(horizontal = 10.dp)) {
                         Text(displayTitle(song.title), maxLines = 1, overflow = TextOverflow.Ellipsis)
                         Text("استكمال من ${com.musiqay.app.util.formatDuration(position)}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.primary)
@@ -139,19 +139,21 @@ fun HomeScreen(
             item { SectionTitle("مضاف حديثًا", "عرض الكل", onAllSongs) }
             item {
                 LazyRow(
-                    horizontalArrangement = Arrangement.spacedBy(10.dp),
-                    contentPadding = PaddingValues(horizontal = 2.dp, vertical = 2.dp)
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    contentPadding = PaddingValues(horizontal = 2.dp, vertical = 4.dp)
                 ) {
                     items(recent, key = { it.id }, contentType = { "recentSong" }) { song ->
                         Column(
                             Modifier
-                                .width(122.dp)
+                                .width(112.dp)
+                                .background(premiumPanelBrush(), RoundedCornerShape(16.dp))
+                                .border(.4.dp, premiumOutlineBrush(), RoundedCornerShape(16.dp))
                                 .clickable { onSong(song) }
-                                .padding(bottom = 4.dp)
+                                .padding(7.dp)
                         ) {
                             AlbumArtwork(
-                                song.artworkUri,
-                                Modifier.size(108.dp).align(Alignment.CenterHorizontally),
+                                preferredSongArtwork(song),
+                                Modifier.size(96.dp).align(Alignment.CenterHorizontally),
                                 16,
                                 placeholderTitle = displayTitle(song.title)
                             )
