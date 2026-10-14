@@ -122,7 +122,7 @@ fun NowPlayingScreen(vm: MusicViewModel, songs: List<Song>, favoriteIds: Set<Lon
             }
             if (landscape) {
                 Row(Modifier.weight(1f), verticalAlignment = Alignment.CenterVertically) {
-                    Box(Modifier.weight(.40f), contentAlignment = Alignment.Center) { AlbumArtwork(state.artworkUri, Modifier.size(artSize), 28, true) }
+                    Box(Modifier.weight(.40f), contentAlignment = Alignment.Center) { AlbumArtwork(preferredPlaybackArtwork(state), Modifier.size(artSize), 28, true) }
                     Column(Modifier.weight(.60f).verticalScroll(rememberScrollState()).padding(start = 16.dp),
                         horizontalAlignment = Alignment.CenterHorizontally) {
                         PlayerDetails(state, favoriteIds, vm)
@@ -136,7 +136,7 @@ fun NowPlayingScreen(vm: MusicViewModel, songs: List<Song>, favoriteIds: Set<Lon
             } else {
                 Column(Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(vertical = 6.dp),
                     horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    AlbumArtwork(state.artworkUri, Modifier.size(artSize).border(.4.dp, premiumOutlineBrush(), RoundedCornerShape(22.dp)), 22, true)
+                    AlbumArtwork(preferredPlaybackArtwork(state), Modifier.size(artSize).border(.4.dp, premiumOutlineBrush(), RoundedCornerShape(22.dp)), 22, true)
                     PlayerDetails(state, favoriteIds, vm)
                     PlayerProgress(vm)
                     PlayerControls(state, vm)
