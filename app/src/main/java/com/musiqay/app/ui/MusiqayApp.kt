@@ -58,6 +58,7 @@ import com.musiqay.app.ui.screens.SettingsScreen
 import com.musiqay.app.ui.screens.SongsScreen
 import com.musiqay.app.ui.screens.RadioScreen
 import com.musiqay.app.ui.screens.PlatformsScreen
+import com.musiqay.app.ui.screens.BluetoothPhoneScreen
 
 private data class NavItem(
     val route: String,
@@ -136,7 +137,9 @@ fun MusiqayApp(vm: MusicViewModel, audioPermission: Boolean = true,
             if (currentRoute != "player" && currentRoute != "settings") {
                 Column(modifier = if (showBottom) Modifier else Modifier.navigationBarsPadding()) {
                     AnimatedVisibility(
-                        visible = playerState.hasMedia && !(currentRoute == "radio" && playerState.isRadio),
+                        visible = playerState.hasMedia &&
+                            currentRoute != "bluetooth" &&
+                            !(currentRoute == "radio" && playerState.isRadio),
                         enter = fadeIn(tween(if (settings.reduceMotion) 0 else 180)) + slideInVertically(
                             animationSpec = tween(if (settings.reduceMotion) 0 else 160),
                             initialOffsetY = { it / 3 }
@@ -223,7 +226,8 @@ fun MusiqayApp(vm: MusicViewModel, audioPermission: Boolean = true,
                     onArtists = { navController.navigate("browse/artist") },
                     onAlbums = { navController.navigate("browse/album") },
                     onFolders = { navController.navigate("browse/folder") },
-                    onPlatforms = { navController.navigate("platforms") { launchSingleTop = true } }
+                    onPlatforms = { navController.navigate("platforms") { launchSingleTop = true } },
+                    onBluetooth = { navController.navigate("bluetooth") { launchSingleTop = true } }
                 )
             }
             composable("songs") {
@@ -241,6 +245,9 @@ fun MusiqayApp(vm: MusicViewModel, audioPermission: Boolean = true,
             }
             composable("platforms") {
                 PlatformsScreen(onBack = { navController.popBackStack() })
+            }
+            composable("bluetooth") {
+                BluetoothPhoneScreen(onBack = { navController.popBackStack() })
             }
             composable("playlists") {
                 PlaylistsScreen(
