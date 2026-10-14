@@ -1,8 +1,8 @@
-name: Build Musiqay 1.4.3 verification
+name: Build Musiqay 1.4.8 verification
 
 on:
   push:
-    branches: ["build/v1.4.2-listening"]
+    branches: ["build/v1.4.8-carhub"]
     paths: [".build-request"]
   workflow_dispatch:
 
@@ -49,15 +49,15 @@ jobs:
       - name: Collect and verify APKs
         run: |
           mkdir -p out
-          cp app/build/outputs/apk/debug/app-debug.apk out/Musiqay-1.4.3-Preview-runner.apk
-          cp app/build/outputs/apk/release/app-release.apk out/Musiqay-1.4.3-Release.apk
+          cp app/build/outputs/apk/debug/app-debug.apk out/Musiqay-1.4.8-Preview-runner.apk
+          cp app/build/outputs/apk/release/app-release.apk out/Musiqay-1.4.8-Release.apk
           cp "$ANDROID_HOME/build-tools/35.0.0/lib/apksigner.jar" out/apksigner.jar
-          "$ANDROID_HOME/build-tools/35.0.0/aapt" dump badging out/Musiqay-1.4.3-Release.apk > out/release-apk-metadata.txt
-          java -jar out/apksigner.jar verify --print-certs out/Musiqay-1.4.3-Release.apk > out/release-signing.txt
-          sha256sum out/Musiqay-1.4.3-Release.apk > out/Musiqay-1.4.3-Release.sha256
+          "$ANDROID_HOME/build-tools/35.0.0/aapt" dump badging out/Musiqay-1.4.8-Release.apk > out/release-apk-metadata.txt
+          java -jar out/apksigner.jar verify --print-certs out/Musiqay-1.4.8-Release.apk > out/release-signing.txt
+          sha256sum out/Musiqay-1.4.8-Release.apk > out/Musiqay-1.4.8-Release.sha256
           grep -q "package: name='com.musiqay.app'" out/release-apk-metadata.txt
-          grep -q "versionCode='7'" out/release-apk-metadata.txt
-          grep -q "versionName='1.4.3'" out/release-apk-metadata.txt
+          grep -q "versionCode='12'" out/release-apk-metadata.txt
+          grep -q "versionName='1.4.8'" out/release-apk-metadata.txt
       - name: Enable emulator acceleration
         run: sudo chmod 666 /dev/kvm
       - name: Device tests with larger Arabic text
@@ -72,7 +72,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: Musiqay-1.4.3-Verified-Build
+          name: Musiqay-1.4.8-Verified-Build
           path: |
             out/
             app/build/reports/
