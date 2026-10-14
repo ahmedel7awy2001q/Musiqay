@@ -26,6 +26,7 @@ import androidx.compose.material.icons.rounded.DarkMode
 import androidx.compose.material.icons.rounded.Folder
 import androidx.compose.material.icons.rounded.LightMode
 import androidx.compose.material.icons.rounded.PhoneAndroid
+import androidx.compose.material.icons.rounded.Radio
 import androidx.compose.material.icons.rounded.Refresh
 import androidx.compose.material.icons.rounded.Security
 import androidx.compose.material.icons.rounded.Tune
@@ -68,6 +69,7 @@ import com.musiqay.app.ui.theme.premiumScreenBrush
 fun SettingsScreen(vm: MusicViewModel, onBack: () -> Unit) {
     val settings by vm.settings.collectAsStateWithLifecycle()
     val status by vm.libraryStatus.collectAsStateWithLifecycle()
+    val radioCatalog by vm.radioCatalog.collectAsStateWithLifecycle()
 
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
@@ -335,6 +337,44 @@ fun SettingsScreen(vm: MusicViewModel, onBack: () -> Unit) {
                                     }
                                 }
                             }
+                    }
+                }
+
+                Spacer(Modifier.height(18.dp))
+                SectionLabel("الراديو")
+
+                SettingCard(
+                    modifier = Modifier.clickable(enabled = !radioCatalog.loading) { vm.refreshRadio(force = true) }
+                ) {
+                    Row(
+                        Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(Icons.Rounded.Radio, null, tint = MaterialTheme.colorScheme.primary)
+                        Column(Modifier.weight(1f).padding(horizontal = 12.dp)) {
+                            Text(
+                                if (radioCatalog.loading) "جارٍ تحديث دليل الراديو…"
+                                else "تحديث دليل المحطات",
+                                fontWeight = FontWeight.Bold
+                            )
+                            val remoteStatus = if (radioCatalog.remoteRevision > 0)
+                                "دليل بعيد ${radioCatalog.remoteRevision}"
+                            else "النسخة الداخلية"
+                            val updated = radioCatalog.updatedAt?.let {
+                                java.text.DateFormat.getTimeInstance(java.text.DateFormat.SHORT)
+                                    .format(java.util.Date(it))
+                            }
+                            Text(
+                                buildString {
+                                    append("${radioCatalog.stations.size} محطة • ")
+                                    append(remoteStatus)
+                                    if (updated != null) append(" • آخر تحديث $updated")
+                                },
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                        Icon(Icons.Rounded.Refresh, "تحديث الآن", tint = MaterialTheme.colorScheme.primary)
                     }
                 }
 
