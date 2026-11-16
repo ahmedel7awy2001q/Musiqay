@@ -11,6 +11,7 @@ import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
 import androidx.media3.session.*
 import com.musiqay.app.MainActivity
+import com.musiqay.app.BuildConfig
 import com.musiqay.app.R
 import com.musiqay.app.util.isRadioMediaId
 import com.musiqay.app.util.radioRetryDelayMs
@@ -150,7 +151,7 @@ class PlaybackService : MediaLibraryService() {
         setMediaNotificationProvider(DefaultMediaNotificationProvider.Builder(this).build().apply {
             setSmallIcon(R.drawable.ic_stat_musiqay)
         })
-        val http = DefaultHttpDataSource.Factory().setUserAgent("Musiqay/1.4.6 (Android)")
+        val http = DefaultHttpDataSource.Factory().setUserAgent("Musiqay/${BuildConfig.VERSION_NAME} (Android)")
             .setConnectTimeoutMs(10_000).setReadTimeoutMs(12_000).setAllowCrossProtocolRedirects(true)
         val exoPlayer = ExoPlayer.Builder(this)
             .setWakeMode(C.WAKE_MODE_LOCAL)
