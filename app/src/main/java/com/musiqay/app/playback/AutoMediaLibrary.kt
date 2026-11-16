@@ -127,7 +127,10 @@ class AutoMediaLibrary(context: Context) : MediaLibraryService.MediaLibrarySessi
                 base.mediaMetadata.buildUpon()
                     .setIsBrowsable(false)
                     .setIsPlayable(true)
-                    .setMediaType(MediaMetadata.MEDIA_TYPE_RADIO_STATION)
+                    .setMediaType(
+                        if (station.isLive) MediaMetadata.MEDIA_TYPE_RADIO_STATION
+                        else MediaMetadata.MEDIA_TYPE_MUSIC
+                    )
                     .build()
             )
             .build()
@@ -138,7 +141,15 @@ class AutoMediaLibrary(context: Context) : MediaLibraryService.MediaLibrarySessi
         browseNode(FAVORITES, "المفضلة", "${data.favoriteIds.size} ملف"),
         browseNode(FOLDERS, "المجلدات", "${data.songs.map { it.folderKey }.distinct().size} مجلد"),
         browseNode(PLAYLISTS, "قوائم التشغيل", "${data.playlists.size} قائمة"),
-        browseNode(RADIO, "الراديو", "${data.stations.size} محطة"),
+        browseNode(
+            RADIO,
+            "الراديو والتسجيلات",
+            buildString {
+                append("${data.stations.count { it.isLive }} مباشر")
+                val recordings = data.stations.count { !it.isLive }
+                if (recordings > 0) append(" • $recordings تسجيل")
+            }
+        ),
         browseNode(ALL, "كل الملفات", "${data.songs.size} ملف صوتي")
     )
 
