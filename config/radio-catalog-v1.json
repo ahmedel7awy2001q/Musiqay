@@ -1,7 +1,7 @@
 {
   "schema": 1,
-  "revision": 3,
-  "refreshHours": 6,
+  "revision": 4,
+  "refreshHours": 4,
   "blockedTerms": [
     "مشاري",
     "العفاسي",
@@ -67,7 +67,7 @@
     {
       "id": "tobar-001",
       "name": "يارب عدت إلى رحابك",
-      "description": "من ابتهالات الشيخ نصر الدين طوبار",
+      "description": "ابتهال مسجل للشيخ نصر الدين طوبار",
       "badge": "طوبار",
       "streamUrl": "https://www.nourelquran.com/files/tobar/001.mp3",
       "website": "https://www.nourelquran.com/play-5690.html",
@@ -75,12 +75,13 @@
       "category": "ابتهالات نصر الدين طوبار",
       "featured": true,
       "priority": 100,
-      "sourceLabel": "نور القرآن"
+      "sourceLabel": "نور القرآن",
+      "isLive": false
     },
     {
       "id": "tobar-002",
       "name": "تواشيح وابتهالات",
-      "description": "من ابتهالات الشيخ نصر الدين طوبار",
+      "description": "ابتهال مسجل للشيخ نصر الدين طوبار",
       "badge": "طوبار",
       "streamUrl": "https://www.nourelquran.com/files/tobar/002.mp3",
       "website": "https://www.nourelquran.com/play-5691.html",
@@ -88,12 +89,13 @@
       "category": "ابتهالات نصر الدين طوبار",
       "featured": true,
       "priority": 99,
-      "sourceLabel": "نور القرآن"
+      "sourceLabel": "نور القرآن",
+      "isLive": false
     },
     {
       "id": "tobar-003",
       "name": "سبحانك",
-      "description": "من ابتهالات الشيخ نصر الدين طوبار",
+      "description": "ابتهال مسجل للشيخ نصر الدين طوبار",
       "badge": "طوبار",
       "streamUrl": "https://www.nourelquran.com/files/tobar/003.mp3",
       "website": "https://www.nourelquran.com/play-5692.html",
@@ -101,12 +103,13 @@
       "category": "ابتهالات نصر الدين طوبار",
       "featured": true,
       "priority": 98,
-      "sourceLabel": "نور القرآن"
+      "sourceLabel": "نور القرآن",
+      "isLive": false
     },
     {
       "id": "tobar-004",
       "name": "يا من رضيت لنا",
-      "description": "من ابتهالات الشيخ نصر الدين طوبار",
+      "description": "ابتهال مسجل للشيخ نصر الدين طوبار",
       "badge": "طوبار",
       "streamUrl": "https://www.nourelquran.com/files/tobar/004.mp3",
       "website": "https://www.nourelquran.com/play-5693.html",
@@ -114,12 +117,13 @@
       "category": "ابتهالات نصر الدين طوبار",
       "featured": true,
       "priority": 97,
-      "sourceLabel": "نور القرآن"
+      "sourceLabel": "نور القرآن",
+      "isLive": false
     },
     {
       "id": "tobar-005",
       "name": "بك أستجير",
-      "description": "من ابتهالات الشيخ نصر الدين طوبار",
+      "description": "ابتهال مسجل للشيخ نصر الدين طوبار",
       "badge": "طوبار",
       "streamUrl": "https://www.nourelquran.com/files/tobar/005.mp3",
       "website": "https://www.nourelquran.com/play-5694.html",
@@ -127,12 +131,13 @@
       "category": "ابتهالات نصر الدين طوبار",
       "featured": false,
       "priority": 96,
-      "sourceLabel": "نور القرآن"
+      "sourceLabel": "نور القرآن",
+      "isLive": false
     },
     {
       "id": "tobar-006",
       "name": "يا بارئ الكون",
-      "description": "من ابتهالات الشيخ نصر الدين طوبار",
+      "description": "ابتهال مسجل للشيخ نصر الدين طوبار",
       "badge": "طوبار",
       "streamUrl": "https://www.nourelquran.com/files/tobar/006.mp3",
       "website": "https://www.nourelquran.com/play-5695.html",
@@ -140,12 +145,13 @@
       "category": "ابتهالات نصر الدين طوبار",
       "featured": false,
       "priority": 95,
-      "sourceLabel": "نور القرآن"
+      "sourceLabel": "نور القرآن",
+      "isLive": false
     },
     {
       "id": "tobar-007",
       "name": "تواشيح",
-      "description": "من ابتهالات الشيخ نصر الدين طوبار",
+      "description": "ابتهال مسجل للشيخ نصر الدين طوبار",
       "badge": "طوبار",
       "streamUrl": "https://www.nourelquran.com/files/tobar/007.mp3",
       "website": "https://www.nourelquran.com/play-5696.html",
@@ -153,12 +159,13 @@
       "category": "ابتهالات نصر الدين طوبار",
       "featured": false,
       "priority": 94,
-      "sourceLabel": "نور القرآن"
+      "sourceLabel": "نور القرآن",
+      "isLive": false
     },
     {
       "id": "tobar-008",
       "name": "الحوت والعنكبوت",
-      "description": "من ابتهالات الشيخ نصر الدين طوبار",
+      "description": "ابتهال مسجل للشيخ نصر الدين طوبار",
       "badge": "طوبار",
       "streamUrl": "https://www.nourelquran.com/files/tobar/008.mp3",
       "website": "https://www.nourelquran.com/play-5697.html",
@@ -166,12 +173,13 @@
       "category": "ابتهالات نصر الدين طوبار",
       "featured": false,
       "priority": 93,
-      "sourceLabel": "نور القرآن"
+      "sourceLabel": "نور القرآن",
+      "isLive": false
     },
     {
       "id": "tobar-009",
       "name": "يا ليلة القدر",
-      "description": "من ابتهالات الشيخ نصر الدين طوبار",
+      "description": "ابتهال مسجل للشيخ نصر الدين طوبار",
       "badge": "طوبار",
       "streamUrl": "https://www.nourelquran.com/files/tobar/009.mp3",
       "website": "https://www.nourelquran.com/play-5698.html",
@@ -179,12 +187,13 @@
       "category": "ابتهالات نصر الدين طوبار",
       "featured": false,
       "priority": 92,
-      "sourceLabel": "نور القرآن"
+      "sourceLabel": "نور القرآن",
+      "isLive": false
     },
     {
       "id": "tobar-010",
       "name": "يا من ملكت قلوبنا",
-      "description": "من ابتهالات الشيخ نصر الدين طوبار",
+      "description": "ابتهال مسجل للشيخ نصر الدين طوبار",
       "badge": "طوبار",
       "streamUrl": "https://www.nourelquran.com/files/tobar/010.mp3",
       "website": "https://www.nourelquran.com/play-5699.html",
@@ -192,12 +201,13 @@
       "category": "ابتهالات نصر الدين طوبار",
       "featured": false,
       "priority": 91,
-      "sourceLabel": "نور القرآن"
+      "sourceLabel": "نور القرآن",
+      "isLive": false
     },
     {
       "id": "tobar-011",
       "name": "يا منقذي في شدتي",
-      "description": "من ابتهالات الشيخ نصر الدين طوبار",
+      "description": "ابتهال مسجل للشيخ نصر الدين طوبار",
       "badge": "طوبار",
       "streamUrl": "https://www.nourelquran.com/files/tobar/011.mp3",
       "website": "https://www.nourelquran.com/play-5700.html",
@@ -205,12 +215,13 @@
       "category": "ابتهالات نصر الدين طوبار",
       "featured": false,
       "priority": 90,
-      "sourceLabel": "نور القرآن"
+      "sourceLabel": "نور القرآن",
+      "isLive": false
     },
     {
       "id": "tobar-012",
       "name": "يا ودودا",
-      "description": "من ابتهالات الشيخ نصر الدين طوبار",
+      "description": "ابتهال مسجل للشيخ نصر الدين طوبار",
       "badge": "طوبار",
       "streamUrl": "https://www.nourelquran.com/files/tobar/012.mp3",
       "website": "https://www.nourelquran.com/play-5701.html",
@@ -218,12 +229,13 @@
       "category": "ابتهالات نصر الدين طوبار",
       "featured": false,
       "priority": 89,
-      "sourceLabel": "نور القرآن"
+      "sourceLabel": "نور القرآن",
+      "isLive": false
     },
     {
       "id": "tobar-013",
       "name": "الواحد المعبود",
-      "description": "من ابتهالات الشيخ نصر الدين طوبار",
+      "description": "ابتهال مسجل للشيخ نصر الدين طوبار",
       "badge": "طوبار",
       "streamUrl": "https://www.nourelquran.com/files/tobar/013.mp3",
       "website": "https://www.nourelquran.com/play-5702.html",
@@ -231,12 +243,13 @@
       "category": "ابتهالات نصر الدين طوبار",
       "featured": false,
       "priority": 88,
-      "sourceLabel": "نور القرآن"
+      "sourceLabel": "نور القرآن",
+      "isLive": false
     },
     {
       "id": "tobar-014",
       "name": "الله رب الوجود",
-      "description": "من ابتهالات الشيخ نصر الدين طوبار",
+      "description": "ابتهال مسجل للشيخ نصر الدين طوبار",
       "badge": "طوبار",
       "streamUrl": "https://www.nourelquran.com/files/tobar/014.mp3",
       "website": "https://www.nourelquran.com/play-5703.html",
@@ -244,12 +257,13 @@
       "category": "ابتهالات نصر الدين طوبار",
       "featured": false,
       "priority": 87,
-      "sourceLabel": "نور القرآن"
+      "sourceLabel": "نور القرآن",
+      "isLive": false
     },
     {
       "id": "tobar-015",
       "name": "الأمر أمرك",
-      "description": "من ابتهالات الشيخ نصر الدين طوبار",
+      "description": "ابتهال مسجل للشيخ نصر الدين طوبار",
       "badge": "طوبار",
       "streamUrl": "https://www.nourelquran.com/files/tobar/015.mp3",
       "website": "https://www.nourelquran.com/play-5704.html",
@@ -257,12 +271,13 @@
       "category": "ابتهالات نصر الدين طوبار",
       "featured": false,
       "priority": 86,
-      "sourceLabel": "نور القرآن"
+      "sourceLabel": "نور القرآن",
+      "isLive": false
     },
     {
       "id": "tobar-016",
       "name": "سل الليل",
-      "description": "من ابتهالات الشيخ نصر الدين طوبار",
+      "description": "ابتهال مسجل للشيخ نصر الدين طوبار",
       "badge": "طوبار",
       "streamUrl": "https://www.nourelquran.com/files/tobar/016.mp3",
       "website": "https://www.nourelquran.com/play-5705.html",
@@ -270,12 +285,13 @@
       "category": "ابتهالات نصر الدين طوبار",
       "featured": false,
       "priority": 85,
-      "sourceLabel": "نور القرآن"
+      "sourceLabel": "نور القرآن",
+      "isLive": false
     },
     {
       "id": "tobar-017",
       "name": "إليك دعاءنا فاجعله مقبولًا",
-      "description": "من ابتهالات الشيخ نصر الدين طوبار",
+      "description": "ابتهال مسجل للشيخ نصر الدين طوبار",
       "badge": "طوبار",
       "streamUrl": "https://www.nourelquran.com/files/tobar/017.mp3",
       "website": "https://www.nourelquran.com/play-5706.html",
@@ -283,12 +299,13 @@
       "category": "ابتهالات نصر الدين طوبار",
       "featured": false,
       "priority": 84,
-      "sourceLabel": "نور القرآن"
+      "sourceLabel": "نور القرآن",
+      "isLive": false
     },
     {
       "id": "tobar-018",
       "name": "إليك خشوعي",
-      "description": "من ابتهالات الشيخ نصر الدين طوبار",
+      "description": "ابتهال مسجل للشيخ نصر الدين طوبار",
       "badge": "طوبار",
       "streamUrl": "https://www.nourelquran.com/files/tobar/018.mp3",
       "website": "https://www.nourelquran.com/play-5707.html",
@@ -296,12 +313,13 @@
       "category": "ابتهالات نصر الدين طوبار",
       "featured": false,
       "priority": 83,
-      "sourceLabel": "نور القرآن"
+      "sourceLabel": "نور القرآن",
+      "isLive": false
     },
     {
       "id": "tobar-019",
       "name": "إن الشكر قد وجب",
-      "description": "من ابتهالات الشيخ نصر الدين طوبار",
+      "description": "ابتهال مسجل للشيخ نصر الدين طوبار",
       "badge": "طوبار",
       "streamUrl": "https://www.nourelquran.com/files/tobar/019.mp3",
       "website": "https://www.nourelquran.com/play-5708.html",
@@ -309,12 +327,13 @@
       "category": "ابتهالات نصر الدين طوبار",
       "featured": false,
       "priority": 82,
-      "sourceLabel": "نور القرآن"
+      "sourceLabel": "نور القرآن",
+      "isLive": false
     },
     {
       "id": "tobar-020",
       "name": "إليك دعاءنا فاجعله مقبولًا — نسخة ثانية",
-      "description": "من ابتهالات الشيخ نصر الدين طوبار",
+      "description": "ابتهال مسجل للشيخ نصر الدين طوبار",
       "badge": "طوبار",
       "streamUrl": "https://www.nourelquran.com/files/tobar/020.mp3",
       "website": "https://www.nourelquran.com/play-5709.html",
@@ -322,12 +341,13 @@
       "category": "ابتهالات نصر الدين طوبار",
       "featured": false,
       "priority": 81,
-      "sourceLabel": "نور القرآن"
+      "sourceLabel": "نور القرآن",
+      "isLive": false
     },
     {
       "id": "tobar-021",
       "name": "دعوتك يا مفرج كل كرب",
-      "description": "من ابتهالات الشيخ نصر الدين طوبار",
+      "description": "ابتهال مسجل للشيخ نصر الدين طوبار",
       "badge": "طوبار",
       "streamUrl": "https://www.nourelquran.com/files/tobar/021.mp3",
       "website": "https://www.nourelquran.com/play-8472.html",
@@ -335,7 +355,120 @@
       "category": "ابتهالات نصر الدين طوبار",
       "featured": false,
       "priority": 80,
-      "sourceLabel": "نور القرآن"
+      "sourceLabel": "نور القرآن",
+      "isLive": false
+    },
+    {
+      "id": "quran",
+      "name": "إذاعة القرآن الكريم من القاهرة",
+      "description": "البث المباشر لإذاعة القرآن الكريم المصرية",
+      "badge": "قرآن",
+      "streamUrl": "https://stream.radiojar.com/8s5u5tpdtwzuv",
+      "fallbackStreamUrl": "https://service.webvideocore.net/CL1olYogIrDWvwqiIKK7eCxOS4PStqG9DuEjAr2ZjZQtvS3d4y9r0cvRhvS17SGN/a_7a4vuubc6mo8.m3u8",
+      "website": "https://misrquran.gov.eg/",
+      "artworkUrl": "https://misrquran.gov.eg/img/1366%20normal%20logo.915db7c0.webp",
+      "category": "قرآن",
+      "featured": true,
+      "priority": 95,
+      "sourceLabel": "إذاعة القرآن الكريم المصرية",
+      "isLive": true
+    },
+    {
+      "id": "nogoum",
+      "name": "نجوم FM",
+      "description": "أغاني وبرامج متنوعة",
+      "badge": "نجوم",
+      "streamUrl": "https://stream.zeno.fm/qb1zvsykm98uv",
+      "fallbackStreamUrl": "https://audio.nrpstream.com/listen/nogoumfm/radio.mp3",
+      "website": "https://www.nogoumfm.net/",
+      "artworkUrl": "https://www.nogoumfm.net/wp-content/uploads/2019/12/logo-nogoum-1.png",
+      "category": "موسيقى ومنوعات",
+      "featured": true,
+      "priority": 75,
+      "sourceLabel": "Nogoum FM",
+      "isLive": true
+    },
+    {
+      "id": "radio9090",
+      "name": "الراديو 9090",
+      "description": "برامج وترفيه وأخبار",
+      "badge": "9090",
+      "streamUrl": "https://9090streaming.mobtada.com/9090FMEGYPT",
+      "fallbackStreamUrl": "http://9090streaming.mobtada.com/9090FMEGYPT",
+      "website": "https://www.9090.fm/",
+      "artworkUrl": "https://www.9090.fm/images/logo.png",
+      "category": "أخبار ورياضة",
+      "featured": true,
+      "priority": 72,
+      "sourceLabel": "الراديو 9090",
+      "isLive": true
+    },
+    {
+      "id": "nile",
+      "name": "نايل FM",
+      "description": "موسيقى وبرامج بالإنجليزية • 104.2 FM",
+      "badge": "NILE",
+      "streamUrl": "https://audio.nrpstream.com/listen/nile_fm/radio.mp3",
+      "website": "https://www.nilefm.com/",
+      "artworkUrl": "https://www.nilefm.com/static/logo.png",
+      "category": "موسيقى ومنوعات",
+      "featured": true,
+      "priority": 70,
+      "sourceLabel": "Nile FM",
+      "isLive": true
+    },
+    {
+      "id": "mega",
+      "name": "ميجا FM",
+      "description": "أغاني وبرامج • 92.7 FM",
+      "badge": "ميجا",
+      "streamUrl": "https://megafm927.radioca.st/stream",
+      "website": "https://www.megafm927.com/ar",
+      "category": "موسيقى ومنوعات",
+      "featured": false,
+      "priority": 66,
+      "sourceLabel": "Mega FM 92.7",
+      "isLive": true
+    },
+    {
+      "id": "shaaby",
+      "name": "شعبي FM 95",
+      "description": "أغاني شعبية وبرامج • 95 FM",
+      "badge": "95",
+      "streamUrl": "https://radio95.radioca.st/;",
+      "fallbackStreamUrl": "https://radio95.radioca.st/stream",
+      "website": "",
+      "category": "موسيقى ومنوعات",
+      "featured": false,
+      "priority": 64,
+      "sourceLabel": "Sha3by FM",
+      "isLive": true
+    },
+    {
+      "id": "hits",
+      "name": "راديو هيتس 88.2",
+      "description": "موسيقى وبرامج • 88.2 FM",
+      "badge": "HITS",
+      "streamUrl": "https://radiohits882.radioca.st/;",
+      "website": "https://radiohits882.com/",
+      "category": "موسيقى ومنوعات",
+      "featured": false,
+      "priority": 63,
+      "sourceLabel": "Radio Hits 88.2",
+      "isLive": true
+    },
+    {
+      "id": "onsport",
+      "name": "ON Sport FM",
+      "description": "رياضة وأخبار وتحليلات مباشرة",
+      "badge": "SPORT",
+      "streamUrl": "https://carina.streamerr.co:2020/stream/OnSportFM",
+      "website": "https://onsportfm.com/",
+      "category": "أخبار ورياضة",
+      "featured": true,
+      "priority": 74,
+      "sourceLabel": "ON Sport FM",
+      "isLive": true
     }
   ]
 }
