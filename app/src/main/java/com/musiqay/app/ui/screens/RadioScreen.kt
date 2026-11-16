@@ -93,9 +93,25 @@ fun RadioScreen(
         }
     }
     val categories = remember(safeCatalogStations) {
-        val preferred = listOf("أذكار ورقية", "قرآن", "موسيقى ومنوعات", "أخبار ورياضة")
+        val preferred = listOf(
+            "أذكار ورقية",
+            "ابتهالات نصر الدين طوبار",
+            "قرآن",
+            "موسيقى ومنوعات",
+            "أخبار ورياضة"
+        )
         val available = safeCatalogStations.map { it.category }.filter { it.isNotBlank() }.distinct()
         listOf("الكل") + preferred.filter { it in available } + available.filter { it !in preferred }.sorted()
+    }
+    val liveCount = remember(safeCatalogStations) { safeCatalogStations.count { it.isLive } }
+    val recordingCount = remember(safeCatalogStations) { safeCatalogStations.size - liveCount }
+    val sourceSummary = remember(safeCatalogStations) {
+        buildList {
+            add("Radio Browser")
+            safeCatalogStations.mapNotNull { it.sourceLabel?.takeIf(String::isNotBlank) }
+                .distinct()
+                .forEach(::add)
+        }.distinct().take(5).joinToString(" • ")
     }
 
     val stations = remember(query, favoritesOnly, favorites, category, safeCatalogStations, searchIndex, favoriteOrder) {
@@ -149,7 +165,8 @@ fun RadioScreen(
     ) {
         item {
             RadioHeader(
-                stationCount = safeCatalogStations.size,
+                liveCount = liveCount,
+                recordingCount = recordingCount,
                 loading = catalog.loading,
                 remoteRevision = catalog.remoteRevision,
                 onAdd = { addStation = true },
@@ -224,7 +241,7 @@ fun RadioScreen(
                 trailingIcon = if (query.isNotBlank()) {
                     { IconButton(onClick = { query = "" }) { Icon(Icons.Rounded.Close, "مسح البحث") } }
                 } else null,
-                placeholder = { Text("ابحث عن محطة") },
+                placeholder = { Text("ابحث عن محطة أو تسجيل") },
                 shape = RoundedCornerShape(16.dp),
                 colors = OutlinedTextFieldDefaults.colors(
                     focusedContainerColor = MaterialTheme.colorScheme.surface.copy(alpha = .96f),
@@ -238,6 +255,9 @@ fun RadioScreen(
         val adhkarStations = safeCatalogStations
             .filter { it.category == "أذكار ورقية" }
             .sortedWith(compareByDescending<RadioStation> { it.featured }.thenByDescending { it.priority })
+        val tobarRecordings = safeCatalogStations
+            .filter { !it.isLive && it.category == "ابتهالات نصر الدين طوبار" }
+            .sortedWith(compareByDescending<RadioStation> { it.featured }.thenByDescending { it.priority })
 
         if (category == "الكل" && query.isBlank() && !favoritesOnly && adhkarStations.isNotEmpty()) {
             item {
@@ -249,13 +269,23 @@ fun RadioScreen(
                 )
             }
         }
+        if (category == "الكل" && query.isBlank() && !favoritesOnly && tobarRecordings.isNotEmpty()) {
+            item {
+                TobarFeatureCard(
+                    station = tobarRecordings.first(),
+                    count = tobarRecordings.size,
+                    onOpen = { category = "ابتهالات نصر الدين طوبار" },
+                    onPlay = { play(tobarRecordings.first()) }
+                )
+            }
+        }
 
         item {
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 FilterChip(
                     selected = !favoritesOnly,
                     onClick = { favoritesOnly = false },
-                    label = { Text("كل المحطات") },
+                    label = { Text("كل المحتوى") },
                     leadingIcon = { Icon(Icons.Rounded.Radio, null, Modifier.size(16.dp)) }
                 )
                 FilterChip(
@@ -287,7 +317,7 @@ fun RadioScreen(
                     FilterChip(
                         selected = category == label,
                         onClick = { category = label },
-                        label = { Text(label) }
+                        label = { Text(categoryDisplayName(label), maxLines = 1) }
                     )
                 }
             }
@@ -305,7 +335,7 @@ fun RadioScreen(
         if (current != null && listedStations.isNotEmpty()) {
             item {
                 Text(
-                    "محطات أخرى",
+                    sectionTitle(category, current),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
                     modifier = Modifier.padding(top = 2.dp)
@@ -350,9 +380,9 @@ fun RadioScreen(
                         Spacer(Modifier.height(8.dp))
                         Text(
                             when {
-                                query.isNotBlank() -> "لا توجد محطة بهذا الاسم"
-                                favoritesOnly -> "لا توجد محطات مفضلة في هذا القسم"
-                                else -> "لا توجد محطات في هذا القسم حاليًا"
+                                query.isNotBlank() -> "لا يوجد محتوى بهذا الاسم"
+                                favoritesOnly -> "لا يوجد محتوى مفضل في هذا القسم"
+                                else -> "لا يوجد محتوى في هذا القسم حاليًا"
                             },
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -363,7 +393,7 @@ fun RadioScreen(
 
         item {
             Text(
-                "المصادر: Radio Browser • Quran Stations / Qurango • البث يحتاج إنترنت",
+                "المصادر: $sourceSummary • التشغيل يحتاج إنترنت",
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -413,8 +443,50 @@ private fun AdhkarRuqyahFeatureCard(
 }
 
 @Composable
+private fun TobarFeatureCard(
+    station: RadioStation,
+    count: Int,
+    onOpen: () -> Unit,
+    onPlay: () -> Unit
+) {
+    val shape = RoundedCornerShape(18.dp)
+    Row(
+        Modifier
+            .fillMaxWidth()
+            .background(MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = .42f), shape)
+            .border(.6.dp, MaterialTheme.colorScheme.tertiary.copy(alpha = .24f), shape)
+            .clickable(onClick = onOpen)
+            .padding(10.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        RadioArtwork(station, Modifier.size(58.dp))
+        Column(Modifier.weight(1f).padding(horizontal = 10.dp)) {
+            Text(
+                "نصر الدين طوبار",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Black
+            )
+            Text(
+                "$count ابتهالًا وتسجيلًا أرشيفيًا",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+        }
+        FilledTonalIconButton(onClick = onPlay, modifier = Modifier.size(46.dp)) {
+            Icon(Icons.Rounded.PlayArrow, "تشغيل ابتهالات نصر الدين طوبار")
+        }
+        IconButton(onClick = onOpen, modifier = Modifier.size(42.dp)) {
+            Icon(Icons.Rounded.ChevronLeft, "فتح القسم")
+        }
+    }
+}
+
+@Composable
 private fun RadioHeader(
-    stationCount: Int,
+    liveCount: Int,
+    recordingCount: Int,
     loading: Boolean,
     remoteRevision: Int,
     onAdd: () -> Unit,
@@ -433,7 +505,12 @@ private fun RadioHeader(
         Column(Modifier.weight(1f).padding(horizontal = 11.dp)) {
             Text("الراديو", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Black)
             Text(
-                "$stationCount محطة • تحديث تلقائي" + if (remoteRevision > 0) " • دليل $remoteRevision" else "",
+                buildString {
+                    append("$liveCount مباشر")
+                    if (recordingCount > 0) append(" • $recordingCount تسجيل")
+                    append(" • تحديث تلقائي")
+                    if (remoteRevision > 0) append(" • دليل $remoteRevision")
+                },
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -485,7 +562,7 @@ private fun CurrentRadioCard(
                             color = MaterialTheme.colorScheme.primary.copy(alpha = .14f)
                         ) {
                             Text(
-                                "LIVE",
+                                if (station.isLive) "LIVE" else "تسجيل",
                                 modifier = Modifier.padding(horizontal = 5.dp, vertical = 1.dp),
                                 style = MaterialTheme.typography.labelSmall,
                                 color = MaterialTheme.colorScheme.primary,
@@ -495,7 +572,7 @@ private fun CurrentRadioCard(
                     }
                 }
                 Text(
-                    radioStatus(state),
+                    radioStatus(state, station.isLive),
                     color = if (state.isPlaying) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
                     style = MaterialTheme.typography.bodySmall,
                     maxLines = 1
@@ -512,7 +589,11 @@ private fun CurrentRadioCard(
             FilledIconButton(onClick = onTogglePlayback, modifier = Modifier.size(48.dp)) {
                 Icon(
                     if (state.wantsPlayback) Icons.Rounded.Stop else Icons.Rounded.PlayArrow,
-                    if (state.wantsPlayback) "إيقاف البث" else "تشغيل البث",
+                    if (state.wantsPlayback) {
+                        if (station.isLive) "إيقاف البث" else "إيقاف التسجيل"
+                    } else {
+                        if (station.isLive) "تشغيل البث" else "تشغيل التسجيل"
+                    },
                     modifier = Modifier.size(23.dp)
                 )
             }
@@ -595,7 +676,7 @@ private fun RadioStationRow(
                 overflow = TextOverflow.Ellipsis
             )
             Text(
-                if (active) radioStatus(state) else buildString {
+                if (active) radioStatus(state, station.isLive) else buildString {
                     append(station.description)
                     station.sourceLabel?.takeIf { it.isNotBlank() }?.let {
                         if (isNotEmpty()) append(" • ")
@@ -627,13 +708,13 @@ private fun RadioStationRow(
     }
 }
 
-private fun radioStatus(state: NowPlayingState): String = when {
-    state.isPlaying -> "بث مباشر الآن"
-    state.playbackError && state.wantsPlayback -> "جارٍ إعادة الاتصال…"
-    state.buffering && state.wantsPlayback -> "جارٍ الاتصال بالمحطة…"
-    state.playbackError -> "تعذر الاتصال — اضغط تشغيل للمحاولة"
-    state.wantsPlayback -> "جارٍ بدء البث…"
-    else -> "البث متوقف"
+private fun radioStatus(state: NowPlayingState, isLive: Boolean): String = when {
+    state.isPlaying -> if (isLive) "بث مباشر الآن" else "يعمل الآن"
+    state.playbackError && state.wantsPlayback -> if (isLive) "جارٍ إعادة الاتصال…" else "جارٍ إعادة المحاولة…"
+    state.buffering && state.wantsPlayback -> if (isLive) "جارٍ الاتصال بالمحطة…" else "جارٍ تحميل التسجيل…"
+    state.playbackError -> if (isLive) "تعذر الاتصال — اضغط تشغيل للمحاولة" else "تعذر تشغيل التسجيل — حاول مجددًا"
+    state.wantsPlayback -> if (isLive) "جارٍ بدء البث…" else "جارٍ بدء التسجيل…"
+    else -> if (isLive) "البث متوقف" else "التسجيل متوقف"
 }
 
 @Composable
@@ -664,6 +745,18 @@ private fun RadioArtwork(station: RadioStation, modifier: Modifier) {
             )
         }
     }
+}
+
+private fun categoryDisplayName(category: String): String = when (category) {
+    "ابتهالات نصر الدين طوبار" -> "نصر الدين طوبار"
+    else -> category
+}
+
+private fun sectionTitle(category: String, current: RadioStation?): String = when {
+    category == "ابتهالات نصر الدين طوبار" -> "تسجيلات أخرى"
+    category != "الكل" -> if (current?.isLive == false) "تسجيلات أخرى" else "محتوى القسم"
+    current?.isLive == false -> "محتوى آخر"
+    else -> "محطات أخرى"
 }
 
 @Composable
