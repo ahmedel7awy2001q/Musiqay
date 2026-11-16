@@ -1,6 +1,7 @@
 package com.musiqay.app.data
 
 import android.content.Context
+import com.musiqay.app.BuildConfig
 import com.musiqay.app.util.*
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
@@ -148,7 +149,7 @@ class RadioRepository(private val context: Context) {
                     remoteRevision = remoteConfig.revision
                 )
 
-                if (!force && (now - preferences.getLong("updated_at", 0) in 0..86_400_000 ||
+                if (!force && (now - preferences.getLong("updated_at", 0) in 0..21_600_000 ||
                     now - lastAttemptAt in 0..60_000)) return@withLock
 
                 lastAttemptAt = now
@@ -235,9 +236,12 @@ class RadioRepository(private val context: Context) {
                 for (i in 0 until entries.length()) {
                     val row = entries.getJSONObject(i)
                     val url = safeRadioUrl(row.optString("url")) ?: continue
-                    add(RadioStation(row.getString("id"), row.getString("name"), row.optString("category"), "", url,
+                    add(RadioStation(
+                        row.getString("id"), row.getString("name"), row.optString("category"), "", url,
                         row.optString("website"), row.optString("mime").takeIf { it.isNotBlank() },
-                        safeRadioUrl(row.optString("artwork")), row.optString("category")))
+                        safeRadioUrl(row.optString("artwork")), row.optString("category"),
+                        isLive = row.optBoolean("isLive", true)
+                    ))
                 }
             }
         }.getOrDefault(emptyList())
@@ -328,7 +332,8 @@ class RadioRepository(private val context: Context) {
                     featured = row.optBoolean("featured", false),
                     priority = row.optInt("priority", 0).coerceIn(-1000, 1000),
                     sourceLabel = row.optString("sourceLabel").trim().take(60).ifBlank { "Musiqay Remote" },
-                    fallbackStreamUrl = safeRadioUrl(row.optString("fallbackStreamUrl"))
+                    fallbackStreamUrl = safeRadioUrl(row.optString("fallbackStreamUrl")),
+                    isLive = row.optBoolean("isLive", true)
                 )
                 if (id !in disabled && allowedRadioStation(station, blocked)) add(station)
             }
@@ -343,13 +348,14 @@ class RadioRepository(private val context: Context) {
             put("id", station.id); put("name", station.name); put("url", station.streamUrl)
             put("website", station.website); put("mime", station.mimeType.orEmpty())
             put("artwork", station.artworkUrl.orEmpty()); put("category", station.category)
+            put("isLive", station.isLive)
         }) }
         preferences.edit().putString("retained", entries.toString()).apply()
     }
     private fun request(url: String, maxBytes: Int = 2 * 1024 * 1024): String {
         val connection = URL(url).openConnection() as HttpURLConnection
         connection.connectTimeout = 8_000; connection.readTimeout = 10_000
-        connection.setRequestProperty("User-Agent", "Musiqay/1.4 (Android)")
+        connection.setRequestProperty("User-Agent", "Musiqay/${BuildConfig.VERSION_NAME} (Android)")
         connection.setRequestProperty("Accept", "application/json")
         try {
             require(connection.responseCode == 200) { "Radio directory unavailable" }
