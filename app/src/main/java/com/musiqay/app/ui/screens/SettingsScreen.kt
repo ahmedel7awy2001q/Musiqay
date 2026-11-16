@@ -69,6 +69,8 @@ import com.musiqay.app.ui.theme.premiumScreenBrush
 fun SettingsScreen(vm: MusicViewModel, onBack: () -> Unit) {
     val settings by vm.settings.collectAsStateWithLifecycle()
     val status by vm.libraryStatus.collectAsStateWithLifecycle()
+    val allSongs by vm.songs.collectAsStateWithLifecycle()
+    val visibleSongs by vm.visibleSongs.collectAsStateWithLifecycle()
     val radioCatalog by vm.radioCatalog.collectAsStateWithLifecycle()
 
     Scaffold(
@@ -203,8 +205,17 @@ fun SettingsScreen(vm: MusicViewModel, onBack: () -> Unit) {
                         Column(Modifier.weight(1f).padding(horizontal = 12.dp)) {
                             Text(if (status.loading) "جارٍ تحديث المكتبة…" else "إعادة فحص الموسيقى", fontWeight = FontWeight.Bold)
                             Text(
-                                status.error ?: status.scannedAt?.let { "آخر تحديث " + java.text.DateFormat.getTimeInstance(java.text.DateFormat.SHORT).format(java.util.Date(it)) }
-                                    ?: "تُحدّث المكتبة تلقائيًا عند تغيّر الملفات",
+                                status.error ?: buildString {
+                                    append("${visibleSongs.size} ملف ظاهر")
+                                    val hiddenCount = (allSongs.size - visibleSongs.size).coerceAtLeast(0)
+                                    if (hiddenCount > 0) append(" • $hiddenCount مخفي")
+                                    append(" • حد ${settings.minimumAudioDurationSeconds}ث")
+                                    if (!settings.includeNonMusicAudio) append(" • موسيقى فقط")
+                                    status.scannedAt?.let {
+                                        append(" • ")
+                                        append(java.text.DateFormat.getTimeInstance(java.text.DateFormat.SHORT).format(java.util.Date(it)))
+                                    }
+                                },
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -354,7 +365,7 @@ fun SettingsScreen(vm: MusicViewModel, onBack: () -> Unit) {
                         Column(Modifier.weight(1f).padding(horizontal = 12.dp)) {
                             Text(
                                 if (radioCatalog.loading) "جارٍ تحديث دليل الراديو…"
-                                else "تحديث دليل المحطات",
+                                else "تحديث مصادر الصوت",
                                 fontWeight = FontWeight.Bold
                             )
                             val remoteStatus = if (radioCatalog.remoteRevision > 0)
@@ -364,9 +375,13 @@ fun SettingsScreen(vm: MusicViewModel, onBack: () -> Unit) {
                                 java.text.DateFormat.getTimeInstance(java.text.DateFormat.SHORT)
                                     .format(java.util.Date(it))
                             }
+                            val live = radioCatalog.stations.count { it.isLive }
+                            val recordings = radioCatalog.stations.size - live
                             Text(
                                 buildString {
-                                    append("${radioCatalog.stations.size} محطة • ")
+                                    append("$live مباشر")
+                                    if (recordings > 0) append(" • $recordings تسجيل")
+                                    append(" • ")
                                     append(remoteStatus)
                                     if (updated != null) append(" • آخر تحديث $updated")
                                 },
@@ -389,7 +404,7 @@ fun SettingsScreen(vm: MusicViewModel, onBack: () -> Unit) {
                         Column(Modifier.padding(horizontal = 12.dp)) {
                             Text("خصوصيتك أولًا", fontWeight = FontWeight.Bold)
                             Text(
-                                "ملفاتك ومفضلتك وعلاماتك تبقى على هاتفك. الراديو يتصل بمصدر البث، ويُحدّث دليل المحطات عند فتحه.",
+                                "ملفاتك ومفضلتك وعلاماتك تبقى على هاتفك. الراديو والتسجيلات الخارجية تتصل بمصادرها عند التشغيل، ويُحدّث دليل المصادر تلقائيًا.",
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 style = MaterialTheme.typography.bodyMedium
                             )
