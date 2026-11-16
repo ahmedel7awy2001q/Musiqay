@@ -1,19 +1,75 @@
 Musiqay radio sources and original station artwork
+Last reviewed: 2026-11-17
 
-Station names/logos belong to their respective broadcasters. Artwork identifies
-the selected station; Musiqay is an independent player. Files were downloaded
-from public broadcaster websites without raster editing.
+Station names/logos belong to their respective broadcasters. Musiqay is an
+independent player. Remote links are refreshed separately through
+config/radio-catalog-v1.json so broken curated routes can be replaced without
+shipping a new APK.
 
-Quran: https://misrquran.gov.eg/img/1366%20normal%20logo.915db7c0.webp
-Nogoum: https://www.nogoumfm.net/wp-content/uploads/2019/12/logo-nogoum-1.png
-9090: https://www.9090.fm/images/logo.png
-Nile: https://www.nilefm.com/static/logo.png
+Curated Egyptian sources
+------------------------
+Quran Cairo
+Website: https://misrquran.gov.eg/
+Primary mount: https://stream.radiojar.com/8s5u5tpdtwzuv
+Fallback: official/previous HLS retained in source and remote catalogue.
+Artwork: https://misrquran.gov.eg/img/1366%20normal%20logo.915db7c0.webp
 
+Nogoum FM
+Website: https://www.nogoumfm.net/
+Primary: https://stream.zeno.fm/qb1zvsykm98uv
+Fallback: https://audio.nrpstream.com/listen/nogoumfm/radio.mp3
+Artwork: https://www.nogoumfm.net/wp-content/uploads/2019/12/logo-nogoum-1.png
+
+Radio 9090
+Website: https://www.9090.fm/
+Primary: https://9090streaming.mobtada.com/9090FMEGYPT
+Fallback: http://9090streaming.mobtada.com/9090FMEGYPT
+Artwork: https://www.9090.fm/images/logo.png
+
+Nile FM
+Website: https://www.nilefm.com/
+Stream: https://audio.nrpstream.com/listen/nile_fm/radio.mp3
+Artwork: https://www.nilefm.com/static/logo.png
+
+Mega FM 92.7
+Website: https://www.megafm927.com/ar
+Stream: https://megafm927.radioca.st/stream
+
+Sha3by FM 95
+Primary: https://radio95.radioca.st/;
+Fallback: https://radio95.radioca.st/stream
+
+Radio Hits 88.2
+Website: https://radiohits882.com/
+Stream: https://radiohits882.radioca.st/;
+
+ON Sport FM
+Website: https://onsportfm.com/
+Stream: https://carina.streamerr.co:2020/stream/OnSportFM
+
+Religious / spoken audio
+------------------------
+Quran Stations / Qurango:
+https://qurango.net/
+Used for Ruqyah, morning adhkar, evening adhkar and Sakeenah streams.
+
+Nasr El Din Tobar archive:
+https://www.nourelquran.com/
+The 21 Tobar items are recorded archive audio, not LIVE radio. Remote catalogue
+marks them isLive=false. The provider may temporarily put individual audio
+services into maintenance, so playback errors must be presented as recording
+source failures, not live-radio failures.
+
+Directory
+---------
 Community catalogue: Radio Browser, https://www.radio-browser.info/
 API instructions: https://docs.radio-browser.info/
-Snapshot countrycode: EG; entries marked lastcheckok=1 at retrieval on 2026-10-07.
-Healthy-directory status is not a guarantee of uninterrupted listening.
+Musiqay requests countrycode EG with hidebroken=true and lastcheckok=1.
+Directory data refreshes every 6 hours in 1.4.9. A healthy-directory flag is
+not a guarantee of uninterrupted listening.
 
-Public reference app: https://play.google.com/store/apps/details?id=com.appmind.radios.egypt
-Only public descriptions/screenshots were reviewed. Its code and station
-database were not copied or accessed.
+Content exclusion
+-----------------
+Mishary Rashid Alafasy / مشاري العفاسي variants are blocked from curated,
+remote, retained and Radio Browser catalogue content by application rules and
+the remote catalogue block list.
