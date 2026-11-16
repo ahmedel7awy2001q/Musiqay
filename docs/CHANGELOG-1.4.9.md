@@ -1,27 +1,50 @@
-# Musiqay 1.4.9 — Native Bluetooth Player Gateway
+# Musiqay 1.4.9
 
-## Why this change
-The tested Android car head unit receives phone audio correctly through its vendor Bluetooth player, but it does not expose the incoming A2DP Sink connection to ordinary third-party apps. Showing a connection state inside Musiqay was therefore misleading.
+## Bluetooth Car Gateway
+- Select the car head-unit native Bluetooth player once.
+- Persist the selected launcher component locally.
+- Open the saved Bluetooth player directly from Home.
+- Fall back to the chooser if the selected app is removed or cannot launch.
+- No Bluetooth scan, contact, notification or microphone permissions.
 
-## New behavior
-- Removed dependency on A2DP connection discovery.
-- Removed BLUETOOTH / BLUETOOTH_CONNECT permissions from Musiqay.
-- First use:
-  1. Open **بلوتوث الهاتف**.
-  2. Choose the head unit's native Bluetooth Music app.
-  3. Musiqay stores the selected launcher component locally.
-- After selection, pressing **بلوتوث الهاتف** on Home opens the saved native Bluetooth player directly with one tap.
-- If the saved app is later removed or fails to launch, Musiqay automatically returns to the chooser.
-- The chooser prioritizes likely Bluetooth / BT Music / A2DP apps, with an option to show all launcher apps when vendor naming is unusual.
-- The selected player can be changed at any time.
-- System Bluetooth Settings remains available as a fallback.
+## Radio and external audio maintenance
+- Remote radio catalogue refresh interval reduced to 4 hours.
+- Radio Browser directory refresh reduced from 24 hours to 6 hours.
+- Refreshed curated Egyptian station links and source labels.
+- Added verified current ON Sport FM source.
+- Added primary/fallback stream pairs for critical stations where a second usable route is available.
+- Kept the remote disabled/block-list mechanism for emergency link removal without a new APK.
+- Kept Mishary/Alafasy exclusion across remote, directory and retained stations.
+- Network User-Agent now follows the actual app version.
 
-## Safety / privacy
-- No Bluetooth scanning.
-- No contact access.
-- No notification access.
-- No microphone access.
-- No audio interception or rebroadcasting.
+## Live streams vs recordings
+- RadioStation now distinguishes live streams from recorded archive audio.
+- Nasr El Din Tobar archive is treated as recordings, not LIVE radio.
+- Radio screen shows separate live/recording counts.
+- Search says "station or recording".
+- Tobar has a dedicated compact feature card and shorter category chip.
+- Playback status and failure text now distinguish live connection failures from recording failures.
+- Android Auto exposes archived recordings as playable audio rather than radio stations.
+
+## Resilience
+- Quran Cairo uses a stable RadioJar route with the existing HLS source as fallback.
+- Nogoum FM has a current primary route plus previous stream fallback.
+- Radio 9090 and Sha3by have fallback routes.
+- Existing retry/backoff remains active after fallback selection.
+- Platform launching is guarded against missing handlers on vendor car head units.
+- Apple Music web search is localized to Egypt.
+
+## Library diagnostics
+- Settings now shows visible file count.
+- Shows hidden-file count when folders are hidden.
+- Shows the active minimum-duration filter.
+- Shows whether only MediaStore music items are included.
+- This makes changes in library count diagnosable without changing or deleting user data.
+
+## UI
+- Sleep timer redesigned into a compact grid for small phones and car screens.
+- Radio source footer is generated from actual active source labels.
+- Generic radio copy now uses "content" when the section may contain recordings.
 
 ## Version
 - versionName: 1.4.9
