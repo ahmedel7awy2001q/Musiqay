@@ -16,15 +16,18 @@ data class RadioStation(
     val tags: String = "", val directoryId: String? = null,
     val featured: Boolean = false, val priority: Int = 0,
     val sourceLabel: String? = null,
-    val fallbackStreamUrl: String? = null
+    val fallbackStreamUrl: String? = null,
+    val isLive: Boolean = true
 ) {
     fun toMediaItem(): MediaItem = MediaItem.Builder()
         .setMediaId("radio:$id").setUri(streamUrl).setMimeType(mimeType)
-        .setMediaMetadata(MediaMetadata.Builder().setTitle(name).setArtist("بث مباشر • $category")
+        .setMediaMetadata(MediaMetadata.Builder().setTitle(name)
+            .setArtist((if (isLive) "بث مباشر" else "تسجيل") + " • " + category)
             .setArtworkUri(artworkUrl?.let(Uri::parse))
             .setExtras(Bundle().apply {
                 putString("radio_station_id", id)
-                putBoolean("spoken_audio", category == "قرآن" || category == "أذكار ورقية")
+                putBoolean("radio_is_live", isLive)
+                putBoolean("spoken_audio", category == "قرآن" || category == "أذكار ورقية" || category.contains("ابتهالات"))
                 fallbackStreamUrl?.let { putString("fallback_stream_url", it) }
             }).build()).build()
 }
