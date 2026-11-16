@@ -81,9 +81,14 @@ class PlayerController(private val context: Context) {
             else if (hasSession) persistPosition(player)
         }
         override fun onPlayerError(error: PlaybackException) {
-            _error.value = if (isRadioMediaId(controller?.currentMediaItem?.mediaId))
-                "انقطع بث المحطة. نحاول إعادة الاتصال؛ يمكنك إيقافه أو المحاولة مجددًا"
-                else "تعذر تشغيل الملف. تأكد أنه ما زال موجودًا على الهاتف"
+            val item = controller?.currentMediaItem
+            val isRadio = isRadioMediaId(item?.mediaId)
+            val isLive = item?.mediaMetadata?.extras?.getBoolean("radio_is_live", true) ?: true
+            _error.value = when {
+                isRadio && isLive -> "انقطع بث المحطة. نحاول إعادة الاتصال؛ يمكنك إيقافه أو المحاولة مجددًا"
+                isRadio -> "تعذر تشغيل التسجيل من المصدر الحالي. حاول مجددًا أو حدّث مصادر الصوت"
+                else -> "تعذر تشغيل الملف. تأكد أنه ما زال موجودًا على الهاتف"
+            }
         }
     }
 
