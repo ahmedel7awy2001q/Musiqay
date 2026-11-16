@@ -81,7 +81,7 @@ private val MusicPlatforms = listOf(
         description = "فتح Apple Music عند تثبيته على الهاتف",
         icon = Icons.Rounded.MusicNote,
         homeUrl = "https://music.apple.com/",
-        searchUrl = { q -> "https://music.apple.com/us/search?term=" + urlEncode(q) }
+        searchUrl = { q -> "https://music.apple.com/eg/search?term=" + urlEncode(q) }
     ),
     MusicPlatform(
         name = "Deezer",
@@ -99,13 +99,12 @@ private fun urlEncode(value: String): String =
 private fun Context.isInstalled(packageName: String): Boolean =
     runCatching { packageManager.getPackageInfo(packageName, 0) }.isSuccess
 
-private fun openPlatform(context: Context, platform: MusicPlatform, query: String?) {
+private fun openPlatform(context: Context, platform: MusicPlatform, query: String?): Boolean {
     val cleanQuery = query?.trim().orEmpty()
     if (cleanQuery.isBlank()) {
-        context.packageManager.getLaunchIntentForPackage(platform.packageName)?.let {
-            it.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-            context.startActivity(it)
-            return
+        context.packageManager.getLaunchIntentForPackage(platform.packageName)?.let { launch ->
+            launch.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            if (runCatching { context.startActivity(launch); true }.getOrDefault(false)) return true
         }
     } else {
         platform.nativeSearchUri?.let { builder ->
@@ -113,10 +112,9 @@ private fun openPlatform(context: Context, platform: MusicPlatform, query: Strin
                 setPackage(platform.packageName)
                 addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
             }
-            if (nativeIntent.resolveActivity(context.packageManager) != null) {
-                context.startActivity(nativeIntent)
-                return
-            }
+            if (nativeIntent.resolveActivity(context.packageManager) != null &&
+                runCatching { context.startActivity(nativeIntent); true }.getOrDefault(false)
+            ) return true
         }
     }
 
@@ -125,13 +123,13 @@ private fun openPlatform(context: Context, platform: MusicPlatform, query: Strin
         setPackage(platform.packageName)
         addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
     }
-    if (appIntent.resolveActivity(context.packageManager) != null) {
-        context.startActivity(appIntent)
-    } else {
-        context.startActivity(
-            Intent(Intent.ACTION_VIEW, Uri.parse(url)).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-        )
-    }
+    if (appIntent.resolveActivity(context.packageManager) != null &&
+        runCatching { context.startActivity(appIntent); true }.getOrDefault(false)
+    ) return true
+
+    val browserIntent = Intent(Intent.ACTION_VIEW, Uri.parse(url)).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+    return browserIntent.resolveActivity(context.packageManager) != null &&
+        runCatching { context.startActivity(browserIntent); true }.getOrDefault(false)
 }
 
 @Composable
