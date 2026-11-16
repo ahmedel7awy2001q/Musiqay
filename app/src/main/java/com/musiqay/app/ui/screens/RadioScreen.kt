@@ -110,7 +110,7 @@ fun RadioScreen(
             add("Radio Browser")
             safeCatalogStations.mapNotNull { it.sourceLabel?.takeIf(String::isNotBlank) }
                 .distinct()
-                .forEach(::add)
+                .forEach { add(it) }
         }.distinct().take(5).joinToString(" • ")
     }
 
