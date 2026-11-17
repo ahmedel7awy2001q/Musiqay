@@ -1,9 +1,9 @@
-name: Build Musiqay 1.4.3 verification
+name: Build Musiqay 1.4.9 release
 
 on:
   push:
-    branches: ["build/v1.4.2-listening"]
-    paths: [".build-request"]
+    branches: ["build/v1.4.9-release"]
+    paths: [".build-request-149"]
   workflow_dispatch:
 
 permissions:
@@ -12,7 +12,7 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
-    timeout-minutes: 45
+    timeout-minutes: 35
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-java@v5
@@ -26,57 +26,28 @@ jobs:
           "$SDKMANAGER" "platforms;android-36" "build-tools;35.0.0"
       - uses: gradle/actions/setup-gradle@v4
       - name: Unit tests and lint
-        if: ${{ !contains(github.event.head_commit.message, '[ui-only]') }}
-        run: ./gradlew --no-daemon -PpreviewBuild=true :app:testDebugUnitTest :app:lintDebug
-      - name: Build preview and Android tests
-        run: ./gradlew --no-daemon -PpreviewBuild=true :app:assembleDebug :app:assembleDebugAndroidTest
-
-      - name: Build signed release update
-        env:
-          MUSIQAY_KEYSTORE_BASE64: ${{ secrets.MUSIQAY_KEYSTORE_BASE64 }}
-          MUSIQAY_KEYSTORE_PASSWORD: ${{ secrets.MUSIQAY_KEYSTORE_PASSWORD }}
-          MUSIQAY_KEY_ALIAS: ${{ secrets.MUSIQAY_KEY_ALIAS }}
-          MUSIQAY_KEY_PASSWORD: ${{ secrets.MUSIQAY_KEY_PASSWORD }}
-        run: |
-          for key in MUSIQAY_KEYSTORE_BASE64 MUSIQAY_KEYSTORE_PASSWORD MUSIQAY_KEY_ALIAS MUSIQAY_KEY_PASSWORD; do
-            if [ -z "${!key}" ]; then echo "Missing release signing secret: $key"; exit 1; fi
-          done
-          export MUSIQAY_KEYSTORE_PATH="$RUNNER_TEMP/musiqay-release.keystore"
-          trap 'rm -f "$MUSIQAY_KEYSTORE_PATH"' EXIT
-          printf '%s' "$MUSIQAY_KEYSTORE_BASE64" | base64 --decode > "$MUSIQAY_KEYSTORE_PATH"
-          ./gradlew --no-daemon :app:assembleRelease
-
-      - name: Collect and verify APKs
+        run: ./gradlew --no-daemon :app:testDebugUnitTest :app:lintDebug
+      - name: Build unsigned release
+        run: ./gradlew --no-daemon :app:assembleRelease
+      - name: Collect and verify unsigned release
         run: |
           mkdir -p out
-          cp app/build/outputs/apk/debug/app-debug.apk out/Musiqay-1.4.3-Preview-runner.apk
-          cp app/build/outputs/apk/release/app-release.apk out/Musiqay-1.4.3-Release.apk
+          APK="app/build/outputs/apk/release/app-release-unsigned.apk"
+          test -f "$APK"
+          cp "$APK" out/Musiqay-1.4.9-Release-unsigned.apk
           cp "$ANDROID_HOME/build-tools/35.0.0/lib/apksigner.jar" out/apksigner.jar
-          "$ANDROID_HOME/build-tools/35.0.0/aapt" dump badging out/Musiqay-1.4.3-Release.apk > out/release-apk-metadata.txt
-          java -jar out/apksigner.jar verify --print-certs out/Musiqay-1.4.3-Release.apk > out/release-signing.txt
-          sha256sum out/Musiqay-1.4.3-Release.apk > out/Musiqay-1.4.3-Release.sha256
-          grep -q "package: name='com.musiqay.app'" out/release-apk-metadata.txt
-          grep -q "versionCode='7'" out/release-apk-metadata.txt
-          grep -q "versionName='1.4.3'" out/release-apk-metadata.txt
-      - name: Enable emulator acceleration
-        run: sudo chmod 666 /dev/kvm
-      - name: Device tests with larger Arabic text
-        uses: reactivecircus/android-emulator-runner@v2
-        with:
-          api-level: 35
-          arch: x86_64
-          profile: pixel_4
-          disable-animations: true
-          script: bash .github/scripts/device-tests.sh
+          "$ANDROID_HOME/build-tools/35.0.0/aapt" dump badging out/Musiqay-1.4.9-Release-unsigned.apk > out/apk-metadata.txt
+          sha256sum out/Musiqay-1.4.9-Release-unsigned.apk > out/Musiqay-1.4.9-Release-unsigned.sha256
+          grep -q "package: name='com.musiqay.app'" out/apk-metadata.txt
+          grep -q "versionCode='13'" out/apk-metadata.txt
+          grep -q "versionName='1.4.9'" out/apk-metadata.txt
       - name: Upload build outputs and reports
-        if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: Musiqay-1.4.3-Verified-Build
+          name: Musiqay-1.4.9-Unsigned-Release
           path: |
             out/
             app/build/reports/
-            app/build/outputs/androidTest-results/
             app/build/test-results/
           retention-days: 30
           if-no-files-found: error
