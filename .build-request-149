@@ -1,3 +1,4 @@
 version=1.4.9
 source=a6f2645a6c74221431d3460c1324461ebf1414e6
 mode=unsigned-release-for-permanent-signing
+trigger=git-data-ref-update
